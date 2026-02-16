@@ -1,0 +1,14 @@
+# Agent Firewall - Production Dependencies
+fastapi>=0.115.0
+uvicorn[standard]>=0.34.0
+websockets>=14.0
+pydantic>=2.10.0
+aiofiles>=24.1.0
+httpx>=0.28.0
+ahocorasick-rs>=0.22.0
+orjson>=3.10.0
+
+# Dev / Test
+pytest>=8.0
+pytest-asyncio>=0.24.0
+ruff>=0.8.0
