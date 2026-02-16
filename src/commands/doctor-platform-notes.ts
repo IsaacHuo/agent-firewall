@@ -3,7 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
-import type { OpenClawConfig } from "../config/config.js";
+import type { AgentShieldConfig } from "../config/config.js";
 import { note } from "../terminal/note.js";
 import { shortenHomePath } from "../utils.js";
 
@@ -18,7 +18,7 @@ export async function noteMacLaunchAgentOverrides() {
     return;
   }
   const home = resolveHomeDir();
-  const markerCandidates = [path.join(home, ".openclaw", "disable-launchagent")];
+  const markerCandidates = [path.join(home, ".agent-shield", "disable-launchagent")];
   const markerPath = markerCandidates.find((candidate) => fs.existsSync(candidate));
   if (!markerPath) {
     return;
@@ -43,7 +43,7 @@ async function launchctlGetenv(name: string): Promise<string | undefined> {
   }
 }
 
-function hasConfigGatewayCreds(cfg: OpenClawConfig): boolean {
+function hasConfigGatewayCreds(cfg: AgentShieldConfig): boolean {
   const localToken =
     typeof cfg.gateway?.auth?.token === "string" ? cfg.gateway?.auth?.token.trim() : "";
   const localPassword =
@@ -56,7 +56,7 @@ function hasConfigGatewayCreds(cfg: OpenClawConfig): boolean {
 }
 
 export async function noteMacLaunchctlGatewayEnvOverrides(
-  cfg: OpenClawConfig,
+  cfg: AgentShieldConfig,
   deps?: {
     platform?: NodeJS.Platform;
     getenv?: (name: string) => Promise<string | undefined>;
@@ -81,17 +81,17 @@ export async function noteMacLaunchctlGatewayEnvOverrides(
       "- Deprecated launchctl environment variables detected (ignored).",
       ...deprecatedLaunchctlEntries.map(
         ([key]) =>
-          `- \`${key}\` is set; use \`OPENCLAW_${key.slice(key.indexOf("_") + 1)}\` instead.`,
+          `- \`${key}\` is set; use \`AGENT_SHIELD_${key.slice(key.indexOf("_") + 1)}\` instead.`,
       ),
     ];
     (deps?.noteFn ?? note)(lines.join("\n"), "Gateway (macOS)");
   }
 
   const tokenEntries = [
-    ["OPENCLAW_GATEWAY_TOKEN", await getenv("OPENCLAW_GATEWAY_TOKEN")],
+    ["AGENT_SHIELD_GATEWAY_TOKEN", await getenv("AGENT_SHIELD_GATEWAY_TOKEN")],
   ] as const;
   const passwordEntries = [
-    ["OPENCLAW_GATEWAY_PASSWORD", await getenv("OPENCLAW_GATEWAY_PASSWORD")],
+    ["AGENT_SHIELD_GATEWAY_PASSWORD", await getenv("AGENT_SHIELD_GATEWAY_PASSWORD")],
   ] as const;
   const tokenEntry = tokenEntries.find(([, value]) => value?.trim());
   const passwordEntry = passwordEntries.find(([, value]) => value?.trim());
@@ -109,7 +109,7 @@ export async function noteMacLaunchctlGatewayEnvOverrides(
       ? `- \`${envTokenKey}\` is set; it overrides config tokens.`
       : undefined,
     envPassword
-      ? `- \`${envPasswordKey ?? "OPENCLAW_GATEWAY_PASSWORD"}\` is set; it overrides config passwords.`
+      ? `- \`${envPasswordKey ?? "AGENT_SHIELD_GATEWAY_PASSWORD"}\` is set; it overrides config passwords.`
       : undefined,
     "- Clear overrides and restart the app/gateway:",
     envTokenKey ? `  launchctl unsetenv ${envTokenKey}` : undefined,
@@ -132,10 +132,10 @@ export function noteDeprecatedLegacyEnvVars(
 
   const lines = [
     "- Deprecated legacy environment variables detected (ignored).",
-    "- Use OPENCLAW_* equivalents instead:",
+    "- Use AGENT_SHIELD_* equivalents instead:",
     ...entries.map((key) => {
       const suffix = key.slice(key.indexOf("_") + 1);
-      return `  ${key} -> OPENCLAW_${suffix}`;
+      return `  ${key} -> AGENT_SHIELD_${suffix}`;
     }),
   ];
   (deps?.noteFn ?? note)(lines.join("\n"), "Environment");

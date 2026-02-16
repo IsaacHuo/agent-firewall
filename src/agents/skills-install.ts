@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { OpenClawConfig } from "../config/config.js";
+import type { AgentShieldConfig } from "../config/config.js";
 import { resolveBrewExecutable } from "../infra/brew.js";
 import { runCommandWithTimeout, type CommandOptions } from "../process/exec.js";
 import { scanDirectoryWithSummary } from "../security/skill-scanner.js";
@@ -20,7 +20,7 @@ export type SkillInstallRequest = {
   skillName: string;
   installId: string;
   timeoutMs?: number;
-  config?: OpenClawConfig;
+  config?: AgentShieldConfig;
 };
 
 export type SkillInstallResult = {
@@ -110,12 +110,12 @@ async function collectSkillInstallScanWarnings(entry: SkillEntry): Promise<strin
       );
     } else if (summary.warn > 0) {
       warnings.push(
-        `Skill "${skillName}" has ${summary.warn} suspicious code pattern(s). Run "openclaw security audit --deep" for details.`,
+        `Skill "${skillName}" has ${summary.warn} suspicious code pattern(s). Run "agent-shield security audit --deep" for details.`,
       );
     }
   } catch (err) {
     warnings.push(
-      `Skill "${skillName}" code safety scan failed (${String(err)}). Installation continues; run "openclaw security audit --deep" after install.`,
+      `Skill "${skillName}" code safety scan failed (${String(err)}). Installation continues; run "agent-shield security audit --deep" after install.`,
     );
   }
 

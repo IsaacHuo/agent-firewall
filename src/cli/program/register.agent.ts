@@ -51,24 +51,24 @@ export function registerAgentCommands(program: Command, args: { agentChannelOpti
         `
 ${theme.heading("Examples:")}
 ${formatHelpExamples([
-  ['openclaw agent --to +15555550123 --message "status update"', "Start a new session."],
-  ['openclaw agent --agent ops --message "Summarize logs"', "Use a specific agent."],
+  ['agent-shield agent --to +15555550123 --message "status update"', "Start a new session."],
+  ['agent-shield agent --agent ops --message "Summarize logs"', "Use a specific agent."],
   [
-    'openclaw agent --session-id 1234 --message "Summarize inbox" --thinking medium',
+    'agent-shield agent --session-id 1234 --message "Summarize inbox" --thinking medium',
     "Target a session with explicit thinking level.",
   ],
   [
-    'openclaw agent --to +15555550123 --message "Trace logs" --verbose on --json',
+    'agent-shield agent --to +15555550123 --message "Trace logs" --verbose on --json',
     "Enable verbose logging and JSON output.",
   ],
-  ['openclaw agent --to +15555550123 --message "Summon reply" --deliver', "Deliver reply."],
+  ['agent-shield agent --to +15555550123 --message "Summon reply" --deliver', "Deliver reply."],
   [
-    'openclaw agent --agent ops --message "Generate report" --deliver --reply-channel slack --reply-to "#reports"',
+    'agent-shield agent --agent ops --message "Generate report" --deliver --reply-channel slack --reply-to "#reports"',
     "Send reply to a different channel/target.",
   ],
 ])}
 
-${theme.muted("Docs:")} ${formatDocsLink("/cli/agent", "docs.openclaw.ai/cli/agent")}`,
+${theme.muted("Docs:")} ${formatDocsLink("/cli/agent", "docs.agent-shield.ai/cli/agent")}`,
     )
     .action(async (opts) => {
       const verboseLevel = typeof opts.verbose === "string" ? opts.verbose.toLowerCase() : "";
@@ -86,7 +86,7 @@ ${theme.muted("Docs:")} ${formatDocsLink("/cli/agent", "docs.openclaw.ai/cli/age
     .addHelpText(
       "after",
       () =>
-        `\n${theme.muted("Docs:")} ${formatDocsLink("/cli/agents", "docs.openclaw.ai/cli/agents")}\n`,
+        `\n${theme.muted("Docs:")} ${formatDocsLink("/cli/agents", "docs.agent-shield.ai/cli/agents")}\n`,
     );
 
   agents
@@ -155,14 +155,14 @@ ${theme.muted("Docs:")} ${formatDocsLink("/cli/agent", "docs.openclaw.ai/cli/age
         `
 ${theme.heading("Examples:")}
 ${formatHelpExamples([
-  ['openclaw agents set-identity --agent main --name "OpenClaw" --emoji "🦞"', "Set name + emoji."],
-  ["openclaw agents set-identity --agent main --avatar avatars/openclaw.png", "Set avatar path."],
+  ['agent-shield agents set-identity --agent main --name "AgentShield" --emoji "🦞"', "Set name + emoji."],
+  ["agent-shield agents set-identity --agent main --avatar avatars/agent-shield.png", "Set avatar path."],
   [
-    "openclaw agents set-identity --workspace ~/.openclaw/workspace --from-identity",
+    "agent-shield agents set-identity --workspace ~/.agent-shield/workspace --from-identity",
     "Load from IDENTITY.md.",
   ],
   [
-    "openclaw agents set-identity --identity-file ~/.openclaw/workspace/IDENTITY.md --agent main",
+    "agent-shield agents set-identity --identity-file ~/.agent-shield/workspace/IDENTITY.md --agent main",
     "Use a specific IDENTITY.md.",
   ],
 ])}

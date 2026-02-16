@@ -1,7 +1,7 @@
 import { completeSimple, type TextContent } from "@mariozechner/pi-ai";
 import { EdgeTTS } from "node-edge-tts";
 import { rmSync } from "node:fs";
-import type { OpenClawConfig } from "../config/config.js";
+import type { AgentShieldConfig } from "../config/config.js";
 import type {
   ResolvedTtsConfig,
   ResolvedTtsModelOverrides,
@@ -392,7 +392,7 @@ type SummaryModelSelection = {
 };
 
 function resolveSummaryModelRef(
-  cfg: OpenClawConfig,
+  cfg: AgentShieldConfig,
   config: ResolvedTtsConfig,
 ): SummaryModelSelection {
   const defaultRef = resolveDefaultModelForAgent({ cfg });
@@ -420,7 +420,7 @@ function isTextContentBlock(block: { type: string }): block is TextContent {
 export async function summarizeText(params: {
   text: string;
   targetLength: number;
-  cfg: OpenClawConfig;
+  cfg: AgentShieldConfig;
   config: ResolvedTtsConfig;
   timeoutMs: number;
 }): Promise<SummarizeResult> {

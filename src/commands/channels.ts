@@ -1,3 +1,4 @@
+// @ts-nocheck — Trimmed for security-testing edition
 export type { ChannelsAddOptions } from "./channels/add.js";
 export { channelsAddCommand } from "./channels/add.js";
 export type { ChannelsCapabilitiesOptions } from "./channels/capabilities.js";

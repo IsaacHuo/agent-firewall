@@ -85,34 +85,37 @@ type CreateMemoryGetTool = typeof import("../../agents/tools/memory-tool.js").cr
 type CreateMemorySearchTool =
   typeof import("../../agents/tools/memory-tool.js").createMemorySearchTool;
 type RegisterMemoryCli = typeof import("../../cli/memory-cli.js").registerMemoryCli;
-type DiscordMessageActions =
-  typeof import("../../channels/plugins/actions/discord.js").discordMessageActions;
+// stub: module removed (../../channels/plugins/actions/discord.js)
+type DiscordMessageActions = (...args: any[]) => any;
 type AuditDiscordChannelPermissions =
   typeof import("../../discord/audit.js").auditDiscordChannelPermissions;
-type ListDiscordDirectoryGroupsLive =
-  typeof import("../../discord/directory-live.js").listDiscordDirectoryGroupsLive;
-type ListDiscordDirectoryPeersLive =
-  typeof import("../../discord/directory-live.js").listDiscordDirectoryPeersLive;
-type ProbeDiscord = typeof import("../../discord/probe.js").probeDiscord;
+// stub: module removed (../../discord/directory-live.js)
+type ListDiscordDirectoryGroupsLive = (...args: any[]) => any;
+type ListDiscordDirectoryPeersLive = (...args: any[]) => any;
+// stub: module removed (../../discord/probe.js)
+type ProbeDiscord = (...args: any[]) => any;
 type ResolveDiscordChannelAllowlist =
   typeof import("../../discord/resolve-channels.js").resolveDiscordChannelAllowlist;
 type ResolveDiscordUserAllowlist =
   typeof import("../../discord/resolve-users.js").resolveDiscordUserAllowlist;
 type SendMessageDiscord = typeof import("../../discord/send.js").sendMessageDiscord;
 type SendPollDiscord = typeof import("../../discord/send.js").sendPollDiscord;
-type MonitorDiscordProvider = typeof import("../../discord/monitor.js").monitorDiscordProvider;
-type ListSlackDirectoryGroupsLive =
-  typeof import("../../slack/directory-live.js").listSlackDirectoryGroupsLive;
-type ListSlackDirectoryPeersLive =
-  typeof import("../../slack/directory-live.js").listSlackDirectoryPeersLive;
-type ProbeSlack = typeof import("../../slack/probe.js").probeSlack;
+// stub: module removed (../../discord/monitor.js)
+type MonitorDiscordProvider = (...args: any[]) => any;
+// stub: module removed (../../slack/directory-live.js)
+type ListSlackDirectoryGroupsLive = (...args: any[]) => any;
+type ListSlackDirectoryPeersLive = (...args: any[]) => any;
+// stub: module removed (../../slack/probe.js)
+type ProbeSlack = (...args: any[]) => any;
 type ResolveSlackChannelAllowlist =
   typeof import("../../slack/resolve-channels.js").resolveSlackChannelAllowlist;
 type ResolveSlackUserAllowlist =
   typeof import("../../slack/resolve-users.js").resolveSlackUserAllowlist;
 type SendMessageSlack = typeof import("../../slack/send.js").sendMessageSlack;
-type MonitorSlackProvider = typeof import("../../slack/index.js").monitorSlackProvider;
-type HandleSlackAction = typeof import("../../agents/tools/slack-actions.js").handleSlackAction;
+// stub: module removed (../../slack/index.js)
+type MonitorSlackProvider = (...args: any[]) => any;
+// stub: module removed (../../agents/tools/slack-actions.js)
+type HandleSlackAction = (...args: any[]) => any;
 type AuditTelegramGroupMembership =
   typeof import("../../telegram/audit.js").auditTelegramGroupMembership;
 type CollectTelegramUnmentionedGroupIds =
@@ -127,8 +130,8 @@ type TelegramMessageActions =
 type ProbeSignal = typeof import("../../signal/probe.js").probeSignal;
 type SendMessageSignal = typeof import("../../signal/send.js").sendMessageSignal;
 type MonitorSignalProvider = typeof import("../../signal/index.js").monitorSignalProvider;
-type SignalMessageActions =
-  typeof import("../../channels/plugins/actions/signal.js").signalMessageActions;
+// stub: module removed (../../channels/plugins/actions/signal.js)
+type SignalMessageActions = (...args: any[]) => any;
 type MonitorIMessageProvider = typeof import("../../imessage/monitor.js").monitorIMessageProvider;
 type ProbeIMessage = typeof import("../../imessage/probe.js").probeIMessage;
 type SendMessageIMessage = typeof import("../../imessage/send.js").sendMessageIMessage;
@@ -144,10 +147,10 @@ type LoginWeb = typeof import("../../web/login.js").loginWeb;
 type StartWebLoginWithQr = typeof import("../../web/login-qr.js").startWebLoginWithQr;
 type WaitForWebLogin = typeof import("../../web/login-qr.js").waitForWebLogin;
 type MonitorWebChannel = typeof import("../../channels/web/index.js").monitorWebChannel;
-type HandleWhatsAppAction =
-  typeof import("../../agents/tools/whatsapp-actions.js").handleWhatsAppAction;
-type CreateWhatsAppLoginTool =
-  typeof import("../../channels/plugins/agent-tools/whatsapp-login.js").createWhatsAppLoginTool;
+// stub: module removed (../../agents/tools/whatsapp-actions.js)
+type HandleWhatsAppAction = (...args: any[]) => any;
+// stub: module removed (../../channels/plugins/agent-tools/whatsapp-login.js)
+type CreateWhatsAppLoginTool = (...args: any[]) => any;
 
 // LINE channel types
 type ListLineAccountIds = typeof import("../../line/accounts.js").listLineAccountIds;
@@ -157,14 +160,14 @@ type ResolveLineAccount = typeof import("../../line/accounts.js").resolveLineAcc
 type NormalizeLineAccountId = typeof import("../../line/accounts.js").normalizeAccountId;
 type ProbeLineBot = typeof import("../../line/probe.js").probeLineBot;
 type SendMessageLine = typeof import("../../line/send.js").sendMessageLine;
-type PushMessageLine = typeof import("../../line/send.js").pushMessageLine;
-type PushMessagesLine = typeof import("../../line/send.js").pushMessagesLine;
-type PushFlexMessage = typeof import("../../line/send.js").pushFlexMessage;
-type PushTemplateMessage = typeof import("../../line/send.js").pushTemplateMessage;
-type PushLocationMessage = typeof import("../../line/send.js").pushLocationMessage;
-type PushTextMessageWithQuickReplies =
-  typeof import("../../line/send.js").pushTextMessageWithQuickReplies;
-type CreateQuickReplyItems = typeof import("../../line/send.js").createQuickReplyItems;
+// stub: exports removed from ../../line/send.js
+type PushMessageLine = (...args: any[]) => any;
+type PushMessagesLine = (...args: any[]) => any;
+type PushFlexMessage = (...args: any[]) => any;
+type PushTemplateMessage = (...args: any[]) => any;
+type PushLocationMessage = (...args: any[]) => any;
+type PushTextMessageWithQuickReplies = (...args: any[]) => any;
+type CreateQuickReplyItems = (...args: any[]) => any;
 type BuildTemplateMessageFromPayload =
   typeof import("../../line/template-messages.js").buildTemplateMessageFromPayload;
 type MonitorLineProvider = typeof import("../../line/monitor.js").monitorLineProvider;

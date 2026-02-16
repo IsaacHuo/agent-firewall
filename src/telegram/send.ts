@@ -513,7 +513,10 @@ export async function sendMessageTelegram(
       maxBytes: opts.maxBytes,
       localRoots: opts.mediaLocalRoots,
     });
-    const kind = mediaKindFromMime(media.contentType ?? undefined);
+    if (!media) {
+      // Media loading not available in trimmed edition; fall through to text-only path.
+    } else {
+      const kind = mediaKindFromMime(media.contentType ?? undefined);
     const isGif = isGifMedia({
       contentType: media.contentType,
       fileName: media.fileName,
@@ -676,6 +679,7 @@ export async function sendMessageTelegram(
     }
 
     return { messageId: mediaMessageId, chatId: resolvedChatId };
+    } // end else (media loaded)
   }
 
   if (!text || !text.trim()) {

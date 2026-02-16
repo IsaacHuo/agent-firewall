@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { AgentShieldConfig } from "../config/config.js";
 import type { ResolvedQmdConfig } from "./backend-config.js";
 import type {
   MemoryEmbeddingProbeResult,
@@ -17,7 +17,7 @@ export type MemorySearchManagerResult = {
 };
 
 export async function getMemorySearchManager(params: {
-  cfg: OpenClawConfig;
+  cfg: AgentShieldConfig;
   agentId: string;
   purpose?: "default" | "status";
 }): Promise<MemorySearchManagerResult> {

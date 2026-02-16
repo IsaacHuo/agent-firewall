@@ -1,5 +1,5 @@
 import type {
-  OpenClawHookMetadata,
+  AgentShieldHookMetadata,
   HookEntry,
   HookInstallSpec,
   HookInvocationPolicy,
@@ -10,10 +10,10 @@ import {
   getFrontmatterString,
   normalizeStringList,
   parseFrontmatterBool,
-  resolveOpenClawManifestBlock,
-  resolveOpenClawManifestInstall,
-  resolveOpenClawManifestOs,
-  resolveOpenClawManifestRequires,
+  resolveAgentShieldManifestBlock,
+  resolveAgentShieldManifestInstall,
+  resolveAgentShieldManifestOs,
+  resolveAgentShieldManifestRequires,
 } from "../shared/frontmatter.js";
 
 export function parseFrontmatter(content: string): ParsedHookFrontmatter {
@@ -56,16 +56,16 @@ function parseInstallSpec(input: unknown): HookInstallSpec | undefined {
   return spec;
 }
 
-export function resolveOpenClawMetadata(
+export function resolveAgentShieldMetadata(
   frontmatter: ParsedHookFrontmatter,
-): OpenClawHookMetadata | undefined {
-  const metadataObj = resolveOpenClawManifestBlock({ frontmatter });
+): AgentShieldHookMetadata | undefined {
+  const metadataObj = resolveAgentShieldManifestBlock({ frontmatter });
   if (!metadataObj) {
     return undefined;
   }
-  const requires = resolveOpenClawManifestRequires(metadataObj);
-  const install = resolveOpenClawManifestInstall(metadataObj, parseInstallSpec);
-  const osRaw = resolveOpenClawManifestOs(metadataObj);
+  const requires = resolveAgentShieldManifestRequires(metadataObj);
+  const install = resolveAgentShieldManifestInstall(metadataObj, parseInstallSpec);
+  const osRaw = resolveAgentShieldManifestOs(metadataObj);
   const eventsRaw = normalizeStringList(metadataObj.events);
   return {
     always: typeof metadataObj.always === "boolean" ? metadataObj.always : undefined,

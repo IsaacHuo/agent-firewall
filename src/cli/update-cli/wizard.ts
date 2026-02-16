@@ -31,7 +31,7 @@ const selectStyled = <T>(params: Parameters<typeof select<T>>[0]) =>
 export async function updateWizardCommand(opts: UpdateWizardOptions = {}): Promise<void> {
   if (!process.stdin.isTTY) {
     defaultRuntime.error(
-      "Update wizard requires a TTY. Use `openclaw update --channel <stable|beta|dev>` instead.",
+      "Update wizard requires a TTY. Use `agent-shield update --channel <stable|beta|dev>` instead.",
     );
     defaultRuntime.exit(1);
     return;
@@ -116,7 +116,7 @@ export async function updateWizardCommand(opts: UpdateWizardOptions = {}): Promi
         const empty = await isEmptyDir(gitDir);
         if (!empty) {
           defaultRuntime.error(
-            `OPENCLAW_GIT_DIR points at a non-git directory: ${gitDir}. Set OPENCLAW_GIT_DIR to an empty folder or an openclaw checkout.`,
+            `AGENT_SHIELD_GIT_DIR points at a non-git directory: ${gitDir}. Set AGENT_SHIELD_GIT_DIR to an empty folder or an agent-shield checkout.`,
           );
           defaultRuntime.exit(1);
           return;
@@ -125,7 +125,7 @@ export async function updateWizardCommand(opts: UpdateWizardOptions = {}): Promi
 
       const ok = await confirm({
         message: stylePromptMessage(
-          `Create a git checkout at ${gitDir}? (override via OPENCLAW_GIT_DIR)`,
+          `Create a git checkout at ${gitDir}? (override via AGENT_SHIELD_GIT_DIR)`,
         ),
         initialValue: true,
       });

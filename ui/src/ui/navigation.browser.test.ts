@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { OpenClawApp } from "./app.ts";
+import { AgentShieldApp } from "./app.ts";
 import "../styles.css";
 
 // oxlint-disable-next-line typescript/unbound-method
-const originalConnect = OpenClawApp.prototype.connect;
+const originalConnect = AgentShieldApp.prototype.connect;
 
 function mountApp(pathname: string) {
   window.history.replaceState({}, "", pathname);
-  const app = document.createElement("openclaw-app") as OpenClawApp;
+  const app = document.createElement("agent-shield-app") as AgentShieldApp;
   document.body.append(app);
   return app;
 }
@@ -19,17 +19,17 @@ function nextFrame() {
 }
 
 beforeEach(() => {
-  OpenClawApp.prototype.connect = () => {
+  AgentShieldApp.prototype.connect = () => {
     // no-op: avoid real gateway WS connections in browser tests
   };
-  window.__OPENCLAW_CONTROL_UI_BASE_PATH__ = undefined;
+  window.__AGENT_SHIELD_CONTROL_UI_BASE_PATH__ = undefined;
   localStorage.clear();
   document.body.innerHTML = "";
 });
 
 afterEach(() => {
-  OpenClawApp.prototype.connect = originalConnect;
-  window.__OPENCLAW_CONTROL_UI_BASE_PATH__ = undefined;
+  AgentShieldApp.prototype.connect = originalConnect;
+  window.__AGENT_SHIELD_CONTROL_UI_BASE_PATH__ = undefined;
   localStorage.clear();
   document.body.innerHTML = "";
 });
@@ -53,22 +53,22 @@ describe("control UI routing", () => {
   });
 
   it("infers nested base paths", async () => {
-    const app = mountApp("/apps/openclaw/cron");
+    const app = mountApp("/apps/agent-shield/cron");
     await app.updateComplete;
 
-    expect(app.basePath).toBe("/apps/openclaw");
+    expect(app.basePath).toBe("/apps/agent-shield");
     expect(app.tab).toBe("cron");
-    expect(window.location.pathname).toBe("/apps/openclaw/cron");
+    expect(window.location.pathname).toBe("/apps/agent-shield/cron");
   });
 
   it("honors explicit base path overrides", async () => {
-    window.__OPENCLAW_CONTROL_UI_BASE_PATH__ = "/openclaw";
-    const app = mountApp("/openclaw/sessions");
+    window.__AGENT_SHIELD_CONTROL_UI_BASE_PATH__ = "/agent-shield";
+    const app = mountApp("/agent-shield/sessions");
     await app.updateComplete;
 
-    expect(app.basePath).toBe("/openclaw");
+    expect(app.basePath).toBe("/agent-shield");
     expect(app.tab).toBe("sessions");
-    expect(window.location.pathname).toBe("/openclaw/sessions");
+    expect(window.location.pathname).toBe("/agent-shield/sessions");
   });
 
   it("updates the URL when clicking nav items", async () => {
@@ -186,7 +186,7 @@ describe("control UI routing", () => {
 
   it("hydrates token from URL params even when settings already set", async () => {
     localStorage.setItem(
-      "openclaw.control.settings.v1",
+      "agent-shield.control.settings.v1",
       JSON.stringify({ token: "existing-token" }),
     );
     const app = mountApp("/ui/overview?token=abc123");

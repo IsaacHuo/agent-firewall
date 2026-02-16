@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../../config/types.js";
+import type { AgentShieldConfig } from "../../config/types.js";
 import { resolveUserTimezone } from "../../agents/date-time.js";
 import { formatZonedTimestamp } from "../../infra/format-time/format-datetime.ts";
 
@@ -71,9 +71,9 @@ export function injectTimestamp(message: string, opts?: TimestampInjectionOption
 }
 
 /**
- * Build TimestampInjectionOptions from an OpenClawConfig.
+ * Build TimestampInjectionOptions from an AgentShieldConfig.
  */
-export function timestampOptsFromConfig(cfg: OpenClawConfig): TimestampInjectionOptions {
+export function timestampOptsFromConfig(cfg: AgentShieldConfig): TimestampInjectionOptions {
   return {
     timezone: resolveUserTimezone(cfg.agents?.defaults?.userTimezone),
   };

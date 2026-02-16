@@ -71,7 +71,7 @@ function createHost() {
     agentsList: null,
     agentsError: null,
     debugHealth: null,
-    assistantName: "OpenClaw",
+    assistantName: "AgentShield",
     assistantAvatar: null,
     assistantAgentId: null,
     sessionKey: "main",

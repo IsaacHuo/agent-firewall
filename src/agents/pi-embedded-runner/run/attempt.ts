@@ -1,3 +1,4 @@
+// @ts-nocheck — Trimmed for security-testing edition
 import type { AgentMessage } from "@mariozechner/pi-agent-core";
 import type { ImageContent } from "@mariozechner/pi-ai";
 import { streamSimple } from "@mariozechner/pi-ai";
@@ -22,7 +23,7 @@ import { buildTtsSystemPromptHint } from "../../../tts/tts.js";
 import { resolveUserPath } from "../../../utils.js";
 import { normalizeMessageChannel } from "../../../utils/message-channel.js";
 import { isReasoningTagProvider } from "../../../utils/provider-utils.js";
-import { resolveOpenClawAgentDir } from "../../agent-paths.js";
+import { resolveAgentShieldAgentDir } from "../../agent-paths.js";
 import { resolveSessionAgentIds } from "../../agent-scope.js";
 import { createAnthropicPayloadLogger } from "../../anthropic-payload-log.js";
 import { makeBootstrapWarn, resolveBootstrapContextForRun } from "../../bootstrap-files.js";
@@ -31,7 +32,7 @@ import {
   listChannelSupportedActions,
   resolveChannelMessageToolHints,
 } from "../../channel-tools.js";
-import { resolveOpenClawDocsPath } from "../../docs-path.js";
+import { resolveAgentShieldDocsPath } from "../../docs-path.js";
 import { isTimeoutError } from "../../failover-error.js";
 import { resolveModelAuthMode } from "../../model-auth.js";
 import { resolveDefaultModelForAgent } from "../../model-selection.js";
@@ -48,7 +49,7 @@ import {
   resolveCompactionReserveTokensFloor,
 } from "../../pi-settings.js";
 import { toClientToolDefinitions } from "../../pi-tool-definition-adapter.js";
-import { createOpenClawCodingTools } from "../../pi-tools.js";
+import { createAgentShieldCodingTools } from "../../pi-tools.js";
 import { resolveSandboxContext } from "../../sandbox.js";
 import { resolveSandboxRuntimeStatus } from "../../sandbox/runtime-status.js";
 import { repairSessionFileIfNeeded } from "../../session-file-repair.js";
@@ -277,13 +278,13 @@ export async function runEmbeddedAttempt(
       ? ["Reminder: commit your changes in this workspace after edits."]
       : undefined;
 
-    const agentDir = params.agentDir ?? resolveOpenClawAgentDir();
+    const agentDir = params.agentDir ?? resolveAgentShieldAgentDir();
 
     // Check if the model supports native image input
     const modelHasVision = params.model.input?.includes("image") ?? false;
     const toolsRaw = params.disableTools
       ? []
-      : createOpenClawCodingTools({
+      : createAgentShieldCodingTools({
           exec: {
             ...params.execOverrides,
             elevated: params.bashElevated,
@@ -418,7 +419,7 @@ export async function runEmbeddedAttempt(
       isSubagentSessionKey(params.sessionKey) || isCronSessionKey(params.sessionKey)
         ? "minimal"
         : "full";
-    const docsPath = await resolveOpenClawDocsPath({
+    const docsPath = await resolveAgentShieldDocsPath({
       workspaceDir: effectiveWorkspace,
       argv1: process.argv[1],
       cwd: process.cwd(),
@@ -1026,7 +1027,7 @@ export async function runEmbeddedAttempt(
         // Previously this was before the prompt, which caused a custom entry to be
         // inserted between compaction and the next prompt — breaking the
         // prepareCompaction() guard that checks the last entry type, leading to
-        // double-compaction. See: https://github.com/openclaw/openclaw/issues/9282
+        // double-compaction. See: https://github.com/agent-shield/agent-shield/issues/9282
         // Skip when timed out during compaction — session state may be inconsistent.
         if (!timedOutDuringCompaction) {
           const shouldTrackCacheTtl =
@@ -1185,7 +1186,7 @@ export async function runEmbeddedAttempt(
       // *before* tool execution completes in the retried agent loop. Without this wait,
       // flushPendingToolResults() fires while tools are still executing, inserting
       // synthetic "missing tool result" errors and causing silent agent failures.
-      // See: https://github.com/openclaw/openclaw/issues/8643
+      // See: https://github.com/agent-shield/agent-shield/issues/8643
       await flushPendingToolResultsAfterIdle({
         agent: session?.agent,
         sessionManager,

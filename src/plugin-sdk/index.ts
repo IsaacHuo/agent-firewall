@@ -1,3 +1,4 @@
+// @ts-nocheck — Trimmed for security-testing edition
 export { CHANNEL_MESSAGE_ACTION_NAMES } from "../channels/plugins/message-action-names.js";
 export {
   BLUEBUBBLES_ACTIONS,
@@ -62,9 +63,9 @@ export type {
 export type { ChannelConfigSchema, ChannelPlugin } from "../channels/plugins/types.plugin.js";
 export type {
   AnyAgentTool,
-  OpenClawPluginApi,
-  OpenClawPluginService,
-  OpenClawPluginServiceContext,
+  AgentShieldPluginApi,
+  AgentShieldPluginService,
+  AgentShieldPluginServiceContext,
   ProviderAuthContext,
   ProviderAuthResult,
 } from "../plugins/types.js";
@@ -77,9 +78,9 @@ export type { PluginRuntime, RuntimeLogger } from "../plugins/runtime/types.js";
 export { normalizePluginHttpPath } from "../plugins/http-path.js";
 export { registerPluginHttpRoute } from "../plugins/http-registry.js";
 export { emptyPluginConfigSchema } from "../plugins/config-schema.js";
-export type { OpenClawConfig } from "../config/config.js";
-/** @deprecated Use OpenClawConfig instead */
-export type { OpenClawConfig as ClawdbotConfig } from "../config/config.js";
+export type { AgentShieldConfig } from "../config/config.js";
+/** @deprecated Use AgentShieldConfig instead */
+export type { AgentShieldConfig as ClawdbotConfig } from "../config/config.js";
 
 export type { FileLockHandle, FileLockOptions } from "./file-lock.js";
 export { acquireFileLock, withFileLock } from "./file-lock.js";

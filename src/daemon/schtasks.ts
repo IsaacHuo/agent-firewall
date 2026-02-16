@@ -9,19 +9,19 @@ import { parseKeyValueOutput } from "./runtime-parse.js";
 import { execSchtasks } from "./schtasks-exec.js";
 
 function resolveTaskName(env: Record<string, string | undefined>): string {
-  const override = env.OPENCLAW_WINDOWS_TASK_NAME?.trim();
+  const override = env.AGENT_SHIELD_WINDOWS_TASK_NAME?.trim();
   if (override) {
     return override;
   }
-  return resolveGatewayWindowsTaskName(env.OPENCLAW_PROFILE);
+  return resolveGatewayWindowsTaskName(env.AGENT_SHIELD_PROFILE);
 }
 
 export function resolveTaskScriptPath(env: Record<string, string | undefined>): string {
-  const override = env.OPENCLAW_TASK_SCRIPT?.trim();
+  const override = env.AGENT_SHIELD_TASK_SCRIPT?.trim();
   if (override) {
     return override;
   }
-  const scriptName = env.OPENCLAW_TASK_SCRIPT_NAME?.trim() || "gateway.cmd";
+  const scriptName = env.AGENT_SHIELD_TASK_SCRIPT_NAME?.trim() || "gateway.cmd";
   const stateDir = resolveGatewayStateDir(env);
   return path.join(stateDir, scriptName);
 }

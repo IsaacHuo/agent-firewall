@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "./types.js";
+import type { AgentShieldConfig } from "./types.js";
 import { isPlainObject } from "../utils.js";
 import { parseConfigPath, setConfigValueAtPath, unsetConfigValueAtPath } from "./config-paths.js";
 
@@ -60,9 +60,9 @@ export function unsetConfigOverride(pathRaw: string): {
   return { ok: true, removed };
 }
 
-export function applyConfigOverrides(cfg: OpenClawConfig): OpenClawConfig {
+export function applyConfigOverrides(cfg: AgentShieldConfig): AgentShieldConfig {
   if (!overrides || Object.keys(overrides).length === 0) {
     return cfg;
   }
-  return mergeOverrides(cfg, overrides) as OpenClawConfig;
+  return mergeOverrides(cfg, overrides) as AgentShieldConfig;
 }

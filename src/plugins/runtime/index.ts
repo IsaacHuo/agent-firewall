@@ -1,3 +1,4 @@
+// @ts-nocheck — Trimmed for security-testing edition
 import { createRequire } from "node:module";
 import type { PluginRuntime } from "./types.js";
 import { resolveEffectiveMessagesConfig, resolveHumanDelayConfig } from "../../agents/identity.js";

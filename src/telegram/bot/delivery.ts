@@ -147,6 +147,9 @@ export async function deliverReplies(params: {
       const media = await loadWebMedia(mediaUrl, {
         localRoots: params.mediaLocalRoots,
       });
+      if (!media) {
+        continue;
+      }
       const kind = mediaKindFromMime(media.contentType ?? undefined);
       const isGif = isGifMedia({
         contentType: media.contentType,
@@ -201,7 +204,7 @@ export async function deliverReplies(params: {
       } else if (kind === "audio") {
         const { useVoice } = resolveTelegramVoiceSend({
           wantsVoice: reply.audioAsVoice === true, // default false (backward compatible)
-          contentType: media.contentType,
+          contentType: media?.contentType,
           fileName,
           logFallback: logVerbose,
         });

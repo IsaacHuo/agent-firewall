@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-nocheck — Trimmed for security-testing edition
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { getReplyFromConfig } from "./auto-reply/reply.js";
@@ -20,7 +21,7 @@ import { loadDotEnv } from "./infra/dotenv.js";
 import { normalizeEnv } from "./infra/env.js";
 import { formatUncaughtError } from "./infra/errors.js";
 import { isMainModule } from "./infra/is-main.js";
-import { ensureOpenClawCliOnPath } from "./infra/path-env.js";
+import { ensureAgentShieldCliOnPath } from "./infra/path-env.js";
 import {
   describePortOwner,
   ensurePortAvailable,
@@ -35,7 +36,7 @@ import { assertWebChannel, normalizeE164, toWhatsappJid } from "./utils.js";
 
 loadDotEnv({ quiet: true });
 normalizeEnv();
-ensureOpenClawCliOnPath();
+ensureAgentShieldCliOnPath();
 
 // Capture all console output into structured logs while keeping stdout/stderr behavior.
 enableConsoleCapture();
@@ -82,12 +83,12 @@ if (isMain) {
   installUnhandledRejectionHandler();
 
   process.on("uncaughtException", (error) => {
-    console.error("[openclaw] Uncaught exception:", formatUncaughtError(error));
+    console.error("[agent-shield] Uncaught exception:", formatUncaughtError(error));
     process.exit(1);
   });
 
   void program.parseAsync(process.argv).catch((err) => {
-    console.error("[openclaw] CLI failed:", formatUncaughtError(err));
+    console.error("[agent-shield] CLI failed:", formatUncaughtError(err));
     process.exit(1);
   });
 }

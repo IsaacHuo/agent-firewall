@@ -1,5 +1,5 @@
 import type { Bot } from "grammy";
-import type { OpenClawConfig, ReplyToMode, TelegramAccountConfig } from "../config/types.js";
+import type { AgentShieldConfig, ReplyToMode, TelegramAccountConfig } from "../config/types.js";
 import type { RuntimeEnv } from "../runtime.js";
 import type { TelegramMessageContext } from "./bot-message-context.js";
 import type { TelegramBotOptions } from "./bot.js";
@@ -30,7 +30,7 @@ import { cacheSticker, describeStickerImage } from "./sticker-cache.js";
 
 const EMPTY_RESPONSE_FALLBACK = "No response generated. Please try again.";
 
-async function resolveStickerVisionSupport(cfg: OpenClawConfig, agentId: string) {
+async function resolveStickerVisionSupport(cfg: AgentShieldConfig, agentId: string) {
   try {
     const catalog = await loadModelCatalog({ config: cfg });
     const defaultModel = resolveDefaultModelForAgent({ cfg, agentId });
@@ -47,7 +47,7 @@ async function resolveStickerVisionSupport(cfg: OpenClawConfig, agentId: string)
 type DispatchTelegramMessageParams = {
   context: TelegramMessageContext;
   bot: Bot;
-  cfg: OpenClawConfig;
+  cfg: AgentShieldConfig;
   runtime: RuntimeEnv;
   replyToMode: ReplyToMode;
   streamMode: TelegramStreamMode;

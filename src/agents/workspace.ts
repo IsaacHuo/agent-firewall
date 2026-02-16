@@ -12,11 +12,11 @@ export function resolveDefaultAgentWorkspaceDir(
   homedir: () => string = os.homedir,
 ): string {
   const home = resolveRequiredHomeDir(env, homedir);
-  const profile = env.OPENCLAW_PROFILE?.trim();
+  const profile = env.AGENT_SHIELD_PROFILE?.trim();
   if (profile && profile.toLowerCase() !== "default") {
-    return path.join(home, ".openclaw", `workspace-${profile}`);
+    return path.join(home, ".agent-shield", `workspace-${profile}`);
   }
-  return path.join(home, ".openclaw", "workspace");
+  return path.join(home, ".agent-shield", "workspace");
 }
 
 export const DEFAULT_AGENT_WORKSPACE_DIR = resolveDefaultAgentWorkspaceDir();
@@ -29,7 +29,7 @@ export const DEFAULT_HEARTBEAT_FILENAME = "HEARTBEAT.md";
 export const DEFAULT_BOOTSTRAP_FILENAME = "BOOTSTRAP.md";
 export const DEFAULT_MEMORY_FILENAME = "MEMORY.md";
 export const DEFAULT_MEMORY_ALT_FILENAME = "memory.md";
-const WORKSPACE_STATE_DIRNAME = ".openclaw";
+const WORKSPACE_STATE_DIRNAME = ".agent-shield";
 const WORKSPACE_STATE_FILENAME = "workspace-state.json";
 const WORKSPACE_STATE_VERSION = 1;
 

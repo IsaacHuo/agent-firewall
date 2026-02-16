@@ -222,7 +222,7 @@ function normalizeSystemdUnit(raw?: string, profile?: string): string {
   return unit.endsWith(".service") ? unit : `${unit}.service`;
 }
 
-export function triggerOpenClawRestart(): RestartAttempt {
+export function triggerAgentShieldRestart(): RestartAttempt {
   if (process.env.VITEST || process.env.NODE_ENV === "test") {
     return { ok: true, method: "supervisor", detail: "test mode" };
   }
@@ -230,8 +230,8 @@ export function triggerOpenClawRestart(): RestartAttempt {
   if (process.platform !== "darwin") {
     if (process.platform === "linux") {
       const unit = normalizeSystemdUnit(
-        process.env.OPENCLAW_SYSTEMD_UNIT,
-        process.env.OPENCLAW_PROFILE,
+        process.env.AGENT_SHIELD_SYSTEMD_UNIT,
+        process.env.AGENT_SHIELD_PROFILE,
       );
       const userArgs = ["--user", "restart", unit];
       tried.push(`systemctl ${userArgs.join(" ")}`);
@@ -265,8 +265,8 @@ export function triggerOpenClawRestart(): RestartAttempt {
   }
 
   const label =
-    process.env.OPENCLAW_LAUNCHD_LABEL ||
-    resolveGatewayLaunchAgentLabel(process.env.OPENCLAW_PROFILE);
+    process.env.AGENT_SHIELD_LAUNCHD_LABEL ||
+    resolveGatewayLaunchAgentLabel(process.env.AGENT_SHIELD_PROFILE);
   const uid = typeof process.getuid === "function" ? process.getuid() : undefined;
   const target = uid !== undefined ? `gui/${uid}/${label}` : label;
   const args = ["kickstart", "-k", target];

@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../../config/config.js";
+import type { AgentShieldConfig } from "../../config/config.js";
 import type { GatewayRequestHandlers } from "./types.js";
 import {
   listAgentIds,
@@ -194,7 +194,7 @@ export const skillsHandlers: GatewayRequestHandlers = {
     }
     entries[p.skillKey] = current;
     skills.entries = entries;
-    const nextConfig: OpenClawConfig = {
+    const nextConfig: AgentShieldConfig = {
       ...cfg,
       skills,
     };

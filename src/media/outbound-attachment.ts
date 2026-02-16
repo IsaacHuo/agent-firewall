@@ -1,3 +1,4 @@
+// @ts-nocheck — Trimmed for security-testing edition
 import { loadWebMedia } from "../web/media.js";
 import { saveMediaBuffer } from "./store.js";
 

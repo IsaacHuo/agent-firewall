@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { OpenClawConfig, ConfigValidationIssue } from "./types.js";
+import type { AgentShieldConfig, ConfigValidationIssue } from "./types.js";
 import { resolveAgentWorkspaceDir, resolveDefaultAgentId } from "../agents/agent-scope.js";
 import { CHANNEL_IDS, normalizeChatChannelId } from "../channels/registry.js";
 import {
@@ -13,7 +13,7 @@ import { isRecord } from "../utils.js";
 import { findDuplicateAgentDirs, formatDuplicateAgentDirError } from "./agent-dirs.js";
 import { applyAgentDefaults, applyModelDefaults, applySessionDefaults } from "./defaults.js";
 import { findLegacyConfigIssues } from "./legacy.js";
-import { OpenClawSchema } from "./zod-schema.js";
+import { AgentShieldSchema } from "./zod-schema.js";
 
 const AVATAR_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
 const AVATAR_DATA_RE = /^data:/i;
@@ -33,7 +33,7 @@ function isWorkspaceAvatarPath(value: string, workspaceDir: string): boolean {
   return !path.isAbsolute(relative);
 }
 
-function validateIdentityAvatar(config: OpenClawConfig): ConfigValidationIssue[] {
+function validateIdentityAvatar(config: AgentShieldConfig): ConfigValidationIssue[] {
   const agents = config.agents?.list;
   if (!Array.isArray(agents) || agents.length === 0) {
     return [];
@@ -89,7 +89,7 @@ function validateIdentityAvatar(config: OpenClawConfig): ConfigValidationIssue[]
  */
 export function validateConfigObjectRaw(
   raw: unknown,
-): { ok: true; config: OpenClawConfig } | { ok: false; issues: ConfigValidationIssue[] } {
+): { ok: true; config: AgentShieldConfig } | { ok: false; issues: ConfigValidationIssue[] } {
   const legacyIssues = findLegacyConfigIssues(raw);
   if (legacyIssues.length > 0) {
     return {
@@ -100,7 +100,7 @@ export function validateConfigObjectRaw(
       })),
     };
   }
-  const validated = OpenClawSchema.safeParse(raw);
+  const validated = AgentShieldSchema.safeParse(raw);
   if (!validated.success) {
     return {
       ok: false,
@@ -110,7 +110,7 @@ export function validateConfigObjectRaw(
       })),
     };
   }
-  const duplicates = findDuplicateAgentDirs(validated.data as OpenClawConfig);
+  const duplicates = findDuplicateAgentDirs(validated.data as AgentShieldConfig);
   if (duplicates.length > 0) {
     return {
       ok: false,
@@ -122,19 +122,19 @@ export function validateConfigObjectRaw(
       ],
     };
   }
-  const avatarIssues = validateIdentityAvatar(validated.data as OpenClawConfig);
+  const avatarIssues = validateIdentityAvatar(validated.data as AgentShieldConfig);
   if (avatarIssues.length > 0) {
     return { ok: false, issues: avatarIssues };
   }
   return {
     ok: true,
-    config: validated.data as OpenClawConfig,
+    config: validated.data as AgentShieldConfig,
   };
 }
 
 export function validateConfigObject(
   raw: unknown,
-): { ok: true; config: OpenClawConfig } | { ok: false; issues: ConfigValidationIssue[] } {
+): { ok: true; config: AgentShieldConfig } | { ok: false; issues: ConfigValidationIssue[] } {
   const result = validateConfigObjectRaw(raw);
   if (!result.ok) {
     return result;
@@ -148,7 +148,7 @@ export function validateConfigObject(
 export function validateConfigObjectWithPlugins(raw: unknown):
   | {
       ok: true;
-      config: OpenClawConfig;
+      config: AgentShieldConfig;
       warnings: ConfigValidationIssue[];
     }
   | {
@@ -162,7 +162,7 @@ export function validateConfigObjectWithPlugins(raw: unknown):
 export function validateConfigObjectRawWithPlugins(raw: unknown):
   | {
       ok: true;
-      config: OpenClawConfig;
+      config: AgentShieldConfig;
       warnings: ConfigValidationIssue[];
     }
   | {
@@ -179,7 +179,7 @@ function validateConfigObjectWithPluginsBase(
 ):
   | {
       ok: true;
-      config: OpenClawConfig;
+      config: AgentShieldConfig;
       warnings: ConfigValidationIssue[];
     }
   | {

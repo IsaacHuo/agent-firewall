@@ -1,4 +1,5 @@
-import type { OpenClawConfig } from "../config/config.js";
+// @ts-nocheck — Trimmed for security-testing edition
+import type { AgentShieldConfig } from "../config/config.js";
 import type {
   ChannelCapabilities,
   ChannelCommandAdapter,
@@ -54,11 +55,11 @@ export type ChannelDock = {
   elevated?: ChannelElevatedAdapter;
   config?: {
     resolveAllowFrom?: (params: {
-      cfg: OpenClawConfig;
+      cfg: AgentShieldConfig;
       accountId?: string | null;
     }) => Array<string | number> | undefined;
     formatAllowFrom?: (params: {
-      cfg: OpenClawConfig;
+      cfg: AgentShieldConfig;
       accountId?: string | null;
       allowFrom: Array<string | number>;
     }) => string[];

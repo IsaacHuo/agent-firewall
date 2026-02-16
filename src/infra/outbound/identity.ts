@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../../config/config.js";
+import type { AgentShieldConfig } from "../../config/config.js";
 import { resolveAgentAvatar } from "../../agents/identity-avatar.js";
 import { resolveAgentIdentity } from "../../agents/identity.js";
 
@@ -24,7 +24,7 @@ export function normalizeOutboundIdentity(
 }
 
 export function resolveAgentOutboundIdentity(
-  cfg: OpenClawConfig,
+  cfg: AgentShieldConfig,
   agentId: string,
 ): OutboundIdentity | undefined {
   const agentIdentity = resolveAgentIdentity(cfg, agentId);

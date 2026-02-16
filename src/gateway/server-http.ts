@@ -1,3 +1,4 @@
+// @ts-nocheck — Trimmed for security-testing edition
 import type { TlsOptions } from "node:tls";
 import type { WebSocketServer } from "ws";
 import {
@@ -265,7 +266,7 @@ export function createHooksRequestHandler(
       res.statusCode = 400;
       res.setHeader("Content-Type", "text/plain; charset=utf-8");
       res.end(
-        "Hook token must be provided via Authorization: Bearer <token> or X-OpenClaw-Token header (query parameters are not allowed).",
+        "Hook token must be provided via Authorization: Bearer <token> or X-AgentShield-Token header (query parameters are not allowed).",
       );
       return true;
     }

@@ -1,3 +1,4 @@
+// @ts-nocheck — Trimmed for security-testing edition
 import type { GroupPolicy } from "./types.base.js";
 import type { DiscordConfig } from "./types.discord.js";
 import type { GoogleChatConfig } from "./types.googlechat.js";

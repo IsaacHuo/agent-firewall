@@ -1,4 +1,4 @@
-import type { OpenClawConfig } from "../config/config.js";
+import type { AgentShieldConfig } from "../config/config.js";
 import type { FailoverReason } from "./pi-embedded-helpers.js";
 import {
   ensureAuthProfileStore,
@@ -96,7 +96,7 @@ type ModelFallbackRunResult<T> = {
 };
 
 function resolveImageFallbackCandidates(params: {
-  cfg: OpenClawConfig | undefined;
+  cfg: AgentShieldConfig | undefined;
   defaultProvider: string;
   modelOverride?: string;
 }): ModelCandidate[] {
@@ -154,7 +154,7 @@ function resolveImageFallbackCandidates(params: {
 }
 
 function resolveFallbackCandidates(params: {
-  cfg: OpenClawConfig | undefined;
+  cfg: AgentShieldConfig | undefined;
   provider: string;
   model: string;
   /** Optional explicit fallbacks list; when provided (even empty), replaces agents.defaults.model.fallbacks. */
@@ -218,7 +218,7 @@ function resolveFallbackCandidates(params: {
 }
 
 export async function runWithModelFallback<T>(params: {
-  cfg: OpenClawConfig | undefined;
+  cfg: AgentShieldConfig | undefined;
   provider: string;
   model: string;
   agentDir?: string;
@@ -329,7 +329,7 @@ export async function runWithModelFallback<T>(params: {
 }
 
 export async function runWithImageModelFallback<T>(params: {
-  cfg: OpenClawConfig | undefined;
+  cfg: AgentShieldConfig | undefined;
   modelOverride?: string;
   run: (provider: string, model: string) => Promise<T>;
   onError?: ModelFallbackErrorHandler;

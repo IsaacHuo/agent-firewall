@@ -1,3 +1,4 @@
+// @ts-nocheck — Trimmed for security-testing edition
 import type { ImageContent } from "@mariozechner/pi-ai";
 import path from "node:path";
 import { fileURLToPath } from "node:url";

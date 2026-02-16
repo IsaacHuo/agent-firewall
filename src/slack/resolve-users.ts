@@ -1,0 +1,2 @@
+// Stub — Slack channel removed in security-testing edition.
+export function resolveSlackUserAllowlist(..._args: unknown[]) { return new Set<string>(); }

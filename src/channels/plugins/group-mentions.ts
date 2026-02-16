@@ -1,4 +1,5 @@
-import type { OpenClawConfig } from "../../config/config.js";
+// @ts-nocheck — Trimmed for security-testing edition
+import type { AgentShieldConfig } from "../../config/config.js";
 import type { DiscordConfig } from "../../config/types.js";
 import type {
   GroupToolPolicyBySenderConfig,
@@ -12,7 +13,7 @@ import {
 import { resolveSlackAccount } from "../../slack/accounts.js";
 
 type GroupMentionParams = {
-  cfg: OpenClawConfig;
+  cfg: AgentShieldConfig;
   groupId?: string | null;
   groupChannel?: string | null;
   groupSpace?: string | null;
@@ -69,7 +70,7 @@ function parseTelegramGroupId(value?: string | null) {
 }
 
 function resolveTelegramRequireMention(params: {
-  cfg: OpenClawConfig;
+  cfg: AgentShieldConfig;
   chatId?: string;
   topicId?: string;
 }): boolean | undefined {

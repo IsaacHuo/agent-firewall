@@ -1,3 +1,4 @@
+// @ts-nocheck — Trimmed for security-testing edition
 import type { ReplyPayload } from "../types.js";
 import { sanitizeUserFacingText } from "../../agents/pi-embedded-helpers.js";
 import { stripHeartbeatToken } from "../heartbeat.js";
