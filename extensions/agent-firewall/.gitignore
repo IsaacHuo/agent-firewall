@@ -9,3 +9,4 @@ audit/
 .ruff_cache/
 node_modules/
 frontend/dist/
+.env

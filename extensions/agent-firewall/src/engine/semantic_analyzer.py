@@ -199,6 +199,8 @@ Examples of BENIGN requests:
     def __init__(self, config: FirewallConfig | None = None) -> None:
         cfg = config or FirewallConfig()
         self._endpoint = cfg.l2_model_endpoint
+        self._api_key = cfg.l2_api_key
+        self._model = cfg.l2_model
         self._timeout = cfg.l2_timeout_seconds
         self._client = httpx.AsyncClient(timeout=self._timeout)
 
@@ -217,27 +219,50 @@ Examples of BENIGN requests:
         user_content = _build_classification_prompt(method, params, session_context)
 
         try:
+            headers = {"Content-Type": "application/json"}
+            if self._api_key:
+                headers["Authorization"] = f"Bearer {self._api_key}"
             response = await self._client.post(
                 self._endpoint,
+                headers=headers,
                 json={
-                    "model": "llama3.2:1b",  # Lightweight model for speed
+                    "model": self._model,
                     "messages": [
                         {"role": "system", "content": self._SYSTEM_PROMPT},
                         {"role": "user", "content": user_content},
                     ],
                     "temperature": 0.1,  # Near-deterministic for security
                     "max_tokens": 200,
-                    "response_format": {"type": "json_object"},
                 },
             )
             response.raise_for_status()
             data = response.json()
 
-            # Parse LLM response
-            content = data["choices"][0]["message"]["content"]
+            # Parse LLM response — strip whitespace
+            raw_content = data["choices"][0]["message"]["content"]
+            logger.debug(
+                "L2 raw response content: %r", raw_content[:500] if raw_content else "(empty)"
+            )
+            content = raw_content.strip() if raw_content else ""
+
+            if not content:
+                logger.warning("L2 LLM returned empty content")
+                return L2Result(reasoning="LLM returned empty response")
+
             import orjson
 
-            result = orjson.loads(content)
+            # Try direct parse first (model usually returns clean JSON)
+            try:
+                result = orjson.loads(content)
+            except orjson.JSONDecodeError:
+                # Fallback: extract JSON from markdown code blocks or surrounding text
+                import re
+
+                # Match JSON object allowing nested braces
+                json_match = re.search(r'\{(?:[^{}]|"[^"]*")*\}', content, re.DOTALL)
+                if json_match:
+                    content = json_match.group(0)
+                result = orjson.loads(content)
 
             is_injection = bool(result.get("is_injection", False))
             confidence = float(result.get("confidence", 0.0))

@@ -41,11 +41,13 @@ class FirewallConfig:
     l2_enabled: bool = field(default_factory=lambda: os.getenv("AF_L2_ENABLED", "1") == "1")
     l2_model_endpoint: str = field(
         default_factory=lambda: os.getenv(
-            "AF_L2_MODEL_ENDPOINT", "http://localhost:11434/v1/chat/completions"
+            "AF_L2_MODEL_ENDPOINT", "https://openrouter.ai/api/v1/chat/completions"
         )
     )
+    l2_api_key: str = field(default_factory=lambda: os.getenv("AF_L2_API_KEY", ""))
+    l2_model: str = field(default_factory=lambda: os.getenv("AF_L2_MODEL", "minimax/minimax-m2.5"))
     l2_timeout_seconds: float = field(
-        default_factory=lambda: float(os.getenv("AF_L2_TIMEOUT", "5.0"))
+        default_factory=lambda: float(os.getenv("AF_L2_TIMEOUT", "10.0"))
     )
 
     # ── Session ──────────────────────────────────────────────────────
