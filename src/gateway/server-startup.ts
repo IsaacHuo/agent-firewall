@@ -29,14 +29,12 @@ export async function startGatewaySidecars(params: {
   pluginRegistry: ReturnType<typeof loadAgentShieldPlugins>;
   defaultWorkspaceDir: string;
   deps: CliDeps;
-  startChannels: () => Promise<void>;
   log: { warn: (msg: string) => void };
   logHooks: {
     info: (msg: string) => void;
     warn: (msg: string) => void;
     error: (msg: string) => void;
   };
-  logChannels: { info: (msg: string) => void; error: (msg: string) => void };
   logBrowser: { error: (msg: string) => void };
 }) {
   // Start AgentShield browser control server (unless disabled via config).
@@ -110,23 +108,6 @@ export async function startGatewaySidecars(params: {
     }
   } catch (err) {
     params.logHooks.error(`failed to load hooks: ${String(err)}`);
-  }
-
-  // Launch configured channels so gateway replies via the surface the message came from.
-  // Tests can opt out via AGENT_SHIELD_SKIP_CHANNELS (or legacy AGENT_SHIELD_SKIP_PROVIDERS).
-  const skipChannels =
-    isTruthyEnvValue(process.env.AGENT_SHIELD_SKIP_CHANNELS) ||
-    isTruthyEnvValue(process.env.AGENT_SHIELD_SKIP_PROVIDERS);
-  if (!skipChannels) {
-    try {
-      await params.startChannels();
-    } catch (err) {
-      params.logChannels.error(`channel startup failed: ${String(err)}`);
-    }
-  } else {
-    params.logChannels.info(
-      "skipping channel start (AGENT_SHIELD_SKIP_CHANNELS=1 or AGENT_SHIELD_SKIP_PROVIDERS=1)",
-    );
   }
 
   if (params.cfg.hooks?.internal?.enabled) {

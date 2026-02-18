@@ -263,7 +263,7 @@ function validateConfigObjectWithPluginsBase(
   }
 
   const heartbeatChannelIds = new Set<string>();
-  for (const channelId of CHANNEL_IDS) {
+  for (const channelId of (CHANNEL_IDS as readonly string[])) {
     heartbeatChannelIds.add(channelId.toLowerCase());
   }
 

@@ -1,5 +1,5 @@
 import { completeSimple, type TextContent } from "@mariozechner/pi-ai";
-import { EdgeTTS } from "node-edge-tts";
+// EdgeTTS import removed
 import { rmSync } from "node:fs";
 import type { AgentShieldConfig } from "../config/config.js";
 import type {
@@ -651,23 +651,11 @@ export function inferEdgeExtension(outputFormat: string): string {
   return ".mp3";
 }
 
-export async function edgeTTS(params: {
+export async function edgeTTS(_params: {
   text: string;
   outputPath: string;
   config: ResolvedTtsConfig["edge"];
   timeoutMs: number;
 }): Promise<void> {
-  const { text, outputPath, config, timeoutMs } = params;
-  const tts = new EdgeTTS({
-    voice: config.voice,
-    lang: config.lang,
-    outputFormat: config.outputFormat,
-    saveSubtitles: config.saveSubtitles,
-    proxy: config.proxy,
-    rate: config.rate,
-    pitch: config.pitch,
-    volume: config.volume,
-    timeout: config.timeoutMs ?? timeoutMs,
-  });
-  await tts.ttsPromise(text, outputPath);
+  throw new Error("Edge TTS is not supported in this version.");
 }

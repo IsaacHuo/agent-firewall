@@ -11,9 +11,7 @@ import type { AgentShieldConfig } from "../../config/config.js";
 import { assertMediaNotDataUrl, resolveSandboxedMediaSource } from "../../agents/sandbox-paths.js";
 import { readStringParam } from "../../agents/tools/common.js";
 import { extensionForMime } from "../../media/mime.js";
-import { parseSlackTarget } from "../../slack/targets.js";
-import { parseTelegramTarget } from "../../telegram/targets.js";
-import { loadWebMedia } from "../../web/media.js";
+// Channel-specific target/media imports removed
 
 export function readBooleanParam(
   params: Record<string, unknown>,
@@ -35,29 +33,11 @@ export function readBooleanParam(
   return undefined;
 }
 
-export function resolveSlackAutoThreadId(params: {
+export function resolveSlackAutoThreadId(_params: {
   to: string;
   toolContext?: ChannelThreadingToolContext;
 }): string | undefined {
-  const context = params.toolContext;
-  if (!context?.currentThreadTs || !context.currentChannelId) {
-    return undefined;
-  }
-  // Only mirror auto-threading when Slack would reply in the active thread for this channel.
-  if (context.replyToMode !== "all" && context.replyToMode !== "first") {
-    return undefined;
-  }
-  const parsedTarget = parseSlackTarget(params.to, { defaultKind: "channel" });
-  if (!parsedTarget || parsedTarget.kind !== "channel") {
-    return undefined;
-  }
-  if (parsedTarget.id.toLowerCase() !== context.currentChannelId.toLowerCase()) {
-    return undefined;
-  }
-  if (context.replyToMode === "first" && context.hasRepliedRef?.value) {
-    return undefined;
-  }
-  return context.currentThreadTs;
+  return undefined;
 }
 
 /**
@@ -70,23 +50,11 @@ export function resolveSlackAutoThreadId(params: {
  * are persistent sub-channels (not ephemeral reply threads), so auto-injection
  * should always apply when the target chat matches.
  */
-export function resolveTelegramAutoThreadId(params: {
+export function resolveTelegramAutoThreadId(_params: {
   to: string;
   toolContext?: ChannelThreadingToolContext;
 }): string | undefined {
-  const context = params.toolContext;
-  if (!context?.currentThreadTs || !context.currentChannelId) {
-    return undefined;
-  }
-  // Use parseTelegramTarget to extract canonical chatId from both sides,
-  // mirroring how Slack uses parseSlackTarget. This handles format variations
-  // like `telegram:group:123:topic:456` vs `telegram:123`.
-  const parsedTo = parseTelegramTarget(params.to);
-  const parsedChannel = parseTelegramTarget(context.currentChannelId);
-  if (parsedTo.chatId.toLowerCase() !== parsedChannel.chatId.toLowerCase()) {
-    return undefined;
-  }
-  return context.currentThreadTs;
+  return undefined;
 }
 
 function resolveAttachmentMaxBytes(params: {

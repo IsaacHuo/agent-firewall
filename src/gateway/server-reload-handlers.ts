@@ -31,15 +31,12 @@ export function createGatewayReloadHandlers(params: {
   broadcast: (event: string, payload: unknown, opts?: { dropIfSlow?: boolean }) => void;
   getState: () => GatewayHotReloadState;
   setState: (state: GatewayHotReloadState) => void;
-  startChannel: (name: ChannelKind) => Promise<void>;
-  stopChannel: (name: ChannelKind) => Promise<void>;
   logHooks: {
     info: (msg: string) => void;
     warn: (msg: string) => void;
     error: (msg: string) => void;
   };
   logBrowser: { error: (msg: string) => void };
-  logChannels: { info: (msg: string) => void; error: (msg: string) => void };
   logCron: { error: (msg: string) => void };
   logReload: { info: (msg: string) => void; warn: (msg: string) => void };
 }) {
@@ -107,26 +104,6 @@ export function createGatewayReloadHandlers(params: {
         }
       } else {
         params.logHooks.info("skipping gmail watcher restart (AGENT_SHIELD_SKIP_GMAIL_WATCHER=1)");
-      }
-    }
-
-    if (plan.restartChannels.size > 0) {
-      if (
-        isTruthyEnvValue(process.env.AGENT_SHIELD_SKIP_CHANNELS) ||
-        isTruthyEnvValue(process.env.AGENT_SHIELD_SKIP_PROVIDERS)
-      ) {
-        params.logChannels.info(
-          "skipping channel reload (AGENT_SHIELD_SKIP_CHANNELS=1 or AGENT_SHIELD_SKIP_PROVIDERS=1)",
-        );
-      } else {
-        const restartChannel = async (name: ChannelKind) => {
-          params.logChannels.info(`restarting ${name} channel`);
-          await params.stopChannel(name);
-          await params.startChannel(name);
-        };
-        for (const channel of plan.restartChannels) {
-          await restartChannel(channel);
-        }
       }
     }
 

@@ -3,7 +3,6 @@ import { ErrorCodes, errorShape } from "./protocol/index.js";
 import { agentHandlers } from "./server-methods/agent.js";
 import { agentsHandlers } from "./server-methods/agents.js";
 import { browserHandlers } from "./server-methods/browser.js";
-import { channelsHandlers } from "./server-methods/channels.js";
 import { chatHandlers } from "./server-methods/chat.js";
 import { configHandlers } from "./server-methods/config.js";
 import { connectHandlers } from "./server-methods/connect.js";
@@ -55,7 +54,6 @@ const ADMIN_METHOD_PREFIXES = ["exec.approvals."];
 const READ_METHODS = new Set([
   "health",
   "logs.tail",
-  "channels.status",
   "status",
   "usage.status",
   "usage.cost",
@@ -148,7 +146,6 @@ function authorizeGatewayMethod(method: string, client: GatewayRequestOptions["c
     method.startsWith("config.") ||
     method.startsWith("wizard.") ||
     method.startsWith("update.") ||
-    method === "channels.logout" ||
     method === "agents.create" ||
     method === "agents.update" ||
     method === "agents.delete" ||
@@ -173,7 +170,6 @@ export const coreGatewayHandlers: GatewayRequestHandlers = {
   ...logsHandlers,
   ...voicewakeHandlers,
   ...healthHandlers,
-  ...channelsHandlers,
   ...chatHandlers,
   ...cronHandlers,
   ...deviceHandlers,

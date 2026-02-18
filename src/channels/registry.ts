@@ -5,35 +5,19 @@ import { requireActivePluginRegistry } from "../plugins/runtime.js";
 // Channel docking: add new core channels here (order + meta + aliases), then
 // register the plugin in its extension entrypoint and keep protocol IDs in sync.
 // NOTE: Trimmed to Telegram-only for security testing custom edition.
-export const CHAT_CHANNEL_ORDER = [
-  "telegram",
-] as const;
+export const CHAT_CHANNEL_ORDER = [] as const;
 
 export type ChatChannelId = (typeof CHAT_CHANNEL_ORDER)[number];
 
 export const CHANNEL_IDS = [...CHAT_CHANNEL_ORDER] as const;
 
-export const DEFAULT_CHAT_CHANNEL: ChatChannelId = "telegram";
+export const DEFAULT_CHAT_CHANNEL: null = null;
 
 export type ChatChannelMeta = ChannelMeta;
 
 const WEBSITE_URL = "https://agent-shield.ai";
 
-const CHAT_CHANNEL_META: Record<ChatChannelId, ChannelMeta> = {
-  telegram: {
-    id: "telegram",
-    label: "Telegram",
-    selectionLabel: "Telegram (Bot API)",
-    detailLabel: "Telegram Bot",
-    docsPath: "/channels/telegram",
-    docsLabel: "telegram",
-    blurb: "simplest way to get started — register a bot with @BotFather and get going.",
-    systemImage: "paperplane",
-    selectionDocsPrefix: "",
-    selectionDocsOmitLabel: true,
-    selectionExtras: [WEBSITE_URL],
-  },
-};
+const CHAT_CHANNEL_META: Record<string, ChannelMeta> = {};
 
 export const CHAT_CHANNEL_ALIASES: Record<string, ChatChannelId> = {};
 

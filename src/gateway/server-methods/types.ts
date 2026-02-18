@@ -9,7 +9,7 @@ import type { ExecApprovalManager } from "../exec-approval-manager.js";
 import type { NodeRegistry } from "../node-registry.js";
 import type { ConnectParams, ErrorShape, RequestFrame } from "../protocol/index.js";
 import type { GatewayBroadcastFn, GatewayBroadcastToConnIdsFn } from "../server-broadcast.js";
-import type { ChannelRuntimeSnapshot } from "../server-channels.js";
+// ChannelRuntimeSnapshot import removed
 import type { DedupeEntry } from "../server-shared.js";
 
 type SubsystemLogger = ReturnType<typeof createSubsystemLogger>;
@@ -63,20 +63,6 @@ export type GatewayRequestContext = {
   wizardSessions: Map<string, WizardSession>;
   findRunningWizard: () => string | null;
   purgeWizardSession: (id: string) => void;
-  getRuntimeSnapshot: () => ChannelRuntimeSnapshot;
-  startChannel: (
-    channel: import("../../channels/plugins/types.js").ChannelId,
-    accountId?: string,
-  ) => Promise<void>;
-  stopChannel: (
-    channel: import("../../channels/plugins/types.js").ChannelId,
-    accountId?: string,
-  ) => Promise<void>;
-  markChannelLoggedOut: (
-    channelId: import("../../channels/plugins/types.js").ChannelId,
-    cleared: boolean,
-    accountId?: string,
-  ) => void;
   wizardRunner: (
     opts: import("../../commands/onboard-types.js").OnboardOptions,
     runtime: import("../../runtime.js").RuntimeEnv,

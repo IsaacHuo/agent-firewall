@@ -9,7 +9,6 @@ import { getActiveEmbeddedRunCount } from "../agents/pi-embedded-runner/runs.js"
 import { registerSkillsChangeListener } from "../agents/skills/refresh.js";
 import { initSubagentRegistry } from "../agents/subagent-registry.js";
 import { getTotalPendingReplies } from "../auto-reply/reply/dispatcher-registry.js";
-import { type ChannelId, listChannelPlugins } from "../channels/plugins/index.js";
 import { formatCliCommand } from "../cli/command-format.js";
 import { createDefaultDeps } from "../cli/deps.js";
 import {
@@ -51,7 +50,6 @@ import { createAuthRateLimiter, type AuthRateLimiter } from "./auth-rate-limit.j
 import { startGatewayConfigReloader } from "./config-reload.js";
 import { ExecApprovalManager } from "./exec-approval-manager.js";
 import { NodeRegistry } from "./node-registry.js";
-import { createChannelManager } from "./server-channels.js";
 import { createAgentEventHandler } from "./server-chat.js";
 import { createGatewayCloseHandler } from "./server-close.js";
 import { buildGatewayCronService } from "./server-cron.js";
@@ -92,7 +90,6 @@ const log = createSubsystemLogger("gateway");
 const logCanvas = log.child("canvas");
 const logDiscovery = log.child("discovery");
 const logTailscale = log.child("tailscale");
-const logChannels = log.child("channels");
 const logBrowser = log.child("browser");
 const logHealth = log.child("health");
 const logCron = log.child("cron");
@@ -249,14 +246,7 @@ export async function startGatewayServer(
         coreGatewayHandlers,
         baseMethods,
       });
-  const channelLogs = Object.fromEntries(
-    listChannelPlugins().map((plugin) => [plugin.id, logChannels.child(plugin.id)]),
-  ) as Record<ChannelId, ReturnType<typeof createSubsystemLogger>>;
-  const channelRuntimeEnvs = Object.fromEntries(
-    Object.entries(channelLogs).map(([id, logger]) => [id, runtimeForLogger(logger)]),
-  ) as Record<ChannelId, RuntimeEnv>;
-  const channelMethods = listChannelPlugins().flatMap((plugin) => plugin.gatewayMethods ?? []);
-  const gatewayMethods = Array.from(new Set([...baseGatewayMethods, ...channelMethods]));
+  const gatewayMethods = baseGatewayMethods;
   let pluginServices: PluginServicesHandle | null = null;
   const runtimeConfig = await resolveGatewayRuntimeConfig({
     cfg: cfgAtStart,
@@ -401,13 +391,11 @@ export async function startGatewayServer(
   });
   let { cron, storePath: cronStorePath } = cronState;
 
-  const channelManager = createChannelManager({
-    loadConfig,
-    channelLogs,
-    channelRuntimeEnvs,
-  });
-  const { getRuntimeSnapshot, startChannels, startChannel, stopChannel, markChannelLoggedOut } =
-    channelManager;
+  const startChannels = async () => {};
+  const startChannel = async () => {};
+  const stopChannel = async () => {};
+  const markChannelLoggedOut = () => {};
+  const getRuntimeSnapshot = () => ({ channels: {}, channelAccounts: {} });
 
   if (!minimalTestGateway) {
     const machineDisplayName = await getMachineDisplayName();
@@ -580,10 +568,6 @@ export async function startGatewayServer(
       wizardSessions,
       findRunningWizard,
       purgeWizardSession,
-      getRuntimeSnapshot,
-      startChannel,
-      stopChannel,
-      markChannelLoggedOut,
       wizardRunner,
       broadcastVoiceWakeChanged,
     },
@@ -617,10 +601,8 @@ export async function startGatewayServer(
       pluginRegistry,
       defaultWorkspaceDir,
       deps,
-      startChannels,
       log,
       logHooks,
-      logChannels,
       logBrowser,
     }));
   }
@@ -655,11 +637,8 @@ export async function startGatewayServer(
             cronStorePath = cronState.storePath;
             browserControl = nextState.browserControl;
           },
-          startChannel,
-          stopChannel,
           logHooks,
           logBrowser,
-          logChannels,
           logCron,
           logReload,
         });
@@ -683,7 +662,6 @@ export async function startGatewayServer(
     tailscaleCleanup,
     canvasHost,
     canvasHostServer,
-    stopChannel,
     pluginServices,
     cron,
     heartbeatRunner,

@@ -3,31 +3,13 @@ export type ExtractMode = "markdown" | "text";
 const READABILITY_MAX_HTML_CHARS = 1_000_000;
 const READABILITY_MAX_ESTIMATED_NESTING_DEPTH = 3_000;
 
-let readabilityDepsPromise:
-  | Promise<{
-      Readability: typeof import("@mozilla/readability").Readability;
-      parseHTML: typeof import("linkedom").parseHTML;
-    }>
-  | undefined;
+let readabilityDepsPromise: Promise<any> | undefined;
 
 async function loadReadabilityDeps(): Promise<{
   Readability: typeof import("@mozilla/readability").Readability;
-  parseHTML: typeof import("linkedom").parseHTML;
+  parseHTML: any;
 }> {
-  if (!readabilityDepsPromise) {
-    readabilityDepsPromise = Promise.all([import("@mozilla/readability"), import("linkedom")]).then(
-      ([readability, linkedom]) => ({
-        Readability: readability.Readability,
-        parseHTML: linkedom.parseHTML,
-      }),
-    );
-  }
-  try {
-    return await readabilityDepsPromise;
-  } catch (error) {
-    readabilityDepsPromise = undefined;
-    throw error;
-  }
+  throw new Error("Readability dependencies (linkedom) were removed.");
 }
 
 function decodeEntities(value: string): string {

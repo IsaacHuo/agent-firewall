@@ -95,7 +95,7 @@ describe("model-selection", () => {
       };
 
       const index = buildModelAliasIndex({
-        cfg: cfg as OpenClawConfig,
+        cfg: cfg,
         defaultProvider: "anthropic",
       });
 
@@ -148,7 +148,7 @@ describe("model-selection", () => {
       };
 
       const result = resolveConfiguredModelRef({
-        cfg: cfg as OpenClawConfig,
+        cfg: cfg,
         defaultProvider: "google",
         defaultModel: "gemini-pro",
       });
@@ -163,7 +163,7 @@ describe("model-selection", () => {
     it("should use default provider/model if config is empty", () => {
       const cfg: Partial<OpenClawConfig> = {};
       const result = resolveConfiguredModelRef({
-        cfg: cfg as OpenClawConfig,
+        cfg: cfg,
         defaultProvider: "openai",
         defaultModel: "gpt-4",
       });

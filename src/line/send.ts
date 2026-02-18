@@ -1,9 +1,0 @@
-// Stub — LINE channel removed in security-testing edition.
-export async function sendMessageLine(..._args: unknown[]) { return undefined; }
-export async function sendLineReplyMessage(..._args: unknown[]) { return undefined; }
-export async function sendLineNarrowcast(..._args: unknown[]) { return undefined; }
-export async function sendLineBroadcast(..._args: unknown[]) { return undefined; }
-export async function sendLineMulticast(..._args: unknown[]) { return undefined; }
-export async function sendLinePushMessage(..._args: unknown[]) { return undefined; }
-export async function sendLineReaction(..._args: unknown[]) { return undefined; }
-export async function removeLineReaction(..._args: unknown[]) { return undefined; }
