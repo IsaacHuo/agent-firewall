@@ -53,7 +53,6 @@ import {
 import { icons } from "./icons.ts";
 import { normalizeBasePath, TAB_GROUPS, subtitleForTab, titleForTab } from "./navigation.ts";
 import { renderAgents } from "./views/agents.ts";
-import { renderChannels } from "./views/channels.ts";
 import { renderChat } from "./views/chat.ts";
 import { renderConfig } from "./views/config.ts";
 import { renderCron } from "./views/cron.ts";
@@ -167,23 +166,6 @@ export function renderApp(state: AppViewState) {
             </div>
           `;
         })}
-        <div class="nav-group nav-group--links">
-          <div class="nav-label nav-label--static">
-            <span class="nav-label__text">Resources</span>
-          </div>
-          <div class="nav-group__items">
-            <a
-              class="nav-item nav-item--external"
-              href="https://docs.agent-shield.ai"
-              target="_blank"
-              rel="noreferrer"
-              title="Docs (opens in new tab)"
-            >
-              <span class="nav-item__icon" aria-hidden="true">${icons.book}</span>
-              <span class="nav-item__text">Docs</span>
-            </a>
-          </div>
-        </div>
       </aside>
       <main class="content ${isChat ? "content--chat" : ""}">
         <section class="content-header">
@@ -225,45 +207,6 @@ export function renderApp(state: AppViewState) {
                 },
                 onConnect: () => state.connect(),
                 onRefresh: () => state.loadOverview(),
-              })
-            : nothing
-        }
-
-        ${
-          state.tab === "channels"
-            ? renderChannels({
-                connected: state.connected,
-                loading: state.channelsLoading,
-                snapshot: state.channelsSnapshot,
-                lastError: state.channelsError,
-                lastSuccessAt: state.channelsLastSuccess,
-                whatsappMessage: state.whatsappLoginMessage,
-                whatsappQrDataUrl: state.whatsappLoginQrDataUrl,
-                whatsappConnected: state.whatsappLoginConnected,
-                whatsappBusy: state.whatsappBusy,
-                configSchema: state.configSchema,
-                configSchemaLoading: state.configSchemaLoading,
-                configForm: state.configForm,
-                configUiHints: state.configUiHints,
-                configSaving: state.configSaving,
-                configFormDirty: state.configFormDirty,
-                nostrProfileFormState: state.nostrProfileFormState,
-                nostrProfileAccountId: state.nostrProfileAccountId,
-                onRefresh: (probe) => loadChannels(state, probe),
-                onWhatsAppStart: (force) => state.handleWhatsAppStart(force),
-                onWhatsAppWait: () => state.handleWhatsAppWait(),
-                onWhatsAppLogout: () => state.handleWhatsAppLogout(),
-                onConfigPatch: (path, value) => updateConfigFormValue(state, path, value),
-                onConfigSave: () => state.handleChannelConfigSave(),
-                onConfigReload: () => state.handleChannelConfigReload(),
-                onNostrProfileEdit: (accountId, profile) =>
-                  state.handleNostrProfileEdit(accountId, profile),
-                onNostrProfileCancel: () => state.handleNostrProfileCancel(),
-                onNostrProfileFieldChange: (field, value) =>
-                  state.handleNostrProfileFieldChange(field, value),
-                onNostrProfileSave: () => state.handleNostrProfileSave(),
-                onNostrProfileImport: () => state.handleNostrProfileImport(),
-                onNostrProfileToggleAdvanced: () => state.handleNostrProfileToggleAdvanced(),
               })
             : nothing
         }
