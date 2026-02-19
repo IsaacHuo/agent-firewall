@@ -34,6 +34,8 @@ function resolveSidebarChatSessionKey(state: AppViewState): string {
 function resetChatStateForSessionSwitch(state: AppViewState, sessionKey: string) {
   state.sessionKey = sessionKey;
   state.chatMessage = "";
+  state.chatAttachments = [];
+  state.chatQueue = [];
   state.chatStream = null;
   (state as unknown as AgentShieldApp).chatStreamStartedAt = null;
   state.chatRunId = null;
@@ -136,6 +138,8 @@ export function renderChatControls(state: AppViewState) {
             const next = (e.target as HTMLSelectElement).value;
             state.sessionKey = next;
             state.chatMessage = "";
+            state.chatAttachments = [];
+            state.chatQueue = [];
             state.chatStream = null;
             (state as unknown as AgentShieldApp).chatStreamStartedAt = null;
             state.chatRunId = null;

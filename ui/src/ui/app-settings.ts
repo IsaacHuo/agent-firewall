@@ -22,6 +22,7 @@ import { loadNodes } from "./controllers/nodes.ts";
 import { loadPresence } from "./controllers/presence.ts";
 import { loadSessions } from "./controllers/sessions.ts";
 import { loadSkills } from "./controllers/skills.ts";
+import { loadUsage } from "./controllers/usage.ts";
 import {
   inferBasePathFromPathname,
   normalizeBasePath,
@@ -219,11 +220,16 @@ export async function refreshActiveTab(host: SettingsHost) {
       }
     }
   }
+  if (host.tab === "usage") {
+    await loadUsage(host as unknown as AgentShieldApp);
+  }
   if (host.tab === "nodes") {
-    await loadNodes(host as unknown as AgentShieldApp);
-    await loadDevices(host as unknown as AgentShieldApp);
-    await loadConfig(host as unknown as AgentShieldApp);
-    await loadExecApprovals(host as unknown as AgentShieldApp);
+    await Promise.all([
+      loadNodes(host as unknown as AgentShieldApp),
+      loadDevices(host as unknown as AgentShieldApp),
+      loadConfig(host as unknown as AgentShieldApp),
+      loadExecApprovals(host as unknown as AgentShieldApp),
+    ]);
   }
   if (host.tab === "chat") {
     await refreshChat(host as unknown as Parameters<typeof refreshChat>[0]);

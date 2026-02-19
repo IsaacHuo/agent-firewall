@@ -1,4 +1,4 @@
-import { html } from "lit";
+import { html, nothing } from "lit";
 import type { GatewayHelloOk } from "../gateway.ts";
 import type { UiSettings } from "../storage.ts";
 import { formatRelativeTimestamp, formatDurationHuman } from "../format.ts";
@@ -144,7 +144,7 @@ export function renderOverview(props: OverviewProps) {
           </label>
           ${
             isTrustedProxy
-              ? ""
+              ? nothing
               : html`
                 <label class="field">
                   <span>Gateway Token</span>

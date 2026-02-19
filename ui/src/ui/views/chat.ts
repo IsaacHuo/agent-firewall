@@ -187,7 +187,7 @@ function renderAttachmentPreview(props: ChatProps) {
 }
 
 export function renderChat(props: ChatProps) {
-  const canCompose = props.connected;
+  const canCompose = props.canSend;
   const isBusy = props.sending || props.stream !== null;
   const canAbort = Boolean(props.canAbort && props.onAbort);
   const activeSession = props.sessions?.sessions?.find((row) => row.key === props.sessionKey);
@@ -377,7 +377,7 @@ export function renderChat(props: ChatProps) {
               ${ref((el) => el && adjustTextareaHeight(el as HTMLTextAreaElement))}
               .value=${props.draft}
               dir=${detectTextDirection(props.draft)}
-              ?disabled=${!props.connected}
+              ?disabled=${!canCompose}
               @keydown=${(e: KeyboardEvent) => {
                 if (e.key !== "Enter") {
                   return;
@@ -408,14 +408,14 @@ export function renderChat(props: ChatProps) {
           <div class="chat-compose__actions">
             <button
               class="btn"
-              ?disabled=${!props.connected || (!canAbort && props.sending)}
+              ?disabled=${!canCompose || (!canAbort && props.sending)}
               @click=${canAbort ? props.onAbort : props.onNewSession}
             >
               ${canAbort ? "Stop" : "New session"}
             </button>
             <button
               class="btn primary"
-              ?disabled=${!props.connected}
+              ?disabled=${!canCompose}
               @click=${props.onSend}
             >
               ${isBusy ? "Queue" : "Send"}<kbd class="btn-kbd">↵</kbd>
@@ -490,7 +490,7 @@ function buildChatItems(props: ChatProps): Array<ChatItem | MessageGroup> {
     const msg = history[i];
     const normalized = normalizeMessage(msg);
     const raw = msg as Record<string, unknown>;
-    const marker = (raw)["__agent-shield"] as Record<string, unknown> | undefined;
+    const marker = raw["__agent-shield"] as Record<string, unknown> | undefined;
     if (marker && marker.kind === "compaction") {
       items.push({
         kind: "divider",

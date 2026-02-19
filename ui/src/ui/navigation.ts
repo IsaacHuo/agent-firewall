@@ -137,7 +137,7 @@ export function iconForTab(tab: Tab): IconName {
     case "sessions":
       return "fileText";
     case "usage":
-      return "barChart";
+      return "pieChart";
     case "cron":
       return "loader";
     case "skills":

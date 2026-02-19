@@ -69,7 +69,7 @@ export function renderLogs(props: LogsProps) {
             ?disabled=${filtered.length === 0}
             @click=${() =>
               props.onExport(
-                filtered.map((entry) => entry.raw),
+                filtered.map((entry) => entry.raw ?? entry.message ?? "").filter(Boolean),
                 exportLabel,
               )}
           >
