@@ -102,7 +102,7 @@ function resolveOnboardingMode(): boolean {
   return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
 }
 
-@customElement("agent-shield-app")
+@customElement("openclaw-app")
 export class AgentShieldApp extends LitElement {
   @state() settings: UiSettings = loadSettings();
   @state() password = "";
