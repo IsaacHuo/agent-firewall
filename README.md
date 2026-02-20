@@ -21,6 +21,7 @@ Agent Firewall is a non-invasive Man-in-the-Middle (MITM) proxy that intercepts 
 - [Testing](#testing)
 - [Project Structure](#project-structure)
 - [Performance Characteristics](#performance-characteristics)
+- [Contributing](#contributing)
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
 
@@ -188,6 +189,27 @@ tools/call, completion/complete, sampling/createMessage
 ---
 
 ## Quick Start
+
+### One-Click Scripts (Recommended)
+
+```bash
+cd extensions/agent-firewall
+
+# Start all services (backend + frontend)
+./scripts/start-all.sh
+
+# Stop all services
+./scripts/stop-all.sh
+```
+
+After running `start-all.sh`:
+
+- **Backend API**: http://localhost:9090
+- **Dashboard**: http://localhost:9091
+
+Logs are saved to `/tmp/agent-firewall-backend.log` and `/tmp/agent-firewall-frontend.log`.
+
+### Manual Start
 
 ```bash
 # 1. Navigate to the extension directory
@@ -594,6 +616,10 @@ extensions/agent-firewall/
 ├── requirements.txt              # Pinned Python dependencies
 ├── README.md                     # This documentation
 │
+├── scripts/                      # Utility scripts
+│   ├── start-all.sh              # One-click start (backend + frontend)
+│   └── stop-all.sh               # One-click stop all services
+│
 ├── src/                          # Python backend
 │   ├── __init__.py
 │   ├── main.py                   # FastAPI app entry (routes, lifespan, CORS)
@@ -659,6 +685,61 @@ extensions/agent-firewall/
 | Dashboard Broadcast   | Async      | Per-client bounded queue (256 events) |
 
 Memory usage is O(1) per request. Payload data is not copied beyond the initial orjson parse. Session ring buffers cap at `AF_SESSION_BUFFER_SIZE` messages per session.
+
+---
+
+## Contributing
+
+### Setup Git Hooks
+
+```bash
+# From repository root
+./scripts/setup-hooks.sh
+```
+
+This installs:
+
+- **pre-commit**: Code linting and formatting (Python ruff, TypeScript ESLint)
+- **commit-msg**: Conventional Commits validation
+
+### Commit Message Convention
+
+We use [Conventional Commits](https://www.conventionalcommits.org/) format:
+
+```
+<type>(<scope>): <subject>
+```
+
+**Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+
+**Scope** (optional): `backend`, `frontend`, `gateway`, `api`, `docs`
+
+**Examples**:
+
+```bash
+feat(backend): add pattern-based rule matching
+fix(frontend): correct traffic chart data binding
+docs: update API reference
+refactor(backend): extract rule validation logic
+```
+
+### Code Quality Checks
+
+```bash
+# Backend (Python)
+cd extensions/agent-firewall
+source .venv/bin/activate
+ruff check src tests      # Lint
+ruff format src tests     # Format
+pytest                    # Tests
+
+# Frontend (Vue/TypeScript)
+cd frontend
+npm run lint             # ESLint fix
+npm run typecheck        # Type check
+```
+
+See [CONTRIBUTING.md](extensions/agent-firewall/CONTRIBUTING.md) for detailed guidelines.
 
 ---
 
