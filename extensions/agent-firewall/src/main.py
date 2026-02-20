@@ -602,8 +602,9 @@ async def dashboard_websocket(ws: WebSocket) -> None:
 
 @app.post("/api/test/analyze")
 async def test_analyze(request: Request) -> dict[str, Any]:
-    from .models import ThreatLevel
+    from .models import ThreatLevel, DashboardEvent, AnalysisResult
     import json
+    import uuid
 
     s = _state(request)
     data = await request.json()
@@ -616,6 +617,8 @@ async def test_analyze(request: Request) -> dict[str, Any]:
     # L2 Analysis
     l2_verdict = "ALLOW"
     l2_confidence = 0.0
+    l2_reasoning = ""
+    method = "unknown"
 
     try:
         parsed = json.loads(payload_str)
@@ -629,6 +632,7 @@ async def test_analyze(request: Request) -> dict[str, Any]:
             session_context=[],
         )
         l2_confidence = l2_result.confidence
+        l2_reasoning = l2_result.reasoning
         if l2_result.is_injection:
             l2_verdict = "BLOCK"
             if l2_result.threat_level == ThreatLevel.CRITICAL:
@@ -642,6 +646,54 @@ async def test_analyze(request: Request) -> dict[str, Any]:
         final_verdict = l1_verdict
     elif l2_verdict != "ALLOW":
         final_verdict = l2_verdict
+
+    # Determine threat level
+    threat_level = l1_result.threat_level
+    if final_verdict == "BLOCK":
+        threat_level = ThreatLevel.HIGH
+    elif final_verdict == "ESCALATE":
+        threat_level = ThreatLevel.CRITICAL
+
+    # Emit dashboard event for test requests
+    analysis = AnalysisResult(
+        request_id=str(uuid.uuid4()),
+        verdict=final_verdict,
+        threat_level=threat_level,
+        l1_matched_patterns=l1_result.matched_patterns,
+        l2_is_injection=(l2_verdict != "ALLOW"),
+        l2_confidence=l2_confidence,
+        l2_reasoning=l2_reasoning,
+        blocked_reason=", ".join(l1_result.matched_patterns) if l1_result.matched_patterns else "",
+    )
+
+    event = DashboardEvent(
+        event_type="request_analyzed",
+        timestamp=time.time(),
+        session_id="test-lab",
+        agent_id="security-tester",
+        method=method,
+        payload_preview=payload_str[:200] + ("..." if len(payload_str) > 200 else ""),
+        analysis=analysis,
+        is_alert=(final_verdict != "ALLOW"),
+    )
+
+    await s._emit_dashboard(event)
+
+    # Also log to audit
+    from .models import AuditEntry
+    audit_entry = AuditEntry(
+        id=analysis.request_id,
+        timestamp=time.time(),
+        session_id="test-lab",
+        agent_id="security-tester",
+        method=method,
+        verdict=final_verdict,
+        threat_level=threat_level,
+        matched_patterns=l1_result.matched_patterns,
+        payload_hash="test",
+        payload_preview=payload_str[:500],
+    )
+    await s._emit_audit(audit_entry)
 
     return {
         "verdict": final_verdict,
