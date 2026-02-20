@@ -367,6 +367,11 @@ class SemanticAnalyzer:
             logger.error("L2 analysis failed: %s", exc, exc_info=True)
             return L2Result(reasoning=f"Analysis error: {exc}")
 
+    async def close(self) -> None:
+        """Shut down the underlying classifier if needed."""
+        if hasattr(self._classifier, "close") and callable(self._classifier.close):
+            await self._classifier.close()
+
 
 # ────────────────────────────────────────────────────────────────────
 # Helpers

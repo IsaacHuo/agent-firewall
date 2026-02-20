@@ -30,8 +30,9 @@ import logging
 import os
 import time
 from contextlib import asynccontextmanager
+from dataclasses import asdict, replace
 from pathlib import Path
-from typing import AsyncIterator
+from typing import Any, AsyncIterator
 
 # Load .env file before importing config
 from dotenv import load_dotenv
@@ -42,16 +43,17 @@ if _env_path.exists():
 
 from fastapi import FastAPI, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 
 from .audit.logger import AuditLogger
 from .config import FirewallConfig
 from .dashboard.ws_handler import DashboardHub
-from .engine.semantic_analyzer import MockClassifier, SemanticAnalyzer
+from .engine.semantic_analyzer import LlmClassifier, MockClassifier, SemanticAnalyzer
 from .engine.static_analyzer import StaticAnalyzer
 from .models import AuditEntry, DashboardEvent
 from .proxy.session_manager import SessionManager
 from .proxy.sse_adapter import SseAdapter, WebSocketAdapter
+from .proxy.openai_adapter import OpenAIAdapter
 
 logger = logging.getLogger("agent_firewall")
 
@@ -67,8 +69,9 @@ class AppState:
     def __init__(self, config: FirewallConfig) -> None:
         self.config = config
         self.static_analyzer = StaticAnalyzer(config.blocked_commands)
+        # Use LlmClassifier if L2 is enabled, else Mock
         self.semantic_analyzer = SemanticAnalyzer(
-            classifier=MockClassifier(),  # Default to mock; swap for production
+            classifier=LlmClassifier(config) if config.l2_enabled else MockClassifier(),
             config=config,
         )
         self.session_manager = SessionManager(config)
@@ -90,7 +93,58 @@ class AppState:
             emit_dashboard_event=self._emit_dashboard,
             emit_audit_entry=self._emit_audit,
         )
+
+        # Initialize OpenAI proxy using L2 configuration as upstream hint
+        l2_base = config.l2_model_endpoint
+        if "/chat/completions" in l2_base:
+            openai_upstream = l2_base.replace("/chat/completions", "")
+        else:
+            openai_upstream = "https://openrouter.ai/api/v1"
+
+        self.openai_adapter = OpenAIAdapter(
+            upstream_base_url=openai_upstream,
+            static_analyzer=self.static_analyzer,
+            semantic_analyzer=self.semantic_analyzer,
+        )
+
         self._start_time = time.time()
+
+    async def reload_config(self, updates: dict[str, Any]) -> None:
+        """Update the configuration and re-initialize downstream services."""
+        # Convert frozen dataclass to dict, update with the partial changes, then re-create
+        new_config_dict = asdict(self.config)
+        new_config_dict.update(updates)
+
+        # Coerce types if necessary (e.g. list from JSON to frozenset)
+        if "blocked_commands" in new_config_dict and isinstance(
+            new_config_dict["blocked_commands"], list
+        ):
+            new_config_dict["blocked_commands"] = frozenset(new_config_dict["blocked_commands"])
+
+        self.config = FirewallConfig(**new_config_dict)
+
+        # Re-initialize only the parts that depend on the updated config
+        # (For L1, we handle separately through the /rules endpoints if needed,
+        # but here we synchronize the whole config's blocked_commands as well).
+        if "blocked_commands" in updates:
+            self.static_analyzer = StaticAnalyzer(self.config.blocked_commands)
+
+        if "l2_enabled" in updates or "l2_api_key" in updates or "l2_model" in updates:
+            # Shutdown old client if it's LlmClassifier
+            await self.semantic_analyzer.close()
+
+            self.semantic_analyzer = SemanticAnalyzer(
+                classifier=LlmClassifier(self.config)
+                if self.config.l2_enabled
+                else MockClassifier(),
+                config=self.config,
+            )
+
+        # Update adapters with new analyzer refs
+        self.sse_adapter.static_analyzer = self.static_analyzer
+        self.sse_adapter.semantic_analyzer = self.semantic_analyzer
+        self.ws_adapter.static_analyzer = self.static_analyzer
+        self.ws_adapter.semantic_analyzer = self.semantic_analyzer
 
     async def _emit_dashboard(self, event: DashboardEvent) -> None:
         await self.dashboard_hub.broadcast(event)
@@ -130,6 +184,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     yield
 
     # Graceful shutdown
+    await state.semantic_analyzer.close()
+
     await state.audit_logger.stop()
     await state.session_manager.stop()
     await state.sse_adapter.close()
@@ -174,6 +230,164 @@ async def health() -> dict[str, str]:
     return {"status": "ok", "service": "agent-firewall"}
 
 
+# ── Configuration ───────────────────────────────────────────────
+
+
+@app.get("/api/config")
+async def get_config(request: Request) -> dict[str, Any]:
+    s = _state(request)
+    c = s.config
+    # Transform flat config to nested structure for frontend
+    return {
+        "network": {
+            "listen_host": c.listen_host,
+            "listen_port": c.listen_port,
+            "upstream_host": c.upstream_host,
+            "upstream_port": c.upstream_port,
+            "transport_mode": c.transport_mode,
+        },
+        "engine": {
+            "l1_enabled": c.l1_enabled,
+            "l2_enabled": c.l2_enabled,
+            "l2_model_endpoint": c.l2_model_endpoint,
+            "l2_api_key": c.l2_api_key,
+            "l2_model": c.l2_model,
+            "l2_timeout_seconds": c.l2_timeout_seconds,
+        },
+        "session": {
+            # These might be missing in config.py, check source
+            "ring_buffer_size": getattr(c, "session_ring_buffer_size", 64),
+            "ttl_seconds": getattr(c, "session_ttl_seconds", 3600),
+        },
+        "rate_limit": {
+            "requests_per_sec": getattr(c, "rate_limit_requests_per_sec", 100),
+            "burst": getattr(c, "rate_limit_burst", 200),
+        },
+        "audit_log_path": c.audit_log_path,
+        "blocked_commands": sorted(list(c.blocked_commands)),
+    }
+
+
+@app.patch("/api/config")
+async def patch_config(request: Request) -> dict[str, Any]:
+    s = _state(request)
+    updates = await request.json()
+
+    # Flatten updates if nested
+    flat_updates = {}
+
+    # Copy top-level fields
+    for k, v in updates.items():
+        if not isinstance(v, dict):
+            flat_updates[k] = v
+
+    if "network" in updates:
+        flat_updates.update(updates["network"])
+    if "engine" in updates:
+        flat_updates.update(updates["engine"])
+    if "session" in updates:
+        # Prefix session fields
+        for k, v in updates["session"].items():
+            if k == "ring_buffer_size":
+                flat_updates["session_ring_buffer_size"] = v
+            elif k == "ttl_seconds":
+                flat_updates["session_ttl_seconds"] = v
+            else:
+                flat_updates[k] = v  # fallback
+
+    if "rate_limit" in updates:
+        for k, v in updates["rate_limit"].items():
+            if k == "requests_per_sec":
+                flat_updates["rate_limit_requests_per_sec"] = v
+            elif k == "burst":
+                flat_updates["rate_limit_burst"] = v
+            else:
+                flat_updates[k] = v
+
+    await s.reload_config(flat_updates)
+
+    # Return NEW config in nested format (call get_config logic conceptually)
+    # Since get_config reads s.config, and we just updated it, calling get_config logic is best.
+    # But get_config extracts from request. Let's just manually re-serialize or return ok.
+    # The frontend expects the new config back.
+
+    # Re-use the response structure from get_config
+    c = s.config
+    return {
+        "network": {
+            "listen_host": c.listen_host,
+            "listen_port": c.listen_port,
+            "upstream_host": c.upstream_host,
+            "upstream_port": c.upstream_port,
+            "transport_mode": c.transport_mode,
+        },
+        "engine": {
+            "l1_enabled": c.l1_enabled,
+            "l2_enabled": c.l2_enabled,
+            "l2_model_endpoint": c.l2_model_endpoint,
+            "l2_api_key": c.l2_api_key,
+            "l2_model": c.l2_model,
+            "l2_timeout_seconds": c.l2_timeout_seconds,
+        },
+        "session": {
+            "ring_buffer_size": getattr(c, "session_ring_buffer_size", 64),
+            "ttl_seconds": getattr(c, "session_ttl_seconds", 3600),
+        },
+        "rate_limit": {
+            "requests_per_sec": getattr(c, "rate_limit_requests_per_sec", 100),
+            "burst": getattr(c, "rate_limit_burst", 200),
+        },
+        "audit_log_path": c.audit_log_path,
+        "blocked_commands": sorted(list(c.blocked_commands)),
+    }
+
+
+# ── Rules Management ─────────────────────────────────────────────
+
+
+@app.get("/api/rules")
+async def get_rules(request: Request) -> list[str]:
+    s = _state(request)
+    return sorted(list(s.static_analyzer.blocked_commands))
+
+
+@app.post("/api/rules")
+async def add_rule(request: Request) -> dict[str, Any]:
+    s = _state(request)
+    data = await request.json()
+    rule = data.get("rule")
+    if rule:
+        s.static_analyzer.add_rule(rule)
+        # Synchronize with config if possible (non-frozen config might be better, but we replace for now)
+        current_rules = set(s.config.blocked_commands)
+        current_rules.add(rule)
+        s.config = replace(s.config, blocked_commands=frozenset(current_rules))
+    return {"status": "ok"}
+
+
+@app.delete("/api/rules")
+async def delete_rule(request: Request) -> dict[str, Any]:
+    s = _state(request)
+    rule = request.query_params.get("rule")
+    if rule:
+        s.static_analyzer.remove_rule(rule)
+        current_rules = set(s.config.blocked_commands)
+        if rule in current_rules:
+            current_rules.remove(rule)
+            s.config = replace(s.config, blocked_commands=frozenset(current_rules))
+    return {"status": "ok"}
+
+
+# ── Audit Log ──────────────────────────────────────────────────
+
+
+@app.get("/api/audit")
+async def get_audit(request: Request) -> list[dict[str, Any]]:
+    s = _state(request)
+    limit = int(request.query_params.get("limit", 50))
+    return await s.audit_logger.get_recent_entries(limit)
+
+
 # ── Stats ─────────────────────────────────────────────────────────
 
 
@@ -216,6 +430,25 @@ async def mcp_sse(request: Request):  # noqa: ANN201
     return await s.sse_adapter.handle_sse(request)
 
 
+# ── OpenAI Proxy (Chat Completions) ──────────────────────────────
+
+
+@app.post("/v1/chat/completions")
+async def openai_chat_completions(request: Request) -> StreamingResponse:
+    s = _state(request)
+    return await s.openai_adapter.handle_chat_completion(request)
+
+
+# ── OpenAI Proxy (Responses) ─────────────────────────────────────
+
+
+@app.post("/v1/responses")
+async def openai_responses(request: Request) -> StreamingResponse:
+    s = _state(request)
+    # Reuse the same handler logic if the body is compatible (JSON chat completion)
+    return await s.openai_adapter.handle_chat_completion(request)
+
+
 # ── MCP Proxy (WebSocket) ────────────────────────────────────────
 
 
@@ -232,6 +465,59 @@ async def mcp_websocket(ws: WebSocket) -> None:
 async def dashboard_websocket(ws: WebSocket) -> None:
     s = ws.app.state.firewall
     await s.dashboard_hub.handle_client(ws)
+
+
+# ── Test Lab ─────────────────────────────────────────────────────
+
+
+@app.post("/api/test/analyze")
+async def test_analyze(request: Request) -> dict[str, Any]:
+    from .models import ThreatLevel
+    import json
+
+    s = _state(request)
+    data = await request.json()
+    payload_str = data.get("payload", "")
+
+    # L1 Analysis
+    l1_result = s.static_analyzer.analyze(payload_str)
+    l1_verdict = "BLOCK" if l1_result.threat_level != ThreatLevel.NONE else "ALLOW"
+
+    # L2 Analysis
+    l2_verdict = "ALLOW"
+    l2_confidence = 0.0
+
+    try:
+        parsed = json.loads(payload_str)
+        method = parsed.get("method", "unknown")
+        params = parsed.get("params", {})
+
+        # Run L2 classification
+        l2_result = await s.semantic_analyzer.analyze(
+            method=method,
+            params=params,
+            session_context=[],
+        )
+        l2_confidence = l2_result.confidence
+        if l2_result.is_injection:
+            l2_verdict = "BLOCK"
+            if l2_result.threat_level == ThreatLevel.CRITICAL:
+                l2_verdict = "ESCALATE"
+    except json.JSONDecodeError:
+        pass
+
+    # Final Verdict Logic
+    final_verdict = "ALLOW"
+    if l1_verdict != "ALLOW":
+        final_verdict = l1_verdict
+    elif l2_verdict != "ALLOW":
+        final_verdict = l2_verdict
+
+    return {
+        "verdict": final_verdict,
+        "l1_patterns": l1_result.matched_patterns,
+        "l2_confidence": l2_confidence,
+    }
 
 
 # ── Logging config ───────────────────────────────────────────────

@@ -69,9 +69,9 @@
             Executes in &lt;1ms per payload.
           </p>
           <div class="form-group">
-            <label>Blocked Commands <span class="count">({{ localConfig.blocked_commands.length }})</span></label>
+            <label>Blocked Commands <span class="count">({{ localConfig.blocked_commands?.length || 0 }})</span></label>
             <textarea
-              :value="localConfig.blocked_commands.join('\n')"
+              :value="localConfig.blocked_commands?.join('\n') ?? ''"
               @input="updateBlockedCommands(($event.target as HTMLTextAreaElement).value)"
               class="form-input mono"
               rows="6"

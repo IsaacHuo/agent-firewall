@@ -5,6 +5,7 @@ import type { GatewayEventFrame, GatewayHelloOk } from "./gateway.ts";
 import type { Tab } from "./navigation.ts";
 import type { UiSettings } from "./storage.ts";
 import type { AgentsListResult, PresenceEntry, HealthSnapshot, StatusSummary } from "./types.ts";
+import { GATEWAY_CLIENT_NAMES } from "../../../src/gateway/protocol/client-info.js";
 import { CHAT_SESSIONS_ACTIVE_MINUTES, flushChatQueueForEvent } from "./app-chat.ts";
 import {
   applySettings,
@@ -123,11 +124,16 @@ export function connectGateway(host: GatewayHost) {
   host.execApprovalError = null;
 
   const previousClient = host.client;
+  // In dev mode, fall back to the env-injected token if settings token is empty.
+  const effectiveToken =
+    host.settings.token.trim() ||
+    (import.meta.env.DEV ? import.meta.env.VITE_DEV_GATEWAY_TOKEN : undefined) ||
+    undefined;
   const client = new GatewayBrowserClient({
     url: host.settings.gatewayUrl,
-    token: host.settings.token.trim() ? host.settings.token : undefined,
+    token: effectiveToken || undefined,
     password: host.password.trim() ? host.password : undefined,
-    clientName: "agent-shield-control-ui",
+    clientName: GATEWAY_CLIENT_NAMES.CONTROL_UI,
     mode: "webchat",
     onHello: (hello) => {
       if (host.client !== client) {

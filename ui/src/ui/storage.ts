@@ -18,12 +18,17 @@ export type UiSettings = {
 export function loadSettings(): UiSettings {
   const defaultUrl = (() => {
     const proto = location.protocol === "https:" ? "wss" : "ws";
+    // In dev mode (Vite on :5173), the gateway runs on a separate port.
+    // In production the control UI is served by the gateway itself, so same host works.
+    if (import.meta.env.DEV && location.port === "5173") {
+      return `${proto}://${location.hostname}:18789`;
+    }
     return `${proto}://${location.host}`;
   })();
 
   const defaults: UiSettings = {
     gatewayUrl: defaultUrl,
-    token: "",
+    token: import.meta.env.VITE_DEV_GATEWAY_TOKEN ?? "",
     sessionKey: "main",
     lastActiveSessionKey: "main",
     theme: "system",
@@ -40,12 +45,17 @@ export function loadSettings(): UiSettings {
       return defaults;
     }
     const parsed = JSON.parse(raw) as Partial<UiSettings>;
+    // In dev mode, auto-correct stale gateway URLs that point to the Vite dev server
+    const storedUrl =
+      typeof parsed.gatewayUrl === "string" && parsed.gatewayUrl.trim()
+        ? parsed.gatewayUrl.trim()
+        : defaults.gatewayUrl;
+    const devViteUrl = import.meta.env.DEV && /^wss?:\/\/localhost:5173\/?$/.test(storedUrl);
     return {
-      gatewayUrl:
-        typeof parsed.gatewayUrl === "string" && parsed.gatewayUrl.trim()
-          ? parsed.gatewayUrl.trim()
-          : defaults.gatewayUrl,
-      token: typeof parsed.token === "string" ? parsed.token : defaults.token,
+      gatewayUrl: devViteUrl ? defaults.gatewayUrl : storedUrl,
+      // In dev mode, use the injected token if localStorage has no token
+      token:
+        typeof parsed.token === "string" && parsed.token.trim() ? parsed.token : defaults.token,
       sessionKey:
         typeof parsed.sessionKey === "string" && parsed.sessionKey.trim()
           ? parsed.sessionKey.trim()

@@ -177,7 +177,25 @@ class StaticAnalyzer:
 
         cfg = FirewallConfig()
         patterns = blocked_commands or cfg.blocked_commands
-        self._ac_matcher = AhoCorasickMatcher(list(patterns))
+        self._blocked_commands = set(patterns)
+        self._ac_matcher = AhoCorasickMatcher(list(self._blocked_commands))
+
+    @property
+    def blocked_commands(self) -> FrozenSet[str]:
+        """Return the current set of blocked command patterns."""
+        return frozenset(self._blocked_commands)
+
+    def add_rule(self, pattern: str) -> None:
+        """Add a new blocked command pattern and rebuild the matcher."""
+        if pattern not in self._blocked_commands:
+            self._blocked_commands.add(pattern)
+            self._ac_matcher = AhoCorasickMatcher(list(self._blocked_commands))
+
+    def remove_rule(self, pattern: str) -> None:
+        """Remove a blocked command pattern and rebuild the matcher."""
+        if pattern in self._blocked_commands:
+            self._blocked_commands.discard(pattern)
+            self._ac_matcher = AhoCorasickMatcher(list(self._blocked_commands))
 
     def analyze(self, payload: str) -> L1Result:
         """
