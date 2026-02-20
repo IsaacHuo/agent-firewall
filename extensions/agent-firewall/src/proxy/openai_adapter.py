@@ -36,12 +36,14 @@ class OpenAIAdapter:
         upstream_base_url: str,
         static_analyzer: StaticAnalyzer,
         semantic_analyzer: SemanticAnalyzer,
+        api_key: str | None = None,
     ) -> None:
         # Ensure upstream base URL doesn't have trailing slash
         self.upstream_url = upstream_base_url.rstrip("/")
         self.client = httpx.AsyncClient(timeout=60.0)
         self.static_analyzer = static_analyzer
         self.semantic_analyzer = semantic_analyzer
+        self.api_key = api_key
 
     async def close(self) -> None:
         await self.client.aclose()
@@ -52,6 +54,7 @@ class OpenAIAdapter:
         """
         try:
             body = await request.json()
+            logger.info(f"Forwarding payload: {json.dumps(body)}")
         except Exception:
             raise HTTPException(status_code=400, detail="Invalid JSON body")
 
@@ -96,6 +99,9 @@ class OpenAIAdapter:
         upstream_headers = dict(request.headers)
         upstream_headers.pop("host", None)
         upstream_headers.pop("content-length", None)
+
+        if self.api_key:
+            upstream_headers["Authorization"] = f"Bearer {self.api_key}"
 
         # We need to forward to the EXACT upstream endpoint.
         # Assuming upstream_base_url is "https://openrouter.ai/api/v1"

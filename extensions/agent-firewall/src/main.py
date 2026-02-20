@@ -105,6 +105,7 @@ class AppState:
             upstream_base_url=openai_upstream,
             static_analyzer=self.static_analyzer,
             semantic_analyzer=self.semantic_analyzer,
+            api_key=config.l2_api_key,
         )
 
         self._start_time = time.time()
@@ -344,38 +345,167 @@ async def patch_config(request: Request) -> dict[str, Any]:
 
 # ── Rules Management ─────────────────────────────────────────────
 
+# In-memory storage for pattern rules (would persist to DB or file in production)
+_pattern_rules: dict[str, dict[str, Any]] = {}
+_method_rules: list[dict[str, Any]] = []
+_agent_rules: list[dict[str, Any]] = []
+_default_action: str = "ALLOW"
+
+
+def _init_default_rules(blocked_commands: frozenset[str]) -> None:
+    """Initialize pattern rules from blocked_commands config."""
+    global _pattern_rules
+    if not _pattern_rules:
+        for i, cmd in enumerate(sorted(blocked_commands)):
+            rule_id = f"default-{i+1}"
+            _pattern_rules[rule_id] = {
+                "id": rule_id,
+                "name": f"Block: {cmd}",
+                "pattern": cmd,
+                "type": "literal",
+                "action": "BLOCK",
+                "threat_level": "HIGH",
+                "enabled": True,
+                "description": f"Default blocked pattern: {cmd}",
+                "created_at": time.time(),
+                "updated_at": time.time(),
+            }
+
 
 @app.get("/api/rules")
-async def get_rules(request: Request) -> list[str]:
+async def get_rules(request: Request) -> dict[str, Any]:
+    """Get all rules in the format expected by frontend."""
     s = _state(request)
-    return sorted(list(s.static_analyzer.blocked_commands))
+    _init_default_rules(s.config.blocked_commands)
+
+    return {
+        "pattern_rules": list(_pattern_rules.values()),
+        "method_rules": _method_rules,
+        "agent_rules": _agent_rules,
+        "default_action": _default_action,
+    }
 
 
-@app.post("/api/rules")
-async def add_rule(request: Request) -> dict[str, Any]:
+@app.post("/api/rules/patterns")
+async def create_pattern_rule(request: Request) -> dict[str, Any]:
+    """Create a new pattern rule."""
     s = _state(request)
     data = await request.json()
-    rule = data.get("rule")
-    if rule:
-        s.static_analyzer.add_rule(rule)
-        # Synchronize with config if possible (non-frozen config might be better, but we replace for now)
-        current_rules = set(s.config.blocked_commands)
-        current_rules.add(rule)
-        s.config = replace(s.config, blocked_commands=frozenset(current_rules))
-    return {"status": "ok"}
+
+    rule_id = data.get("id") or f"rule-{int(time.time() * 1000)}"
+    now = time.time()
+
+    rule = {
+        "id": rule_id,
+        "name": data.get("name", "Unnamed Rule"),
+        "pattern": data.get("pattern", ""),
+        "type": data.get("type", "literal"),
+        "action": data.get("action", "BLOCK"),
+        "threat_level": data.get("threat_level", "HIGH"),
+        "enabled": data.get("enabled", True),
+        "description": data.get("description", ""),
+        "created_at": data.get("created_at") or now,
+        "updated_at": now,
+    }
+
+    _pattern_rules[rule_id] = rule
+
+    # Also add to static analyzer if enabled and is literal type
+    if rule["enabled"] and rule["type"] == "literal":
+        s.static_analyzer.add_rule(rule["pattern"])
+
+    return rule
 
 
-@app.delete("/api/rules")
-async def delete_rule(request: Request) -> dict[str, Any]:
+@app.put("/api/rules/patterns")
+async def update_pattern_rule(request: Request) -> dict[str, Any]:
+    """Update an existing pattern rule."""
     s = _state(request)
-    rule = request.query_params.get("rule")
-    if rule:
-        s.static_analyzer.remove_rule(rule)
-        current_rules = set(s.config.blocked_commands)
-        if rule in current_rules:
-            current_rules.remove(rule)
-            s.config = replace(s.config, blocked_commands=frozenset(current_rules))
-    return {"status": "ok"}
+    data = await request.json()
+    rule_id = data.get("id")
+
+    if not rule_id or rule_id not in _pattern_rules:
+        return {"error": "Rule not found"}
+
+    old_rule = _pattern_rules[rule_id]
+
+    # Remove old pattern from analyzer if it was active
+    if old_rule["enabled"] and old_rule["type"] == "literal":
+        s.static_analyzer.remove_rule(old_rule["pattern"])
+
+    # Update rule
+    rule = {
+        **old_rule,
+        "name": data.get("name", old_rule["name"]),
+        "pattern": data.get("pattern", old_rule["pattern"]),
+        "type": data.get("type", old_rule["type"]),
+        "action": data.get("action", old_rule["action"]),
+        "threat_level": data.get("threat_level", old_rule["threat_level"]),
+        "enabled": data.get("enabled", old_rule["enabled"]),
+        "description": data.get("description", old_rule["description"]),
+        "updated_at": time.time(),
+    }
+
+    _pattern_rules[rule_id] = rule
+
+    # Add new pattern to analyzer if enabled and literal
+    if rule["enabled"] and rule["type"] == "literal":
+        s.static_analyzer.add_rule(rule["pattern"])
+
+    return rule
+
+
+@app.delete("/api/rules/patterns/{rule_id}")
+async def delete_pattern_rule(request: Request, rule_id: str) -> dict[str, Any]:
+    """Delete a pattern rule."""
+    s = _state(request)
+
+    if rule_id not in _pattern_rules:
+        return {"error": "Rule not found"}
+
+    rule = _pattern_rules[rule_id]
+
+    # Remove from analyzer if it was active
+    if rule["enabled"] and rule["type"] == "literal":
+        s.static_analyzer.remove_rule(rule["pattern"])
+
+    del _pattern_rules[rule_id]
+
+    return {"status": "ok", "deleted": rule_id}
+
+
+@app.post("/api/rules/patterns/{rule_id}/toggle")
+async def toggle_pattern_rule(request: Request, rule_id: str) -> dict[str, Any]:
+    """Toggle a pattern rule's enabled state."""
+    s = _state(request)
+    data = await request.json()
+
+    if rule_id not in _pattern_rules:
+        return {"error": "Rule not found"}
+
+    rule = _pattern_rules[rule_id]
+    new_enabled = data.get("enabled", not rule["enabled"])
+
+    # Update analyzer accordingly
+    if rule["type"] == "literal":
+        if new_enabled and not rule["enabled"]:
+            s.static_analyzer.add_rule(rule["pattern"])
+        elif not new_enabled and rule["enabled"]:
+            s.static_analyzer.remove_rule(rule["pattern"])
+
+    rule["enabled"] = new_enabled
+    rule["updated_at"] = time.time()
+
+    return rule
+
+
+@app.post("/api/rules/default")
+async def update_default_action(request: Request) -> dict[str, Any]:
+    """Update the default action for unmatched requests."""
+    global _default_action
+    data = await request.json()
+    _default_action = data.get("action", "ALLOW")
+    return {"status": "ok", "default_action": _default_action}
 
 
 # ── Audit Log ──────────────────────────────────────────────────

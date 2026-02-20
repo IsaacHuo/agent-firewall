@@ -453,20 +453,28 @@ App.vue (shell + router)
 
 ### Management Endpoints
 
-| Method    | Path                              | Description                                                     |
-| --------- | --------------------------------- | --------------------------------------------------------------- |
-| GET       | `/health`                         | Service health check                                            |
-| GET       | `/api/stats`                      | Firewall statistics (uptime, sessions, audit counts)            |
-| GET       | `/api/audit`                      | Paginated audit log entries (`?limit=&offset=&verdict=&since=`) |
-| GET       | `/api/config`                     | Current firewall configuration                                  |
-| PATCH     | `/api/config`                     | Update firewall configuration (partial)                         |
-| GET       | `/api/rules`                      | All rules (pattern, method, agent)                              |
-| POST      | `/api/rules/patterns`             | Create pattern rule                                             |
-| PUT       | `/api/rules/patterns`             | Update pattern rule                                             |
-| DELETE    | `/api/rules/patterns/{id}`        | Delete pattern rule                                             |
-| POST      | `/api/rules/patterns/{id}/toggle` | Enable/disable pattern rule                                     |
-| POST      | `/api/test/analyze`               | Test a payload against the analysis engine                      |
-| WebSocket | `/ws/dashboard`                   | Real-time event stream + human-in-the-loop verdicts             |
+| Method    | Path                              | Description                                                          |
+| --------- | --------------------------------- | -------------------------------------------------------------------- |
+| GET       | `/health`                         | Service health check                                                 |
+| GET       | `/api/stats`                      | Firewall statistics (uptime, sessions, audit counts)                 |
+| GET       | `/api/audit`                      | Paginated audit log entries (`?limit=&offset=&verdict=&since=`)      |
+| GET       | `/api/config`                     | Current firewall configuration                                       |
+| PATCH     | `/api/config`                     | Update firewall configuration (partial)                              |
+| GET       | `/api/rules`                      | All rules (pattern_rules, method_rules, agent_rules, default_action) |
+| POST      | `/api/rules/patterns`             | Create pattern rule                                                  |
+| PUT       | `/api/rules/patterns`             | Update pattern rule                                                  |
+| DELETE    | `/api/rules/patterns/{id}`        | Delete pattern rule                                                  |
+| POST      | `/api/rules/patterns/{id}/toggle` | Enable/disable pattern rule                                          |
+| POST      | `/api/rules/default`              | Update default action for unmatched requests                         |
+| POST      | `/api/test/analyze`               | Test a payload against the analysis engine                           |
+| WebSocket | `/ws/dashboard`                   | Real-time event stream + human-in-the-loop verdicts                  |
+
+### OpenAI-Compatible Proxy Endpoints
+
+| Method | Path                   | Description                                                    |
+| ------ | ---------------------- | -------------------------------------------------------------- |
+| POST   | `/v1/chat/completions` | OpenAI-compatible chat completion proxy with security analysis |
+| POST   | `/v1/responses`        | OpenAI responses endpoint proxy                                |
 
 ### Blocked Request Response
 
@@ -600,7 +608,8 @@ extensions/agent-firewall/
 │   ├── proxy/                    # Transport adapters
 │   │   ├── session_manager.py    # In-memory session store (ring buffer, TTL GC)
 │   │   ├── sse_adapter.py        # SSE + WebSocket proxy (httpx-based)
-│   │   └── stdio_adapter.py      # stdio MITM proxy (subprocess)
+│   │   ├── stdio_adapter.py      # stdio MITM proxy (subprocess)
+│   │   └── openai_adapter.py     # OpenAI-compatible chat completion proxy
 │   │
 │   ├── audit/                    # Security logging
 │   │   └── logger.py             # AuditLogger — async batched JSONL writer
