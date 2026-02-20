@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+#
+# Commit message hook for validating Conventional Commits format
+# Format: <type>(<scope>): <subject>
+#
+# Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert
+# Scope: optional, e.g., backend, frontend, gateway, docs
+#
+# Examples:
+#   feat(backend): add rule validation endpoint
+#   fix(frontend): correct traffic chart rendering
+#   docs: update API documentation
+#   chore: update dependencies
+
+set -euo pipefail
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# Skip merge commits
+if [[ "$COMMIT_MSG" =~ ^Merge ]]; then
+  exit 0
+fi
+
+# Skip revert commits
+if [[ "$COMMIT_MSG" =~ ^Revert ]]; then
+  exit 0
+fi
+
+# Conventional Commits regex pattern
+# type(scope)?: subject
+PATTERN="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-zA-Z0-9_-]+\))?!?: .{1,100}$"
+
+# Get first line (subject)
+FIRST_LINE=$(echo "$COMMIT_MSG" | head -1)
+
+if ! [[ "$FIRST_LINE" =~ $PATTERN ]]; then
+  echo "❌ Invalid commit message format!"
+  echo ""
+  echo "Expected: <type>(<scope>): <subject>"
+  echo ""
+  echo "Types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+  echo "Scope: optional, e.g., backend, frontend, gateway, api"
+  echo ""
+  echo "Examples:"
+  echo "  feat(backend): add rule validation endpoint"
+  echo "  fix(frontend): correct traffic chart rendering"
+  echo "  docs: update API documentation"
+  echo "  chore: update dependencies"
+  echo ""
+  echo "Your message: $FIRST_LINE"
+  exit 1
+fi
+
+# Check subject length (max 72 chars recommended, 100 enforced)
+SUBJECT_LENGTH=${#FIRST_LINE}
+if [[ $SUBJECT_LENGTH -gt 100 ]]; then
+  echo "❌ Commit subject too long ($SUBJECT_LENGTH chars). Max 100 chars."
+  exit 1
+fi
+
+# Check subject doesn't end with period
+if [[ "$FIRST_LINE" =~ \.$ ]]; then
+  echo "❌ Commit subject should not end with a period."
+  exit 1
+fi
+
+exit 0

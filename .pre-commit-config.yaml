@@ -103,3 +103,37 @@ repos:
         language: system
         pass_filenames: false
         types: [swift]
+
+      # Python: ruff lint (agent-firewall)
+      - id: ruff-lint
+        name: ruff lint
+        entry: bash -c 'cd extensions/agent-firewall && .venv/bin/ruff check --fix src tests'
+        language: system
+        pass_filenames: false
+        types: [python]
+        files: ^extensions/agent-firewall/
+
+      # Python: ruff format (agent-firewall)
+      - id: ruff-format
+        name: ruff format
+        entry: bash -c 'cd extensions/agent-firewall && .venv/bin/ruff format src tests'
+        language: system
+        pass_filenames: false
+        types: [python]
+        files: ^extensions/agent-firewall/
+
+      # Vue/TypeScript: lint frontend (agent-firewall)
+      - id: frontend-lint
+        name: frontend lint
+        entry: bash -c 'cd extensions/agent-firewall/frontend && npm run lint 2>/dev/null || true'
+        language: system
+        pass_filenames: false
+        types_or: [vue, ts, javascript]
+        files: ^extensions/agent-firewall/frontend/
+
+      # Commit message validation
+      - id: commit-msg-check
+        name: commit message
+        entry: git-hooks/commit-msg
+        language: script
+        stages: [commit-msg]
