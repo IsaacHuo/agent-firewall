@@ -89,3 +89,22 @@ package-lock.json
 
 # Runtime PID files
 .run/
+
+# Upstream openclaw files not used by agent-firewall
+.swiftlint.yml
+.swiftformat
+Swabble/
+appcast.xml
+fly.toml
+fly.private.toml
+render.yaml
+setup-podman.sh
+build.log
+.secrets.baseline
+.detect-secrets.cfg
+.pre-commit-config.yaml
+.markdownlint-cli2.jsonc
+zizmor.yml
+agent-shield.mjs
+docs.acp.md
+.pi/
