@@ -122,11 +122,12 @@ class DashboardHub:
             self.disconnect(client_id)
 
     async def _client_sender(self, ws: WebSocket, queue: asyncio.Queue[bytes]) -> None:
-        """Send queued events to the client."""
+        """Send queued events to the client as text frames (JSON)."""
         while True:
             data = await queue.get()
             try:
-                await ws.send_bytes(data)
+                # Send as text so browsers can directly JSON.parse(event.data)
+                await ws.send_text(data.decode("utf-8") if isinstance(data, bytes) else data)
             except Exception:
                 break
 

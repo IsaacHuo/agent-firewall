@@ -322,7 +322,7 @@ AF_BLOCKED_COMMANDS="rm -rf,/etc/shadow,DROP TABLE"
 AF_L2_ENABLED=1                  # Enable L2 (1=on, 0=off)
 AF_L2_MODEL_ENDPOINT=https://openrouter.ai/api/v1/chat/completions
 AF_L2_API_KEY=sk-or-v1-your-api-key
-AF_L2_MODEL=minimax/minimax-m2.5
+AF_L2_MODEL=deepseek/deepseek-v3.2-speciale
 AF_L2_TIMEOUT=10.0              # Seconds before L2 timeout → fail-open
 
 # ── Session Management ──────────────────────────────
@@ -350,7 +350,7 @@ AF_AUDIT_LOG=./audit/firewall.jsonl
 | `AF_L2_ENABLED`          | `1`                                             | Enable L2 semantic analyzer          |
 | `AF_L2_MODEL_ENDPOINT`   | `https://openrouter.ai/api/v1/chat/completions` | LLM API endpoint (OpenAI-compatible) |
 | `AF_L2_API_KEY`          | (empty)                                         | API key for LLM authentication       |
-| `AF_L2_MODEL`            | `minimax/minimax-m2.5`                          | Model identifier for L2              |
+| `AF_L2_MODEL`            | `deepseek/deepseek-v3.2-speciale`               | Model identifier for L2              |
 | `AF_L2_TIMEOUT`          | `10.0`                                          | L2 analysis timeout (seconds)        |
 | `AF_SESSION_BUFFER_SIZE` | `64`                                            | Ring buffer size per session         |
 | `AF_SESSION_TTL`         | `3600`                                          | Session expiry (seconds)             |

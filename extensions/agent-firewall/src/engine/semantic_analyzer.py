@@ -239,15 +239,22 @@ Examples of BENIGN requests:
             data = response.json()
 
             # Parse LLM response — strip whitespace
-            raw_content = data["choices"][0]["message"]["content"]
+            choices = data.get("choices", [])
+            if not choices:
+                logger.warning("L2 LLM returned no choices — fail-open. Full response: %r", data)
+                return L2Result(reasoning="LLM returned no choices — fail-open")
+
+            raw_content = choices[0].get("message", {}).get("content")
             logger.debug(
                 "L2 raw response content: %r", raw_content[:500] if raw_content else "(empty)"
             )
             content = raw_content.strip() if raw_content else ""
 
             if not content:
-                logger.warning("L2 LLM returned empty content")
-                return L2Result(reasoning="LLM returned empty response")
+                logger.warning("L2 LLM returned empty content — fail-open (no opinion)")
+                # Fail-open: do not fall back to aggressive keyword matcher.
+                # L1 + policy will still catch real threats.
+                return L2Result(reasoning="LLM returned empty content — fail-open")
 
             import orjson
 
@@ -284,12 +291,12 @@ Examples of BENIGN requests:
             )
 
         except httpx.TimeoutException:
-            logger.warning("L2 LLM classifier timed out after %.1fs", self._timeout)
-            return L2Result(reasoning="LLM timeout — fail-open")
+            logger.warning("L2 LLM classifier timed out after %.1fs — fail-open", self._timeout)
+            return L2Result(reasoning=f"LLM timeout ({self._timeout}s) — fail-open")
 
         except Exception as exc:
-            logger.warning("L2 LLM classifier error: %s", exc)
-            return L2Result(reasoning=f"LLM error: {exc}")
+            logger.warning("L2 LLM classifier error: %s — fail-open", exc)
+            return L2Result(reasoning=f"LLM error: {exc} — fail-open")
 
     async def close(self) -> None:
         """Gracefully shut down the HTTP client connection pool."""

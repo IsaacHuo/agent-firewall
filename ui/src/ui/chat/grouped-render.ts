@@ -240,12 +240,20 @@ function renderGroupedMessage(
     opts.showReasoning && role === "assistant" ? extractThinkingCached(message) : null;
   const markdownBase = extractedText?.trim() ? extractedText : null;
   const reasoningMarkdown = extractedThinking ? formatReasoningMarkdown(extractedThinking) : null;
-  const markdown = markdownBase;
-  const canCopyMarkdown = role === "assistant" && Boolean(markdown?.trim());
+
+  // Surface error messages from failed assistant responses (e.g. provider 500s)
+  // so users see the failure reason instead of an empty bubble.
+  const errorMessage =
+    !markdownBase && role === "assistant" && typeof m.errorMessage === "string" && m.errorMessage
+      ? m.errorMessage
+      : null;
+  const markdown = markdownBase ?? (errorMessage ? `⚠️ ${errorMessage}` : null);
+  const canCopyMarkdown = role === "assistant" && Boolean(markdownBase?.trim());
 
   const bubbleClasses = [
     "chat-bubble",
     canCopyMarkdown ? "has-copy" : "",
+    errorMessage ? "chat-bubble--error" : "",
     opts.isStreaming ? "streaming" : "",
     "fade-in",
   ]
