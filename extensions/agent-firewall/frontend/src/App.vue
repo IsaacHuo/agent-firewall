@@ -1,10 +1,12 @@
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :data-theme="theme">
     <Sidebar
       :currentSection="currentSection"
       :connected="connected"
       :stats="stats"
+      :theme="theme"
       @navigate="navigateTo"
+      @toggleTheme="toggleTheme"
     />
     <main class="main-content">
       <Dashboard
@@ -73,6 +75,7 @@ import {
   useSecurityTest,
   useAuditLog,
   useNavigation,
+  useTheme,
 } from './composables'
 
 // Components
@@ -95,6 +98,7 @@ const { rules: rulesData, loadRules, saveRule, deleteRule, toggleRule } = useRul
 const { results: testResults, running: testRunning, runTest, runBatch, clearResults: clearTestResults } = useSecurityTest()
 const { entries: auditEntries, loading: auditLoading, hasMore: auditHasMore, loadEntries: loadAuditEntries, loadMore: loadMoreAudit } = useAuditLog()
 const { currentSection, navigateTo } = useNavigation()
+const { theme, toggleTheme } = useTheme()
 
 // ── Event Handlers ───────────────────────────────────────────────
 
@@ -167,7 +171,8 @@ onMounted(() => {
   padding: 0;
 }
 
-:root {
+:root,
+[data-theme="dark"] {
   --bg-primary: #0a0a0f;
   --bg-secondary: #0f0f1a;
   --bg-elevated: #141428;
@@ -179,11 +184,37 @@ onMounted(() => {
   --text-muted: #888888;
   --text-dim: #666666;
   --accent-red: #e94560;
-  --accent-green: #00ff88;
+  --accent-green: #00cc6a;
   --accent-blue: #4488ff;
   --accent-yellow: #ffaa00;
   --danger: #ff4444;
+  --sidebar-bg-from: #0f0f1a;
+  --sidebar-bg-to: #1a1a2e;
+  --scrollbar-thumb: #2a2a3e;
+  --scrollbar-thumb-hover: #3a3a4e;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+
+[data-theme="light"] {
+  --bg-primary: #f5f5f8;
+  --bg-secondary: #eeeef2;
+  --bg-elevated: #ffffff;
+  --bg-surface: #ffffff;
+  --border: #d8d8e0;
+  --border-hover: #c0c0cc;
+  --text-primary: #1a1a2e;
+  --text-secondary: #3a3a4e;
+  --text-muted: #6e6e80;
+  --text-dim: #9090a0;
+  --accent-red: #d63250;
+  --accent-green: #00994d;
+  --accent-blue: #3366dd;
+  --accent-yellow: #cc8800;
+  --danger: #dd3333;
+  --sidebar-bg-from: #eaeaf0;
+  --sidebar-bg-to: #f0f0f6;
+  --scrollbar-thumb: #ccccd4;
+  --scrollbar-thumb-hover: #b0b0bc;
 }
 
 body {
@@ -196,8 +227,8 @@ body {
 /* ── Scrollbar ────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #2a2a3e; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #3a3a4e; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
 </style>
 
 <style scoped>

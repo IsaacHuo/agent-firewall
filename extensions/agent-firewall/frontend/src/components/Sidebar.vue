@@ -22,6 +22,10 @@
     </div>
 
     <div class="sidebar-footer">
+      <button class="theme-toggle" @click="$emit('toggleTheme')" :title="props.theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'">
+        <span class="theme-icon" v-html="props.theme === 'dark' ? icons.sun : icons.moon"></span>
+        <span>{{ props.theme === 'dark' ? 'Light Mode' : 'Dark Mode' }}</span>
+      </button>
       <div class="connection-status" :class="{ connected }">
         <span class="status-dot"></span>
         {{ connected ? 'Connected' : 'Disconnected' }}
@@ -34,15 +38,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { NavSection, Stats } from '../types'
+import type { Theme } from '../composables'
 
 const props = defineProps<{
   currentSection: NavSection
   connected: boolean
   stats: Stats | null
+  theme: Theme
 }>()
 
 defineEmits<{
   navigate: [section: NavSection]
+  toggleTheme: []
 }>()
 
 // SVG icons as strings for v-html
@@ -80,6 +87,20 @@ const icons = {
     <line x1="16" y1="17" x2="8" y2="17"></line>
     <polyline points="10 9 9 9 8 9"></polyline>
   </svg>`,
+  sun: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="12" cy="12" r="5"></circle>
+    <line x1="12" y1="1" x2="12" y2="3"></line>
+    <line x1="12" y1="21" x2="12" y2="23"></line>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+    <line x1="1" y1="12" x2="3" y2="12"></line>
+    <line x1="21" y1="12" x2="23" y2="12"></line>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+  </svg>`,
+  moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+  </svg>`,
 }
 
 const navItems = computed(() => [
@@ -110,8 +131,8 @@ const navItems = computed(() => [
 .sidebar {
   width: 240px;
   height: 100vh;
-  background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
-  border-right: 1px solid #2a2a3e;
+  background: linear-gradient(180deg, var(--sidebar-bg-from) 0%, var(--sidebar-bg-to) 100%);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
 }
@@ -121,7 +142,7 @@ const navItems = computed(() => [
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid #2a2a3e;
+  border-bottom: 1px solid var(--border);
 }
 
 .logo {
@@ -131,7 +152,7 @@ const navItems = computed(() => [
 .sidebar-header h1 {
   font-size: 16px;
   font-weight: 600;
-  color: #fff;
+  color: var(--text-primary);
   margin: 0;
 }
 
@@ -150,7 +171,7 @@ const navItems = computed(() => [
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: #888;
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s;
   margin-bottom: 4px;
@@ -159,14 +180,14 @@ const navItems = computed(() => [
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #ccc;
+  background: rgba(128, 128, 128, 0.1);
+  color: var(--text-secondary);
 }
 
 .nav-item.active {
   background: linear-gradient(135deg, rgba(233, 69, 96, 0.2) 0%, rgba(233, 69, 96, 0.1) 100%);
-  color: #e94560;
-  border-left: 3px solid #e94560;
+  color: var(--accent-red);
+  border-left: 3px solid var(--accent-red);
 }
 
 .nav-icon {
@@ -190,23 +211,57 @@ const navItems = computed(() => [
   font-size: 11px;
   padding: 2px 8px;
   border-radius: 10px;
-  background: #2a2a3e;
-  color: #888;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
 }
 
 .nav-badge.info {
   background: rgba(68, 136, 255, 0.2);
-  color: #4488ff;
+  color: var(--accent-blue);
 }
 
 .nav-badge.danger {
   background: rgba(255, 68, 68, 0.2);
-  color: #ff4444;
+  color: var(--danger);
 }
 
 .sidebar-footer {
   padding: 16px 20px;
-  border-top: 1px solid #2a2a3e;
+  border-top: 1px solid var(--border);
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent-blue);
+  color: var(--accent-blue);
+}
+
+.theme-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-icon :deep(svg) {
+  width: 100%;
+  height: 100%;
 }
 
 .connection-status {
@@ -214,28 +269,28 @@ const navItems = computed(() => [
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #666;
+  color: var(--text-dim);
 }
 
 .status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #666;
+  background: var(--text-dim);
 }
 
 .connection-status.connected .status-dot {
-  background: #00ff88;
+  background: var(--accent-green);
   animation: pulse 2s infinite;
 }
 
 .connection-status.connected {
-  color: #00ff88;
+  color: var(--accent-green);
 }
 
 .version {
   font-size: 11px;
-  color: #444;
+  color: var(--text-dim);
   margin-top: 8px;
 }
 

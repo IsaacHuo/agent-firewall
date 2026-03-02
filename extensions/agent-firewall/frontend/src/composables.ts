@@ -370,6 +370,30 @@ export function useAuditLog() {
   return { entries, loading, hasMore, error, loadEntries, loadMore };
 }
 
+// ── Theme ───────────────────────────────────────────────────────────
+
+export type Theme = "dark" | "light";
+
+export function useTheme() {
+  const theme = ref<Theme>((localStorage.getItem("af-theme") as Theme) || "dark");
+
+  function applyTheme(t: Theme) {
+    document.documentElement.setAttribute("data-theme", t);
+    localStorage.setItem("af-theme", t);
+  }
+
+  function toggleTheme() {
+    theme.value = theme.value === "dark" ? "light" : "dark";
+    applyTheme(theme.value);
+  }
+
+  onMounted(() => {
+    applyTheme(theme.value);
+  });
+
+  return { theme, toggleTheme };
+}
+
 // ── Navigation ──────────────────────────────────────────────────────
 
 export function useNavigation() {
