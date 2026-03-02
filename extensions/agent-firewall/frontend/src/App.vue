@@ -47,6 +47,9 @@
         @runAll="handleRunAllTests"
         @clear="clearTestResults"
       />
+      <ChatLab
+        v-else-if="currentSection === 'chat'"
+      />
       <AuditLog
         v-else-if="currentSection === 'audit'"
         :entries="auditEntries"
@@ -81,6 +84,7 @@ import EngineSettings from './components/EngineSettings.vue'
 import RateLimitSettings from './components/RateLimitSettings.vue'
 import SecurityTest from './components/SecurityTest.vue'
 import AuditLog from './components/AuditLog.vue'
+import ChatLab from './components/ChatLab.vue'
 
 // ── Composables ──────────────────────────────────────────────────
 

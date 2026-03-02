@@ -357,7 +357,7 @@ def _init_default_rules(blocked_commands: frozenset[str]) -> None:
     global _pattern_rules
     if not _pattern_rules:
         for i, cmd in enumerate(sorted(blocked_commands)):
-            rule_id = f"default-{i+1}"
+            rule_id = f"default-{i + 1}"
             _pattern_rules[rule_id] = {
                 "id": rule_id,
                 "name": f"Block: {cmd}",
@@ -597,6 +597,223 @@ async def dashboard_websocket(ws: WebSocket) -> None:
     await s.dashboard_hub.handle_client(ws)
 
 
+# ── Red Team Chat Lab ─────────────────────────────────────────────
+
+
+@app.post("/api/chat/send")
+async def chat_send(request: Request) -> JSONResponse:
+    """
+    Red Team Chat Lab endpoint.
+
+    Accepts a chat message (with optional modified/injected version),
+    runs L1/L2 analysis, and optionally forwards to the upstream LLM.
+
+    Request body:
+      {
+        "messages": [{"role": "user", "content": "..."}],
+        "model": "deepseek/deepseek-chat",
+        "modified_content": "...",     // optional: injected/modified user content
+        "force_forward": false,        // optional: forward even if blocked
+        "analyze_only": false          // optional: only analyze, don't forward
+      }
+
+    Response:
+      {
+        "analysis": { "verdict", "l1_patterns", "l2_confidence", ... },
+        "blocked": bool,
+        "original_content": "...",
+        "forwarded_content": "...",    // what was actually sent upstream
+        "response": "..." | null,      // LLM response text (null if blocked)
+        "response_raw": {...} | null   // full LLM response object
+      }
+    """
+    import uuid
+
+    s = _state(request)
+    data = await request.json()
+    messages = data.get("messages", [])
+    model = data.get("model", "deepseek/deepseek-chat")
+    modified_content = data.get("modified_content", None)
+    force_forward = data.get("force_forward", False)
+    analyze_only = data.get("analyze_only", False)
+
+    if not messages:
+        return JSONResponse({"error": "No messages provided"}, status_code=400)
+
+    # Extract original user content
+    from .models import ThreatLevel, DashboardEvent, AnalysisResult, AuditEntry
+
+    def _extract_text(content: Any) -> str:
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            return "\n".join(
+                part.get("text", "") if isinstance(part, dict) else str(part) for part in content
+            )
+        return str(content) if content else ""
+
+    original_content = "\n".join(
+        [_extract_text(m.get("content", "")) for m in messages if m.get("role") == "user"]
+    )
+
+    # Determine what content to analyze (modified version if provided)
+    analyze_content = modified_content if modified_content else original_content
+    forwarded_messages = list(messages)  # shallow copy
+
+    # If modified content provided, replace the last user message
+    if modified_content:
+        for i in range(len(forwarded_messages) - 1, -1, -1):
+            if forwarded_messages[i].get("role") == "user":
+                forwarded_messages[i] = {"role": "user", "content": modified_content}
+                break
+
+    # L1 Analysis
+    l1_result = s.static_analyzer.analyze(analyze_content)
+    l1_blocked = l1_result.threat_level in (ThreatLevel.CRITICAL, ThreatLevel.HIGH)
+
+    # L2 Analysis
+    l2_confidence = 0.0
+    l2_reasoning = ""
+    l2_is_injection = False
+
+    try:
+        l2_result = await s.semantic_analyzer.analyze(
+            method="chat/completions",
+            params=analyze_content,
+            session_context=[],
+        )
+        l2_confidence = l2_result.confidence
+        l2_reasoning = l2_result.reasoning
+        l2_is_injection = l2_result.is_injection
+    except Exception as e:
+        l2_reasoning = f"L2 analysis error: {e}"
+
+    l2_blocked = l2_is_injection and l2_confidence >= 0.7
+
+    # Final verdict
+    is_blocked = l1_blocked or l2_blocked
+    verdict = "BLOCK" if is_blocked else "ALLOW"
+    if is_blocked and l2_confidence >= 0.9:
+        verdict = "ESCALATE"
+
+    threat_level = l1_result.threat_level
+    if l2_blocked:
+        threat_level = ThreatLevel.HIGH if l2_confidence < 0.9 else ThreatLevel.CRITICAL
+
+    analysis_result = AnalysisResult(
+        request_id=str(uuid.uuid4()),
+        verdict=verdict,
+        threat_level=threat_level,
+        l1_matched_patterns=l1_result.matched_patterns,
+        l2_is_injection=l2_is_injection,
+        l2_confidence=l2_confidence,
+        l2_reasoning=l2_reasoning,
+        blocked_reason=(
+            f"L1: {', '.join(l1_result.matched_patterns)}"
+            if l1_blocked
+            else f"L2: {l2_reasoning}"
+            if l2_blocked
+            else ""
+        ),
+    )
+
+    # Emit dashboard event
+    event = DashboardEvent(
+        event_type="chat_lab_request",
+        timestamp=time.time(),
+        session_id="chat-lab",
+        agent_id="red-team-tester",
+        method="chat/completions",
+        payload_preview=(
+            analyze_content[:200] + "..." if len(analyze_content) > 200 else analyze_content
+        ),
+        analysis=analysis_result,
+        is_alert=(verdict != "ALLOW"),
+    )
+    await s._emit_dashboard(event)
+
+    # Emit audit entry
+    audit_entry = AuditEntry(
+        id=analysis_result.request_id,
+        timestamp=time.time(),
+        session_id="chat-lab",
+        agent_id="red-team-tester",
+        method="chat/completions",
+        verdict=verdict,
+        threat_level=threat_level,
+        matched_patterns=l1_result.matched_patterns,
+        payload_hash="chat-lab",
+        payload_preview=analyze_content[:500],
+    )
+    await s._emit_audit(audit_entry)
+
+    # Build response
+    response_data: dict[str, Any] = {
+        "analysis": {
+            "request_id": analysis_result.request_id,
+            "verdict": verdict,
+            "threat_level": threat_level.value
+            if hasattr(threat_level, "value")
+            else str(threat_level),
+            "l1_patterns": l1_result.matched_patterns,
+            "l2_is_injection": l2_is_injection,
+            "l2_confidence": l2_confidence,
+            "l2_reasoning": l2_reasoning,
+            "blocked_reason": analysis_result.blocked_reason,
+        },
+        "blocked": is_blocked and not force_forward,
+        "original_content": original_content,
+        "forwarded_content": analyze_content,
+        "response": None,
+        "response_raw": None,
+    }
+
+    # Forward to upstream if not blocked (or force_forward) and not analyze_only
+    if (not is_blocked or force_forward) and not analyze_only:
+        try:
+            import httpx
+
+            # Use the openai_adapter's upstream URL and API key
+            upstream_url = f"{s.openai_adapter.upstream_url}/chat/completions"
+            upstream_headers: dict[str, str] = {
+                "content-type": "application/json",
+                "accept": "application/json",
+            }
+            if s.openai_adapter.api_key:
+                upstream_headers["Authorization"] = f"Bearer {s.openai_adapter.api_key}"
+
+            chat_body = {
+                "model": model,
+                "messages": forwarded_messages,
+                "stream": False,
+            }
+
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.post(
+                    upstream_url,
+                    headers=upstream_headers,
+                    json=chat_body,
+                )
+
+                if resp.status_code == 200:
+                    resp_json = resp.json()
+                    response_data["response_raw"] = resp_json
+                    # Extract text from response
+                    choices = resp_json.get("choices", [])
+                    if choices:
+                        msg = choices[0].get("message", {})
+                        response_data["response"] = msg.get("content", "")
+                else:
+                    response_data["response"] = (
+                        f"[Upstream error {resp.status_code}]: {resp.text[:500]}"
+                    )
+        except Exception as e:
+            logger.error(f"Chat lab upstream error: {e}")
+            response_data["response"] = f"[Error]: {e}"
+
+    return JSONResponse(response_data)
+
+
 # ── Test Lab ─────────────────────────────────────────────────────
 
 
@@ -681,6 +898,7 @@ async def test_analyze(request: Request) -> dict[str, Any]:
 
     # Also log to audit
     from .models import AuditEntry
+
     audit_entry = AuditEntry(
         id=analysis.request_id,
         timestamp=time.time(),

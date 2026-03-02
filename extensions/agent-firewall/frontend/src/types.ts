@@ -185,4 +185,5 @@ export type NavSection =
   | "engine"
   | "rate-limit"
   | "test"
+  | "chat"
   | "audit";
