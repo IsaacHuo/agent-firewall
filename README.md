@@ -193,7 +193,7 @@ tools/call, completion/complete, sampling/createMessage
 ### One-Click Start (Recommended)
 
 ```bash
-# From repository root — starts backend + frontend
+# From repository root — starts Gateway + backend + frontend
 ./scripts/start-all.sh
 
 # Stop all services
@@ -434,14 +434,13 @@ open http://localhost:9091
 
 ## Frontend Dashboard
 
-The unified console is a Vue 3 SPA providing 11 pages across 4 groups — Chat, Security, Agent Management, and Settings.
+The unified console is a Vue 3 SPA providing 10 pages across 4 groups — Chat, Security, Agent Management, and Settings.
 
 ### Pages
 
 | Group        | Page              | Route Hash        | Description                                                                                                                                 |
 | ------------ | ----------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Chat**     | Chat              | `#chat`           | Interactive chatbot interface — default landing page                                                                                        |
-| **Security** | Dashboard         | `#dashboard`      | Overview — stat cards, threat distribution chart, recent alerts, engine status, quick actions                                               |
 | **Security** | Traffic Waterfall | `#traffic`        | Real-time traffic monitoring — verdict/method/search filtering, auto-scroll, detail panel with HITL escalation                              |
 | **Security** | Rules Config      | `#rules`          | Full rule management — Pattern rules, Method policies, Agent rules. CRUD with live regex testing                                            |
 | **Security** | Engine Settings   | `#engine`         | L1/L2 engine configuration — network settings, blocked commands, L2 model endpoint/key/timeout                                              |
@@ -458,7 +457,6 @@ The unified console is a Vue 3 SPA providing 11 pages across 4 groups — Chat, 
 App.vue (shell + hash-based router)
 ├── Sidebar.vue (grouped navigation: Chat / Security / Agent / Settings)
 ├── ChatLab.vue            ── Chat group
-├── Dashboard.vue          ── Security group
 ├── TrafficWaterfall.vue
 ├── RulesConfig.vue
 ├── EngineSettings.vue
@@ -672,7 +670,6 @@ extensions/agent-firewall/
 │       └── components/
 │           ├── Sidebar.vue       # Grouped navigation (Chat / Security / Agent / Settings)
 │           ├── ChatLab.vue       # Interactive chatbot interface (default page)
-│           ├── Dashboard.vue     # Overview — stats, threats, alerts, engine status
 │           ├── TrafficWaterfall.vue  # Real-time traffic waterfall + detail panel
 │           ├── RulesConfig.vue   # Pattern/Method/Agent rule CRUD management
 │           ├── EngineSettings.vue    # L1/L2 engine + network + session config
