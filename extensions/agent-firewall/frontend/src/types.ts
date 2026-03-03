@@ -180,7 +180,6 @@ export interface AuditEntry {
 
 export type NavSection =
   | "chat"
-  | "dashboard"
   | "traffic"
   | "rules"
   | "engine"
