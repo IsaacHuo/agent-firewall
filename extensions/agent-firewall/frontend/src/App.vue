@@ -15,7 +15,7 @@
           v-for="item in navItems"
           :key="item.id"
           class="rail-btn"
-          :class="{ active: currentSection === item.id, separator: item.separator }"
+          :class="{ active: currentSection === item.id, separator: item.separator, primary: item.primary }"
           :title="item.label"
           @click="navigateTo(item.id)"
         >
@@ -73,8 +73,8 @@
       <div class="content-split">
         <!-- Left: Active page -->
         <div class="content-main" :class="{ 'full-width': !showTraffic }">
-          <ChatLab v-show="currentSection === 'chat'" :events="events" />
-          <RulesConfig v-if="currentSection === 'rules'" :rules="rulesData" @save="handleSaveRule" @delete="handleDeleteRule" @toggle="handleToggleRule" @updateMethodAction="handleUpdateMethodAction" @updateDefaultAction="(a: string) => handleUpdateDefaultAction(a as RuleAction)" />
+          <ChatLab v-if="currentSection === 'chat'" :events="events" />
+          <RulesConfig v-else-if="currentSection === 'rules'" :rules="rulesData" @save="handleSaveRule" @delete="handleDeleteRule" @toggle="handleToggleRule" @updateMethodAction="handleUpdateMethodAction" @updateDefaultAction="(a: string) => handleUpdateDefaultAction(a as RuleAction)" />
           <EngineSettings v-else-if="currentSection === 'engine'" :config="config" :saving="configSaving" @save="handleSaveConfig" />
           <RateLimitSettings v-else-if="currentSection === 'rate-limit'" :config="config?.rate_limit ?? { requests_per_sec: 10, burst: 20 }" @save="handleSaveRateLimit" />
           <SecurityTest v-else-if="currentSection === 'test'" :results="testResults" :running="testRunning" @run="handleRunTest" @runAll="handleRunAllTests" @clear="clearTestResults" />
@@ -179,7 +179,7 @@ const cmdQuery = ref('')
 const cmdInput = ref<HTMLInputElement | null>(null)
 
 const navItems = computed(() => [
-  { id: 'chat' as const, label: 'Chat Lab', icon: icons.chat, group: 'main' },
+  { id: 'chat' as const, label: 'Chat Lab', icon: icons.chat, group: 'main', primary: true },
   { id: 'rules' as const, label: 'Rules', icon: icons.rules, group: 'security', separator: true },
   { id: 'engine' as const, label: 'Engine', icon: icons.engine, group: 'security' },
   { id: 'rate-limit' as const, label: 'Rate Limit', icon: icons.rateLimit, group: 'security' },
@@ -495,6 +495,9 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
   position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
   border: none; border-radius: var(--radius-md); background: transparent; color: var(--text-dim); cursor: pointer; transition: all 0.15s;
 }
+.rail-btn.primary { width: 38px; height: 38px; margin-bottom: 6px; background: var(--accent-muted); color: var(--accent); border-radius: 12px; }
+.rail-btn.primary:hover { background: var(--accent); color: #fff; }
+.rail-btn.primary.active { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(var(--accent-rgb, 99,102,241), 0.3); }
 .rail-btn.separator { margin-top: 8px; }
 .rail-btn.separator::before { content: ''; position: absolute; top: -5px; left: 6px; right: 6px; height: 1px; background: var(--border); }
 .rail-btn:hover { background: var(--bg-hover); color: var(--text-secondary); }

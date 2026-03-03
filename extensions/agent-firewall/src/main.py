@@ -973,34 +973,21 @@ def _all_tools_openai_format() -> list[dict[str, Any]]:
 
 
 @app.post("/api/chat/send")
-async def chat_send(request: Request) -> JSONResponse:
+async def chat_send(request: Request):
     """
-    Red Team Chat Lab endpoint.
+    Red Team Chat Lab endpoint — **streaming NDJSON**.
 
     Accepts a chat message (with optional modified/injected version),
     runs L1/L2 analysis, and optionally forwards to the upstream LLM.
+    Results are streamed back as newline-delimited JSON events so the
+    frontend can display progress incrementally.
 
-    Request body:
-      {
-        "messages": [{"role": "user", "content": "..."}],
-        "model": "openai/gpt-4o-mini",
-        "modified_content": "...",     // optional: injected/modified user content
-        "force_forward": false,        // optional: forward even if blocked
-        "analyze_only": false,         // optional: only analyze, don't forward
-        "temperature": 0.7,            // optional: sampling temperature (0-2)
-        "max_tokens": 4096,            // optional: max output tokens
-        "top_p": 1.0                   // optional: nucleus sampling
-      }
-
-    Response:
-      {
-        "analysis": { "verdict", "l1_patterns", "l2_confidence", ... },
-        "blocked": bool,
-        "original_content": "...",
-        "forwarded_content": "...",    // what was actually sent upstream
-        "response": "..." | null,      // LLM response text (null if blocked)
-        "response_raw": {...} | null   // full LLM response object
-      }
+    Event types:
+      {"type": "analysis", "analysis": {...}, "blocked": bool}
+      {"type": "tool_call", "tool_call": {...}}
+      {"type": "content", "content": "..."}
+      {"type": "error", "error": "..."}
+      {"type": "done"}
     """
     import uuid
 
@@ -1019,113 +1006,108 @@ async def chat_send(request: Request) -> JSONResponse:
     if not messages:
         return JSONResponse({"error": "No messages provided"}, status_code=400)
 
-    # Extract original user content
-    from .models import AnalysisResult, AuditEntry, DashboardEvent, ThreatLevel
+    async def _event_stream():
+        """Async generator yielding NDJSON lines."""
+        from .models import AnalysisResult, AuditEntry, DashboardEvent, ThreatLevel
 
-    def _extract_text(content: Any) -> str:
-        if isinstance(content, str):
-            return content
-        if isinstance(content, list):
-            return "\n".join(
-                part.get("text", "") if isinstance(part, dict) else str(part) for part in content
-            )
-        return str(content) if content else ""
+        def _extract_text(content: Any) -> str:
+            if isinstance(content, str):
+                return content
+            if isinstance(content, list):
+                return "\n".join(
+                    part.get("text", "") if isinstance(part, dict) else str(part)
+                    for part in content
+                )
+            return str(content) if content else ""
 
-    original_content = "\n".join(
-        [_extract_text(m.get("content", "")) for m in messages if m.get("role") == "user"]
-    )
+        def _emit(obj: dict) -> str:
+            return json.dumps(obj, ensure_ascii=False) + "\n"
 
-    # Determine what content to analyze (modified version if provided)
-    analyze_content = modified_content if modified_content else original_content
-    forwarded_messages = list(messages)  # shallow copy
-
-    # If modified content provided, replace the last user message
-    if modified_content:
-        for i in range(len(forwarded_messages) - 1, -1, -1):
-            if forwarded_messages[i].get("role") == "user":
-                forwarded_messages[i] = {"role": "user", "content": modified_content}
-                break
-
-    # L1 Analysis
-    l1_result = s.static_analyzer.analyze(analyze_content)
-    l1_blocked = l1_result.threat_level in (ThreatLevel.CRITICAL, ThreatLevel.HIGH)
-
-    # L2 Analysis
-    l2_confidence = 0.0
-    l2_reasoning = ""
-    l2_is_injection = False
-
-    try:
-        l2_result = await s.semantic_analyzer.analyze(
-            method="chat/completions",
-            params=analyze_content,
-            session_context=[],
+        original_content = "\n".join(
+            [_extract_text(m.get("content", "")) for m in messages if m.get("role") == "user"]
         )
-        l2_confidence = l2_result.confidence
-        l2_reasoning = l2_result.reasoning
-        l2_is_injection = l2_result.is_injection
-    except Exception as e:
-        l2_reasoning = f"L2 analysis error: {e}"
+        analyze_content = modified_content if modified_content else original_content
+        forwarded_messages = list(messages)
 
-    l2_blocked = l2_is_injection and l2_confidence >= 0.7
+        if modified_content:
+            for i in range(len(forwarded_messages) - 1, -1, -1):
+                if forwarded_messages[i].get("role") == "user":
+                    forwarded_messages[i] = {"role": "user", "content": modified_content}
+                    break
 
-    # Final verdict
-    is_blocked = l1_blocked or l2_blocked
-    verdict = "BLOCK" if is_blocked else "ALLOW"
-    if is_blocked and l2_confidence >= 0.9:
-        verdict = "ESCALATE"
+        # L1 Analysis
+        l1_result = s.static_analyzer.analyze(analyze_content)
+        l1_blocked = l1_result.threat_level in (ThreatLevel.CRITICAL, ThreatLevel.HIGH)
 
-    threat_level = l1_result.threat_level
-    if l2_blocked:
-        threat_level = ThreatLevel.HIGH if l2_confidence < 0.9 else ThreatLevel.CRITICAL
+        # L2 Analysis
+        l2_confidence = 0.0
+        l2_reasoning = ""
+        l2_is_injection = False
+        try:
+            l2_result = await s.semantic_analyzer.analyze(
+                method="chat/completions",
+                params=analyze_content,
+                session_context=[],
+            )
+            l2_confidence = l2_result.confidence
+            l2_reasoning = l2_result.reasoning
+            l2_is_injection = l2_result.is_injection
+        except Exception as e:
+            l2_reasoning = f"L2 analysis error: {e}"
 
-    analysis_result = AnalysisResult(
-        request_id=str(uuid.uuid4()),
-        verdict=verdict,
-        threat_level=threat_level,
-        l1_matched_patterns=l1_result.matched_patterns,
-        l2_is_injection=l2_is_injection,
-        l2_confidence=l2_confidence,
-        l2_reasoning=l2_reasoning,
-        blocked_reason=(
-            f"L1: {', '.join(l1_result.matched_patterns)}"
-            if l1_blocked
-            else f"L2: {l2_reasoning}"
-            if l2_blocked
-            else ""
-        ),
-    )
+        l2_blocked = l2_is_injection and l2_confidence >= 0.7
+        is_blocked = l1_blocked or l2_blocked
+        verdict = "BLOCK" if is_blocked else "ALLOW"
+        if is_blocked and l2_confidence >= 0.9:
+            verdict = "ESCALATE"
 
-    # Emit dashboard event
-    event = DashboardEvent(
-        event_type="chat_lab_request",
-        timestamp=time.time(),
-        session_id="chat-lab",
-        agent_id="red-team-tester",
-        method="chat/completions",
-        payload_preview=(
-            analyze_content[:200] + "..." if len(analyze_content) > 200 else analyze_content
-        ),
-        analysis=analysis_result,
-        is_alert=(verdict != "ALLOW"),
-    )
-    await s._emit_dashboard(event)
+        threat_level = l1_result.threat_level
+        if l2_blocked:
+            threat_level = ThreatLevel.HIGH if l2_confidence < 0.9 else ThreatLevel.CRITICAL
 
-    # Emit audit entry
-    audit_entry = AuditEntry(
-        timestamp=time.time(),
-        session_id="chat-lab",
-        agent_id="red-team-tester",
-        method="chat/completions",
-        params_summary=analyze_content[:500],
-        analysis=analysis_result,
-        verdict=verdict,
-    )
-    await s._emit_audit(audit_entry)
+        analysis_result = AnalysisResult(
+            request_id=str(uuid.uuid4()),
+            verdict=verdict,
+            threat_level=threat_level,
+            l1_matched_patterns=l1_result.matched_patterns,
+            l2_is_injection=l2_is_injection,
+            l2_confidence=l2_confidence,
+            l2_reasoning=l2_reasoning,
+            blocked_reason=(
+                f"L1: {', '.join(l1_result.matched_patterns)}"
+                if l1_blocked
+                else f"L2: {l2_reasoning}"
+                if l2_blocked
+                else ""
+            ),
+        )
 
-    # Build response
-    response_data: dict[str, Any] = {
-        "analysis": {
+        # Emit dashboard + audit events
+        event = DashboardEvent(
+            event_type="chat_lab_request",
+            timestamp=time.time(),
+            session_id="chat-lab",
+            agent_id="red-team-tester",
+            method="chat/completions",
+            payload_preview=(
+                analyze_content[:200] + "..." if len(analyze_content) > 200 else analyze_content
+            ),
+            analysis=analysis_result,
+            is_alert=(verdict != "ALLOW"),
+        )
+        await s._emit_dashboard(event)
+        audit_entry = AuditEntry(
+            timestamp=time.time(),
+            session_id="chat-lab",
+            agent_id="red-team-tester",
+            method="chat/completions",
+            params_summary=analyze_content[:500],
+            analysis=analysis_result,
+            verdict=verdict,
+        )
+        await s._emit_audit(audit_entry)
+
+        analysis_payload = {
             "request_id": analysis_result.request_id,
             "verdict": verdict,
             "threat_level": threat_level.value
@@ -1136,20 +1118,25 @@ async def chat_send(request: Request) -> JSONResponse:
             "l2_confidence": l2_confidence,
             "l2_reasoning": l2_reasoning,
             "blocked_reason": analysis_result.blocked_reason,
-        },
-        "blocked": is_blocked and not force_forward,
-        "original_content": original_content,
-        "forwarded_content": analyze_content,
-        "response": None,
-        "response_raw": None,
-    }
+        }
 
-    # Forward to upstream if not blocked (or force_forward) and not analyze_only
-    if (not is_blocked or force_forward) and not analyze_only:
+        # ── Stream: analysis event ──
+        yield _emit(
+            {
+                "type": "analysis",
+                "analysis": analysis_payload,
+                "blocked": is_blocked and not force_forward,
+            }
+        )
+
+        if (is_blocked and not force_forward) or analyze_only:
+            yield _emit({"type": "done"})
+            return
+
+        # ── Forward to upstream LLM ──
         try:
             import httpx
 
-            # Use the openai_adapter's upstream URL and API key
             upstream_url = f"{s.openai_adapter.upstream_url}/chat/completions"
             upstream_headers: dict[str, str] = {
                 "content-type": "application/json",
@@ -1158,12 +1145,9 @@ async def chat_send(request: Request) -> JSONResponse:
             if s.openai_adapter.api_key:
                 upstream_headers["Authorization"] = f"Bearer {s.openai_adapter.api_key}"
 
-            # Gateway + skill tool definitions (all auto-discovered)
             gw_host, gw_port, gw_token = _get_gateway_auth()
             openai_tools = _all_tools_openai_format()
 
-            # Inject tool context into the system prompt so the LLM knows
-            # how to use skills (via run_skill) and gateway tools (via invoke_gateway)
             registry = _get_skill_registry()
             gw_registry = _get_gateway_tool_registry()
             skills_prompt = registry.get_skills_system_prompt()
@@ -1171,9 +1155,7 @@ async def chat_send(request: Request) -> JSONResponse:
             combined_prompt = "\n\n".join(p for p in [gateway_prompt, skills_prompt] if p)
 
             if combined_prompt and enable_tools:
-                # Prepend tool docs to the conversation as a system message
                 chat_body_messages = list(forwarded_messages)
-                # Check if there's already a system message; if so, append to it
                 has_system = chat_body_messages and chat_body_messages[0].get("role") == "system"
                 if has_system:
                     existing = chat_body_messages[0].get("content", "")
@@ -1202,40 +1184,34 @@ async def chat_send(request: Request) -> JSONResponse:
                 chat_body["tool_choice"] = "auto"
 
             tool_calls_log: list[dict[str, Any]] = []
-            max_iterations = 10  # safety: prevent infinite tool-call loops
+            max_iterations = 10
 
             async with httpx.AsyncClient(timeout=120.0) as client:
                 for iteration in range(max_iterations):
-                    resp = await client.post(
-                        upstream_url,
-                        headers=upstream_headers,
-                        json=chat_body,
-                    )
+                    resp = await client.post(upstream_url, headers=upstream_headers, json=chat_body)
 
                     if resp.status_code != 200:
-                        response_data["response"] = (
-                            f"[Upstream error {resp.status_code}]: {resp.text[:500]}"
+                        yield _emit(
+                            {
+                                "type": "error",
+                                "error": f"Upstream error {resp.status_code}: {resp.text[:500]}",
+                            }
                         )
                         break
 
                     resp_json = resp.json()
-                    response_data["response_raw"] = resp_json
                     choices = resp_json.get("choices", [])
                     if not choices:
-                        response_data["response"] = "[No choices in LLM response]"
+                        yield _emit({"type": "error", "error": "No choices in LLM response"})
                         break
 
                     assistant_msg = choices[0].get("message", {})
                     finish_reason = choices[0].get("finish_reason", "stop")
-
-                    # Check if the LLM wants to call tools
                     pending_tool_calls = assistant_msg.get("tool_calls", [])
 
                     if finish_reason == "tool_calls" or pending_tool_calls:
-                        # Append assistant message with tool_calls to conversation
                         chat_body["messages"].append(assistant_msg)
 
-                        # Execute each tool call
                         for tc in pending_tool_calls:
                             tc_id = tc.get("id", "")
                             func = tc.get("function", {})
@@ -1284,7 +1260,6 @@ async def chat_send(request: Request) -> JSONResponse:
                             tool_call_record["l2_blocked"] = tool_l2_blocked
 
                             if tool_l1_blocked or tool_l2_blocked:
-                                # Block this tool call
                                 block_reasons = []
                                 if tool_l1_blocked:
                                     block_reasons.append(
@@ -1298,7 +1273,6 @@ async def chat_send(request: Request) -> JSONResponse:
                                 tool_call_record["blocked"] = True
                                 tool_call_record["result_preview"] = tool_result[:200]
                             else:
-                                # Execute tool — skill tools or gateway (all dynamically discovered)
                                 if tool_name == "get_skill_docs":
                                     skill_name = tool_args.get("skill_name", "")
                                     tool_result = registry.get_skill_docs(skill_name)
@@ -1314,7 +1288,6 @@ async def chat_send(request: Request) -> JSONResponse:
                                     )
                                     tool_result = await registry.execute_skill(skill_name, command)
                                 elif tool_name == "invoke_gateway":
-                                    # Generic gateway tool invocation
                                     gw_tool_name = tool_args.get("tool_name", "")
                                     gw_arguments = tool_args.get("arguments", {})
                                     logger.info(
@@ -1322,7 +1295,6 @@ async def chat_send(request: Request) -> JSONResponse:
                                         gw_tool_name,
                                         json.dumps(gw_arguments, ensure_ascii=False)[:200],
                                     )
-                                    # Intercept web_search → use Tavily instead of gateway Brave
                                     if gw_tool_name == "web_search":
                                         search_query = gw_arguments.get("query", "")
                                         search_count = gw_arguments.get("count", 5)
@@ -1334,7 +1306,6 @@ async def chat_send(request: Request) -> JSONResponse:
                                             gw_host, gw_port, gw_token, gw_tool_name, gw_arguments
                                         )
                                 else:
-                                    # Fallback: try as direct gateway tool invocation
                                     tool_result = await GatewayToolRegistry.execute(
                                         gw_host, gw_port, gw_token, tool_name, tool_args
                                     )
@@ -1353,17 +1324,13 @@ async def chat_send(request: Request) -> JSONResponse:
                                 payload_preview=tool_content_str[:200],
                                 analysis=AnalysisResult(
                                     request_id=str(uuid.uuid4()),
-                                    verdict=(
-                                        "BLOCK" if (tool_l1_blocked or tool_l2_blocked) else "ALLOW"
-                                    ),
-                                    threat_level=(
-                                        tool_l1.threat_level
-                                        if tool_l1_blocked
-                                        else (
-                                            ThreatLevel.HIGH
-                                            if tool_l2_blocked
-                                            else ThreatLevel.NONE
-                                        )
+                                    verdict="BLOCK"
+                                    if (tool_l1_blocked or tool_l2_blocked)
+                                    else "ALLOW",
+                                    threat_level=tool_l1.threat_level
+                                    if tool_l1_blocked
+                                    else (
+                                        ThreatLevel.HIGH if tool_l2_blocked else ThreatLevel.NONE
                                     ),
                                     l1_matched_patterns=tool_l1.matched_patterns,
                                     l2_is_injection=tool_l2_blocked,
@@ -1381,34 +1348,29 @@ async def chat_send(request: Request) -> JSONResponse:
 
                             # Append tool result to conversation
                             chat_body["messages"].append(
-                                {
-                                    "role": "tool",
-                                    "tool_call_id": tc_id,
-                                    "content": tool_result,
-                                }
+                                {"role": "tool", "tool_call_id": tc_id, "content": tool_result}
                             )
 
-                        # Continue loop — LLM will process tool results
+                            # ── Stream: tool call event ──
+                            yield _emit({"type": "tool_call", "tool_call": tool_call_record})
+
                         continue
 
-                    # No tool calls — we have the final response
-                    response_data["response"] = assistant_msg.get("content", "")
+                    # No tool calls — final response
+                    yield _emit({"type": "content", "content": assistant_msg.get("content", "")})
                     break
                 else:
-                    # max iterations reached
-                    response_data["response"] = "[Max tool-call iterations reached] " + (
-                        assistant_msg.get("content", "") if "assistant_msg" in dir() else ""
+                    yield _emit(
+                        {"type": "content", "content": "[Max tool-call iterations reached]"}
                     )
-
-            # Attach tool call log to response
-            if tool_calls_log:
-                response_data["tool_calls"] = tool_calls_log
 
         except Exception as e:
             logger.error(f"Chat lab upstream error: {e}")
-            response_data["response"] = f"[Error]: {e}"
+            yield _emit({"type": "error", "error": str(e)})
 
-    return JSONResponse(response_data)
+        yield _emit({"type": "done"})
+
+    return StreamingResponse(_event_stream(), media_type="application/x-ndjson")
 
 
 # ── Test Lab ─────────────────────────────────────────────────────

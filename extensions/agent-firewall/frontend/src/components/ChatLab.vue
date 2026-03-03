@@ -818,32 +818,90 @@ async function sendMessage(content: string, modifiedContent: string | null, anal
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     })
-    const data = await res.json()
-    userMsg.analysis = data.analysis; userMsg.verdict = data.analysis?.verdict; userMsg.blocked = data.blocked
 
-    if (data.blocked) {
-      chatMessages.value.push({ id: generateId(), role: 'system', content: `Blocked: ${data.analysis?.blocked_reason || 'Security policy violation'}`, timestamp: Date.now(), verdict: 'BLOCK' })
+    // Stream NDJSON events from backend
+    const reader = res.body!.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let assistantAdded = false
+    const assistantMsg: ChatMessage = {
+      id: generateId(), role: 'assistant', content: '', timestamp: Date.now(),
     }
 
-    // Show tool calls if any
-    const toolCalls: ToolCallRecord[] = data.tool_calls || []
-    if (toolCalls.length) {
-      for (const tc of toolCalls) {
-        const tcContent = tc.blocked
-          ? `🛡️ **BLOCKED** \`${tc.tool_name}\`(${JSON.stringify(tc.arguments)})\nL1 patterns: ${tc.l1_patterns.join(', ')}${tc.l2_blocked ? `\nL2: ${((tc.l2_confidence || 0) * 100).toFixed(0)}% — ${tc.l2_reasoning || ''}` : ''}`
-          : `🔧 \`${tc.tool_name}\`(${JSON.stringify(tc.arguments)})\n→ ${tc.result_preview}`
-        chatMessages.value.push({
-          id: generateId(), role: 'tool', content: tcContent, timestamp: Date.now(),
-          verdict: tc.blocked ? 'BLOCK' : 'ALLOW', blocked: tc.blocked,
-          toolCalls: [tc],
-        })
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+
+      let newlineIdx: number
+      while ((newlineIdx = buffer.indexOf('\n')) >= 0) {
+        const line = buffer.slice(0, newlineIdx).trim()
+        buffer = buffer.slice(newlineIdx + 1)
+        if (!line) continue
+
+        let event: any
+        try { event = JSON.parse(line) } catch { continue }
+
+        switch (event.type) {
+          case 'analysis':
+            userMsg.analysis = event.analysis
+            userMsg.verdict = event.analysis?.verdict
+            userMsg.blocked = event.blocked
+            if (event.blocked) {
+              chatMessages.value.push({
+                id: generateId(), role: 'system',
+                content: `Blocked: ${event.analysis?.blocked_reason || 'Security policy violation'}`,
+                timestamp: Date.now(), verdict: 'BLOCK',
+              })
+            }
+            scrollToBottom()
+            break
+
+          case 'tool_call': {
+            const tc = event.tool_call as ToolCallRecord
+            const tcContent = tc.blocked
+              ? `🛡️ **BLOCKED** \`${tc.tool_name}\`(${JSON.stringify(tc.arguments)})\nL1 patterns: ${tc.l1_patterns.join(', ')}${tc.l2_blocked ? `\nL2: ${((tc.l2_confidence || 0) * 100).toFixed(0)}% — ${tc.l2_reasoning || ''}` : ''}`
+              : `🔧 \`${tc.tool_name}\`(${JSON.stringify(tc.arguments)})\n→ ${tc.result_preview}`
+            chatMessages.value.push({
+              id: generateId(), role: 'tool', content: tcContent, timestamp: Date.now(),
+              verdict: tc.blocked ? 'BLOCK' : 'ALLOW', blocked: tc.blocked,
+              toolCalls: [tc],
+            })
+            scrollToBottom()
+            break
+          }
+
+          case 'content':
+            if (!assistantAdded) {
+              assistantMsg.content = event.content
+              chatMessages.value.push(assistantMsg)
+              assistantAdded = true
+            } else {
+              assistantMsg.content = event.content
+            }
+            scrollToBottom()
+            break
+
+          case 'error':
+            chatMessages.value.push({
+              id: generateId(), role: 'system',
+              content: `Error: ${event.error}`, timestamp: Date.now(),
+            })
+            scrollToBottom()
+            break
+
+          case 'done':
+            break
+        }
       }
     }
 
-    if (data.response) {
-      chatMessages.value.push({ id: generateId(), role: 'assistant', content: data.response, timestamp: Date.now() })
-    } else if (analyzeOnlyFlag && !data.blocked) {
-      chatMessages.value.push({ id: generateId(), role: 'system', content: 'Analysis complete — not forwarded (analyze-only)', timestamp: Date.now() })
+    if (analyzeOnlyFlag && !userMsg.blocked) {
+      chatMessages.value.push({
+        id: generateId(), role: 'system',
+        content: 'Analysis complete — not forwarded (analyze-only)',
+        timestamp: Date.now(),
+      })
     }
   } catch (err) {
     chatMessages.value.push({ id: generateId(), role: 'system', content: `Error: ${err instanceof Error ? err.message : 'Unknown error'}`, timestamp: Date.now() })
