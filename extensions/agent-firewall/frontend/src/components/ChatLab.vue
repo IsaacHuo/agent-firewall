@@ -4,25 +4,62 @@
     <div class="chat-toolbar">
       <div class="toolbar-left">
         <div class="mode-tabs">
-          <button
-            v-for="m in modes"
-            :key="m.id"
-            class="mode-tab"
-            :class="{ active: mode === m.id }"
-            @click="mode = m.id"
-          >
+          <button v-for="m in modes" :key="m.id" class="mode-tab" :class="{ active: mode === m.id }" @click="mode = m.id">
             <span class="mode-icon" v-html="m.icon"></span>
             {{ m.label }}
           </button>
         </div>
       </div>
       <div class="toolbar-right">
+        <!-- History dropdown -->
+        <div class="history-dropdown" ref="histDropRef">
+          <button class="toolbar-btn" @click="showHistoryMenu = !showHistoryMenu" title="Conversation history">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </button>
+          <div v-if="showHistoryMenu" class="dropdown-menu history-menu">
+            <div class="dropdown-header">
+              <span>Conversations</span>
+              <button class="icon-btn-sm" @click="newConversation" title="New conversation">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+            </div>
+            <div class="dropdown-list">
+              <div v-for="conv in savedConversations" :key="conv.id" class="dropdown-item" :class="{ active: conv.id === activeConvId }" @click="loadConversation(conv.id)">
+                <div class="conv-info">
+                  <span class="conv-title">{{ conv.title }}</span>
+                  <span class="conv-meta">{{ conv.messageCount }} msgs · {{ formatDate(conv.updatedAt) }}</span>
+                </div>
+                <div class="conv-actions">
+                  <button class="icon-btn-xs" @click.stop="exportConversation(conv.id)" title="Export JSON">⬇</button>
+                  <button class="icon-btn-xs danger" @click.stop="deleteConversation(conv.id)" title="Delete">✕</button>
+                </div>
+              </div>
+              <div v-if="!savedConversations.length" class="dropdown-empty">No saved conversations</div>
+            </div>
+          </div>
+        </div>
+
         <select v-model="selectedModel" class="toolbar-select">
-          <option value="deepseek/deepseek-chat">deepseek-chat</option>
-          <option value="deepseek/deepseek-v3.2-speciale">deepseek-v3.2</option>
           <option value="openai/gpt-4o-mini">gpt-4o-mini</option>
+          <option value="openai/gpt-4o">gpt-4o</option>
+          <option value="moonshotai/kimi-k2.5">kimi-k2.5</option>
+          <option value="anthropic/claude-sonnet-4">claude-sonnet-4</option>
           <option value="anthropic/claude-3.5-sonnet">claude-3.5-sonnet</option>
+          <option value="google/gemini-2.0-flash-001">gemini-2.0-flash</option>
+          <option value="google/gemini-3-flash-preview">gemini-3-flash</option>
+          <option value="minimax/minimax-m2.5">minimax-m2.5</option>
+          <option value="deepseek/deepseek-chat">deepseek-chat (no tools)</option>
         </select>
+
+        <!-- Settings gear -->
+        <button class="toolbar-btn" @click="showSettings = !showSettings" :class="{ active: showSettings }" title="Model settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+
         <label class="toolbar-toggle" title="Auto-intercept messages for review">
           <input type="checkbox" v-model="autoIntercept" />
           <span class="toggle-label">Intercept</span>
@@ -31,15 +68,38 @@
           <input type="checkbox" v-model="forceForward" />
           <span class="toggle-label">Force</span>
         </label>
-        <label class="toolbar-toggle" title="Enable gateway tools (web_search, message, tts, etc.)">
-          <input type="checkbox" v-model="useGateway" />
-          <span class="toggle-label">Tools</span>
-        </label>
         <button class="toolbar-btn" @click="clearChat" title="Clear chat">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
             <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
           </svg>
         </button>
+      </div>
+    </div>
+
+    <!-- Settings panel (slide down) -->
+    <div v-if="showSettings" class="settings-panel">
+      <div class="settings-grid">
+        <div class="setting-group full-width">
+          <label class="setting-label">System Prompt</label>
+          <textarea v-model="systemPrompt" class="setting-textarea" rows="3" placeholder="You are a helpful assistant..."></textarea>
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">Temperature <span class="setting-val">{{ temperature.toFixed(2) }}</span></label>
+          <input type="range" v-model.number="temperature" min="0" max="2" step="0.05" class="setting-range" />
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">Max Tokens <span class="setting-val">{{ maxTokens }}</span></label>
+          <input type="range" v-model.number="maxTokens" min="256" max="16384" step="256" class="setting-range" />
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">Top P <span class="setting-val">{{ topP.toFixed(2) }}</span></label>
+          <input type="range" v-model.number="topP" min="0" max="1" step="0.05" class="setting-range" />
+        </div>
+        <div class="setting-group">
+          <label class="setting-label">
+            <input type="checkbox" v-model="enableTools" /> Enable Tool Calling
+          </label>
+        </div>
       </div>
     </div>
 
@@ -56,24 +116,14 @@
           <h3>Agent Firewall Chat Lab</h3>
           <p>Test attack payloads against the firewall's dual-layer analysis engine.</p>
           <div class="quick-actions">
-            <button
-              v-for="sample in sampleAttacks"
-              :key="sample.name"
-              class="quick-btn"
-              @click="useSample(sample)"
-            >
+            <button v-for="sample in sampleAttacks" :key="sample.name" class="quick-btn" @click="useSample(sample)">
               <span class="quick-tag">{{ sample.category }}</span>
               {{ sample.name }}
             </button>
           </div>
         </div>
 
-        <div
-          v-for="msg in chatMessages"
-          :key="msg.id"
-          class="message"
-          :class="[`msg-${msg.role}`, { blocked: msg.blocked, modified: msg.wasModified }]"
-        >
+        <div v-for="msg in chatMessages" :key="msg.id" class="message" :class="[`msg-${msg.role}`, { blocked: msg.blocked, modified: msg.wasModified }]">
           <div class="msg-gutter">
             <div class="msg-avatar" :class="msg.role">
               {{ msg.role === 'user' ? 'A' : msg.role === 'system' ? 'F' : msg.role === 'tool' ? '⚡' : 'L' }}
@@ -87,7 +137,12 @@
               <span v-if="msg.blocked" class="msg-tag blocked">Blocked</span>
               <span v-if="msg.verdict" class="msg-tag" :class="msg.verdict.toLowerCase()">{{ msg.verdict }}</span>
             </div>
-            <div class="msg-text" :class="{ 'tool-text': msg.role === 'tool' }">{{ msg.content }}</div>
+            <!-- Markdown rendered content for assistant messages -->
+            <div v-if="msg.role === 'assistant'" class="msg-text md-content" v-html="renderMarkdown(msg.content)"></div>
+            <!-- Tool call content (monospace) -->
+            <div v-else-if="msg.role === 'tool'" class="msg-text tool-text" v-html="renderMarkdown(msg.content)"></div>
+            <!-- Plain text for user/system -->
+            <div v-else class="msg-text">{{ msg.content }}</div>
 
             <!-- Analysis collapse -->
             <details v-if="msg.analysis" class="msg-analysis">
@@ -109,6 +164,30 @@
                 <div v-if="msg.analysis.l2_reasoning" class="analysis-row">
                   <span class="al">Reasoning</span>
                   <span class="reasoning">{{ msg.analysis.l2_reasoning }}</span>
+                </div>
+              </div>
+            </details>
+
+            <!-- Tool call L1/L2 analysis -->
+            <details v-if="msg.toolCalls?.length" class="msg-analysis">
+              <summary class="analysis-summary">
+                <span class="verdict-chip" :class="msg.blocked ? 'block' : 'allow'">{{ msg.blocked ? 'BLOCKED' : 'ALLOWED' }}</span>
+                <span class="conf-text">Tool: {{ msg.toolCalls[0].tool_name }}</span>
+                <span v-if="msg.toolCalls[0].l2_confidence" class="conf-text">L2: {{ ((msg.toolCalls[0].l2_confidence || 0) * 100).toFixed(0) }}%</span>
+              </summary>
+              <div class="analysis-body">
+                <div v-if="msg.toolCalls[0].l1_patterns?.length" class="analysis-row">
+                  <span class="al">L1 Patterns</span>
+                  <span class="pattern-chip" v-for="p in msg.toolCalls[0].l1_patterns" :key="p">{{ p }}</span>
+                </div>
+                <div v-if="msg.toolCalls[0].l2_confidence" class="analysis-row">
+                  <span class="al">L2 Confidence</span>
+                  <div class="conf-bar"><div class="conf-fill" :class="confClass(msg.toolCalls[0].l2_confidence || 0)" :style="{ width: ((msg.toolCalls[0].l2_confidence || 0) * 100) + '%' }"></div></div>
+                  <span class="conf-val">{{ ((msg.toolCalls[0].l2_confidence || 0) * 100).toFixed(1) }}%</span>
+                </div>
+                <div v-if="msg.toolCalls[0].l2_reasoning" class="analysis-row">
+                  <span class="al">L2 Reasoning</span>
+                  <span class="reasoning">{{ msg.toolCalls[0].l2_reasoning }}</span>
                 </div>
               </div>
             </details>
@@ -266,13 +345,89 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, watch, onMounted } from 'vue'
+import { ref, nextTick, watch, onMounted, onBeforeUnmount, computed } from 'vue'
+import { marked } from 'marked'
 import type { FirewallEvent, SkillStatusEntry } from '../types'
 import { useGatewaySkills } from '../composables'
 
 defineProps<{
   events: FirewallEvent[]
 }>()
+
+// ── Markdown Setup ──
+
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+})
+
+const FILE_SERVE_URL = `${window.location.protocol}//${window.location.hostname}:9090/api/file`
+
+// File extension categories
+const AUDIO_EXTS = ['mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac', 'webm']
+const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico']
+const VIDEO_EXTS = ['mp4', 'mov', 'avi', 'mkv']
+
+function getFileExt(p: string): string {
+  const m = p.match(/\.([a-zA-Z0-9]+)$/)
+  return m ? m[1].toLowerCase() : ''
+}
+
+function fileUrl(absPath: string): string {
+  return `${FILE_SERVE_URL}?path=${encodeURIComponent(absPath)}`
+}
+
+/**
+ * Replace local file paths (MEDIA:... or /path/to/file.ext) with inline
+ * audio players, images, videos, or download links, then render markdown.
+ */
+function renderMarkdown(text: string): string {
+  if (!text) return ''
+  try {
+    // Replace MEDIA:/path/to/file or bare absolute paths for known extensions
+    const allExts = [...AUDIO_EXTS, ...IMAGE_EXTS, ...VIDEO_EXTS, 'txt', 'pdf', 'docx', 'xlsx', 'csv', 'json', 'md', 'html'].join('|')
+    const fileRegex = new RegExp(`(?:MEDIA:)?(\/[^\\s"'<>]+\\.(?:${allExts}))`, 'gi')
+
+    const processed = text.replace(fileRegex, (_match, filePath: string) => {
+      const ext = getFileExt(filePath)
+      const url = fileUrl(filePath)
+      const name = filePath.split('/').pop() || filePath
+
+      if (AUDIO_EXTS.includes(ext)) {
+        return `\n\n<div class="file-embed audio-embed">` +
+          `<div class="file-embed-header"><span class="file-icon">🔊</span> <span class="file-name">${name}</span></div>` +
+          `<audio controls preload="metadata" src="${url}"></audio>` +
+          `<a class="file-download" href="${url}" download="${name}">⬇ Download</a>` +
+          `</div>\n\n`
+      }
+      if (IMAGE_EXTS.includes(ext)) {
+        return `\n\n<div class="file-embed image-embed">` +
+          `<div class="file-embed-header"><span class="file-icon">🖼️</span> <span class="file-name">${name}</span></div>` +
+          `<img src="${url}" alt="${name}" loading="lazy" style="max-width:100%;border-radius:8px;" />` +
+          `<a class="file-download" href="${url}" download="${name}">⬇ Download</a>` +
+          `</div>\n\n`
+      }
+      if (VIDEO_EXTS.includes(ext)) {
+        return `\n\n<div class="file-embed video-embed">` +
+          `<div class="file-embed-header"><span class="file-icon">🎬</span> <span class="file-name">${name}</span></div>` +
+          `<video controls preload="metadata" src="${url}" style="max-width:100%;border-radius:8px;"></video>` +
+          `<a class="file-download" href="${url}" download="${name}">⬇ Download</a>` +
+          `</div>\n\n`
+      }
+      // Documents / other files — clickable download link
+      const extIcons: Record<string, string> = { pdf: '📕', docx: '📄', xlsx: '📊', csv: '📊', txt: '📝', json: '📋', md: '📝', html: '🌐' }
+      const icon = extIcons[ext] || '📎'
+      return `\n\n<div class="file-embed doc-embed">` +
+        `<a class="file-link" href="${url}" target="_blank" download="${name}">` +
+        `<span class="file-icon">${icon}</span> <span class="file-name">${name}</span>` +
+        `<span class="file-action">Open / Download ↗</span></a></div>\n\n`
+    })
+
+    return marked.parse(processed) as string
+  } catch {
+    return text
+  }
+}
 
 // ── Types ──
 
@@ -284,12 +439,18 @@ interface ChatAnalysis {
 interface ToolCallRecord {
   tool_name: string; arguments: Record<string, unknown>; iteration: number;
   l1_patterns: string[]; l1_blocked: boolean; blocked: boolean; result_preview: string;
+  l2_confidence?: number; l2_reasoning?: string; l2_blocked?: boolean;
 }
 
 interface ChatMessage {
   id: string; role: 'user' | 'assistant' | 'system' | 'tool'; content: string; timestamp: number;
   analysis?: ChatAnalysis; blocked?: boolean; wasModified?: boolean; originalContent?: string; verdict?: string;
   toolCalls?: ToolCallRecord[];
+}
+
+interface SavedConversation {
+  id: string; title: string; messages: ChatMessage[]; model: string;
+  systemPrompt: string; createdAt: number; updatedAt: number; messageCount: number;
 }
 
 interface McpResult {
@@ -302,22 +463,38 @@ interface McpResult {
 const API_BASE = `${window.location.protocol}//${window.location.hostname}:9090`
 const CHAT_STORAGE_KEY = 'af-chat-messages'
 const CHAT_MODEL_KEY = 'af-chat-model'
+const CONV_LIST_KEY = 'af-conversations'
+const SETTINGS_KEY = 'af-chat-settings'
 
 const mode = ref<'chat' | 'mcp' | 'skill'>('chat')
-const chatMessages = ref<ChatMessage[]>(loadStoredMessages())
+const chatMessages = ref<ChatMessage[]>([])
 const inputMessage = ref('')
 const sending = ref(false)
 const autoIntercept = ref(false)
 const forceForward = ref(false)
-const useGateway = ref(true)
-const selectedModel = ref(localStorage.getItem(CHAT_MODEL_KEY) || 'deepseek/deepseek-chat')
+const selectedModel = ref(localStorage.getItem(CHAT_MODEL_KEY) || 'openai/gpt-4o-mini')
 const messagesEl = ref<HTMLElement | null>(null)
 const inputEl = ref<HTMLTextAreaElement | null>(null)
 
 const interceptActive = ref(false)
 const pendingMessage = ref('')
 const modifiedMessage = ref('')
-let msgIdCounter = chatMessages.value.length
+let msgIdCounter = 0
+
+// Settings
+const savedSettings = loadSettings()
+const showSettings = ref(false)
+const systemPrompt = ref(savedSettings.systemPrompt)
+const temperature = ref(savedSettings.temperature)
+const maxTokens = ref(savedSettings.maxTokens)
+const topP = ref(savedSettings.topP)
+const enableTools = ref(savedSettings.enableTools)
+
+// History
+const showHistoryMenu = ref(false)
+const activeConvId = ref<string>('')
+const savedConversations = ref<SavedConversation[]>(loadConversationList())
+const histDropRef = ref<HTMLElement | null>(null)
 
 // MCP state
 const mcpMethod = ref('tools/call')
@@ -361,20 +538,145 @@ const mcpPresets = [
   { name: 'SQL inject', method: 'tools/call', tool: 'query_db', args: '{"sql": "SELECT * FROM users; DROP TABLE users;--"}' },
 ]
 
-function loadStoredMessages(): ChatMessage[] {
+// ── Settings persistence ──
+
+function loadSettings() {
   try {
-    const raw = localStorage.getItem(CHAT_STORAGE_KEY)
+    const raw = localStorage.getItem(SETTINGS_KEY)
+    if (raw) {
+      const s = JSON.parse(raw)
+      return {
+        systemPrompt: s.systemPrompt || '',
+        temperature: s.temperature ?? 0.7,
+        maxTokens: s.maxTokens ?? 4096,
+        topP: s.topP ?? 1.0,
+        enableTools: s.enableTools ?? true,
+      }
+    }
+  } catch { /* ignore */ }
+  return { systemPrompt: '', temperature: 0.7, maxTokens: 4096, topP: 1.0, enableTools: true }
+}
+
+function saveSettings() {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+    systemPrompt: systemPrompt.value,
+    temperature: temperature.value,
+    maxTokens: maxTokens.value,
+    topP: topP.value,
+    enableTools: enableTools.value,
+  }))
+}
+
+watch([systemPrompt, temperature, maxTokens, topP, enableTools], saveSettings, { deep: true })
+
+// ── Conversation History ──
+
+function loadConversationList(): SavedConversation[] {
+  try {
+    const raw = localStorage.getItem(CONV_LIST_KEY)
     if (raw) return JSON.parse(raw)
   } catch { /* ignore */ }
   return []
 }
 
-watch(chatMessages, (msgs) => {
-  try { localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs.slice(-200))) } catch { /* full */ }
+function saveConversationList() {
+  localStorage.setItem(CONV_LIST_KEY, JSON.stringify(savedConversations.value))
+}
+
+function autoSaveCurrentConv() {
+  if (!chatMessages.value.length) return
+  if (!activeConvId.value) {
+    activeConvId.value = `conv-${Date.now()}`
+  }
+  const firstUserMsg = chatMessages.value.find(m => m.role === 'user')
+  const title = firstUserMsg ? firstUserMsg.content.slice(0, 50) + (firstUserMsg.content.length > 50 ? '...' : '') : 'New conversation'
+  const existing = savedConversations.value.findIndex(c => c.id === activeConvId.value)
+  const conv: SavedConversation = {
+    id: activeConvId.value,
+    title,
+    messages: chatMessages.value,
+    model: selectedModel.value,
+    systemPrompt: systemPrompt.value,
+    createdAt: existing >= 0 ? savedConversations.value[existing].createdAt : Date.now(),
+    updatedAt: Date.now(),
+    messageCount: chatMessages.value.length,
+  }
+  if (existing >= 0) {
+    savedConversations.value[existing] = conv
+  } else {
+    savedConversations.value.unshift(conv)
+  }
+  // Keep max 50 conversations
+  if (savedConversations.value.length > 50) savedConversations.value = savedConversations.value.slice(0, 50)
+  saveConversationList()
+}
+
+function newConversation() {
+  autoSaveCurrentConv()
+  chatMessages.value = []
+  activeConvId.value = ''
+  showHistoryMenu.value = false
+  inputEl.value?.focus()
+}
+
+function loadConversation(id: string) {
+  autoSaveCurrentConv()
+  const conv = savedConversations.value.find(c => c.id === id)
+  if (conv) {
+    chatMessages.value = [...conv.messages]
+    activeConvId.value = conv.id
+    msgIdCounter = chatMessages.value.length
+    if (conv.systemPrompt) systemPrompt.value = conv.systemPrompt
+    if (conv.model) selectedModel.value = conv.model
+  }
+  showHistoryMenu.value = false
+  scrollToBottom()
+}
+
+function deleteConversation(id: string) {
+  savedConversations.value = savedConversations.value.filter(c => c.id !== id)
+  saveConversationList()
+  if (activeConvId.value === id) {
+    activeConvId.value = ''
+    chatMessages.value = []
+  }
+}
+
+function exportConversation(id: string) {
+  const conv = savedConversations.value.find(c => c.id === id)
+  if (!conv) return
+  const blob = new Blob([JSON.stringify(conv, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `conversation-${conv.title.slice(0, 30).replace(/[^a-zA-Z0-9]/g, '_')}-${new Date(conv.updatedAt).toISOString().slice(0, 10)}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function formatDate(ts: number) {
+  const d = new Date(ts)
+  const now = new Date()
+  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric' })
+}
+
+// Close history dropdown on outside click
+function onDocClick(e: MouseEvent) {
+  if (histDropRef.value && !histDropRef.value.contains(e.target as Node)) {
+    showHistoryMenu.value = false
+  }
+}
+onMounted(() => { document.addEventListener('click', onDocClick); scrollToBottom(); inputEl.value?.focus() })
+onBeforeUnmount(() => { document.removeEventListener('click', onDocClick) })
+
+// ── Watches ──
+
+watch(chatMessages, () => {
+  autoSaveCurrentConv()
 }, { deep: true })
 
 watch(selectedModel, (m) => localStorage.setItem(CHAT_MODEL_KEY, m))
-onMounted(() => { scrollToBottom(); inputEl.value?.focus() })
 
 // ── Chat methods ──
 
@@ -420,18 +722,35 @@ async function sendMessage(content: string, modifiedContent: string | null, anal
   chatMessages.value.push(userMsg)
   scrollToBottom()
 
-  const apiMessages = chatMessages.value.filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({ role: m.role, content: m.content }))
+  // Build messages for API — include system prompt if set
+  const apiMessages: Array<{ role: string; content: string }> = []
+  if (systemPrompt.value.trim()) {
+    apiMessages.push({ role: 'system', content: systemPrompt.value.trim() })
+  }
+  for (const m of chatMessages.value) {
+    if (m.role === 'user' || m.role === 'assistant') {
+      apiMessages.push({ role: m.role, content: m.content })
+    }
+  }
+
   sending.value = true
 
   try {
+    const body: Record<string, unknown> = {
+      messages: apiMessages,
+      model: selectedModel.value,
+      modified_content: wasModified ? modifiedContent : undefined,
+      force_forward: forceForward.value,
+      analyze_only: analyzeOnlyFlag,
+      temperature: temperature.value,
+      max_tokens: maxTokens.value,
+      top_p: topP.value,
+      enable_tools: enableTools.value,
+    }
+
     const res = await fetch(`${API_BASE}/api/chat/send`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: apiMessages, model: selectedModel.value,
-        modified_content: wasModified ? modifiedContent : undefined,
-        force_forward: forceForward.value, analyze_only: analyzeOnlyFlag,
-        use_gateway: useGateway.value,
-      }),
+      body: JSON.stringify(body),
     })
     const data = await res.json()
     userMsg.analysis = data.analysis; userMsg.verdict = data.analysis?.verdict; userMsg.blocked = data.blocked
@@ -445,7 +764,7 @@ async function sendMessage(content: string, modifiedContent: string | null, anal
     if (toolCalls.length) {
       for (const tc of toolCalls) {
         const tcContent = tc.blocked
-          ? `🛡️ **BLOCKED** \`${tc.tool_name}\`(${JSON.stringify(tc.arguments)})\nL1 patterns: ${tc.l1_patterns.join(', ')}`
+          ? `🛡️ **BLOCKED** \`${tc.tool_name}\`(${JSON.stringify(tc.arguments)})\nL1 patterns: ${tc.l1_patterns.join(', ')}${tc.l2_blocked ? `\nL2: ${((tc.l2_confidence || 0) * 100).toFixed(0)}% — ${tc.l2_reasoning || ''}` : ''}`
           : `🔧 \`${tc.tool_name}\`(${JSON.stringify(tc.arguments)})\n→ ${tc.result_preview}`
         chatMessages.value.push({
           id: generateId(), role: 'tool', content: tcContent, timestamp: Date.now(),
@@ -467,7 +786,12 @@ async function sendMessage(content: string, modifiedContent: string | null, anal
   }
 }
 
-function clearChat() { chatMessages.value = []; localStorage.removeItem(CHAT_STORAGE_KEY); interceptActive.value = false }
+function clearChat() {
+  autoSaveCurrentConv()
+  chatMessages.value = []
+  activeConvId.value = ''
+  interceptActive.value = false
+}
 
 // ── MCP methods ──
 
@@ -494,7 +818,7 @@ async function sendMcpTest() {
       verdict: data.verdict, latency: Math.round(performance.now() - start),
       details: { l1_patterns: data.l1_patterns || [], l2_confidence: data.l2_confidence || 0, l2_reasoning: data.l2_reasoning || '' },
     })
-  } catch (err) {
+  } catch {
     mcpResults.value.unshift({ method, verdict: 'ERROR', latency: Math.round(performance.now() - start) })
   } finally {
     mcpSending.value = false
@@ -506,7 +830,6 @@ async function sendMcpTest() {
 async function loadSkillsList() { await loadSkills() }
 
 async function testSkill(skill: SkillStatusEntry) {
-  // Switch to MCP mode with a preset for this skill
   mode.value = 'mcp'
   mcpMethod.value = 'tools/call'
   mcpToolName.value = skill.name
@@ -520,8 +843,8 @@ async function testSkill(skill: SkillStatusEntry) {
 /* Toolbar */
 .chat-toolbar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 6px 12px; border-bottom: 1px solid var(--border); background: var(--bg-secondary);
-  flex-shrink: 0; gap: 8px; min-height: 38px;
+  padding: 0 10px; border-bottom: 1px solid var(--border); background: var(--bg-secondary);
+  flex-shrink: 0; gap: 8px; height: 36px;
 }
 .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 6px; }
 .mode-tabs { display: flex; gap: 1px; background: var(--bg-primary); border-radius: var(--radius-md); padding: 2px; }
@@ -541,11 +864,70 @@ async function testSkill(skill: SkillStatusEntry) {
 .toolbar-toggle input { accent-color: var(--accent); width: 12px; height: 12px; }
 .toggle-label { white-space: nowrap; }
 .toolbar-btn {
-  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
   border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent;
   color: var(--text-dim); cursor: pointer; transition: all 0.15s;
 }
-.toolbar-btn:hover { border-color: var(--accent-red); color: var(--accent-red); }
+.toolbar-btn:hover { border-color: var(--accent); color: var(--accent); }
+.toolbar-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-muted); }
+
+/* History dropdown */
+.history-dropdown { position: relative; }
+.dropdown-menu {
+  position: absolute; top: 100%; right: 0; z-index: 100; margin-top: 4px;
+  background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3); min-width: 280px; max-width: 360px;
+}
+.dropdown-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 600; color: var(--text-primary);
+}
+.icon-btn-sm {
+  width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); background: transparent;
+  color: var(--text-dim); cursor: pointer; transition: all 0.15s;
+}
+.icon-btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+.dropdown-list { max-height: 300px; overflow-y: auto; }
+.dropdown-item {
+  display: flex; align-items: center; justify-content: space-between; padding: 8px 10px;
+  cursor: pointer; transition: background 0.1s; border-bottom: 1px solid var(--border);
+}
+.dropdown-item:last-child { border-bottom: none; }
+.dropdown-item:hover { background: var(--bg-hover); }
+.dropdown-item.active { background: var(--accent-muted); }
+.conv-info { flex: 1; min-width: 0; }
+.conv-title { font-size: 11px; color: var(--text-primary); display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.conv-meta { font-size: 9px; color: var(--text-dim); }
+.conv-actions { display: flex; gap: 4px; flex-shrink: 0; margin-left: 8px; }
+.icon-btn-xs {
+  width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+  border: none; border-radius: 3px; background: transparent; color: var(--text-dim);
+  cursor: pointer; font-size: 10px; transition: all 0.1s;
+}
+.icon-btn-xs:hover { background: var(--bg-surface); color: var(--text-primary); }
+.icon-btn-xs.danger:hover { color: var(--accent-red); }
+.dropdown-empty { padding: 16px; text-align: center; font-size: 11px; color: var(--text-dim); }
+
+/* Settings panel */
+.settings-panel {
+  padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--bg-elevated);
+  flex-shrink: 0; animation: slideDown 0.15s ease;
+}
+@keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.setting-group { display: flex; flex-direction: column; gap: 4px; }
+.setting-group.full-width { grid-column: 1 / -1; }
+.setting-label { font-size: 10px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; }
+.setting-label input[type="checkbox"] { accent-color: var(--accent); width: 12px; height: 12px; }
+.setting-val { font-family: var(--font-mono); color: var(--accent); font-weight: 400; }
+.setting-textarea {
+  background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary);
+  padding: 6px 8px; border-radius: var(--radius-sm); font-size: 11px; resize: vertical;
+  outline: none; font-family: inherit; line-height: 1.5;
+}
+.setting-textarea:focus { border-color: var(--accent); }
+.setting-range { width: 100%; accent-color: var(--accent); height: 4px; }
 
 /* Chat area */
 .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
@@ -592,10 +974,133 @@ async function testSkill(skill: SkillStatusEntry) {
 .msg-tag.blocked, .msg-tag.block, .msg-tag.escalate { background: var(--accent-red-muted); color: var(--accent-red); }
 .msg-tag.allow { background: var(--accent-green-muted); color: var(--accent-green); }
 .msg-tag.modified { background: var(--accent-yellow-muted); color: var(--accent-yellow); }
-.msg-text { font-size: 12px; line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; word-break: break-word; }
+.msg-text { font-size: 12px; line-height: 1.6; color: var(--text-secondary); word-break: break-word; }
 .msg-text.tool-text { font-family: var(--font-mono); font-size: 11px; background: var(--bg-elevated); padding: 6px 8px; border-radius: var(--radius-sm); border-left: 2px solid #58a6ff; }
-.msg-tool { background: rgba(88, 166, 255, 0.04); border-left: 2px solid rgba(88, 166, 255, 0.3); }
-.msg-tool.blocked { background: var(--accent-red-muted); border-left: 2px solid var(--accent-red); }
+
+/* Markdown content styling */
+.md-content :deep(p) { margin: 0 0 8px 0; }
+.md-content :deep(p:last-child) { margin-bottom: 0; }
+.md-content :deep(code) {
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 1px 4px; border-radius: 3px;
+  background: var(--bg-elevated); color: var(--accent);
+}
+.md-content :deep(pre) {
+  background: var(--bg-elevated); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px; margin: 8px 0;
+  overflow-x: auto; font-size: 11px; line-height: 1.5;
+}
+.md-content :deep(pre code) {
+  background: none; padding: 0; color: var(--text-primary);
+}
+.md-content :deep(ul), .md-content :deep(ol) {
+  margin: 4px 0 8px 0; padding-left: 20px;
+}
+.md-content :deep(li) { margin-bottom: 2px; }
+.md-content :deep(h1), .md-content :deep(h2), .md-content :deep(h3),
+.md-content :deep(h4), .md-content :deep(h5), .md-content :deep(h6) {
+  color: var(--text-primary); margin: 12px 0 6px 0; font-weight: 600;
+}
+.md-content :deep(h1) { font-size: 16px; }
+.md-content :deep(h2) { font-size: 14px; }
+.md-content :deep(h3) { font-size: 13px; }
+.md-content :deep(blockquote) {
+  border-left: 3px solid var(--accent); padding: 4px 12px; margin: 8px 0;
+  color: var(--text-muted); background: var(--bg-surface); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.md-content :deep(table) {
+  border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 11px;
+}
+.md-content :deep(th), .md-content :deep(td) {
+  border: 1px solid var(--border); padding: 4px 8px; text-align: left;
+}
+.md-content :deep(th) { background: var(--bg-surface); font-weight: 600; }
+.md-content :deep(a) { color: var(--accent); text-decoration: none; }
+.md-content :deep(a:hover) { text-decoration: underline; }
+.md-content :deep(hr) { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+.md-content :deep(strong) { color: var(--text-primary); }
+
+/* File embeds (audio, image, video, document) */
+.md-content :deep(.file-embed) {
+  margin: 10px 0;
+  padding: 12px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.md-content :deep(.file-embed-header) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.md-content :deep(.file-embed .file-icon) {
+  font-size: 16px;
+}
+.md-content :deep(.file-embed .file-name) {
+  font-family: 'SF Mono', 'Consolas', monospace;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.md-content :deep(.file-embed audio) {
+  width: 100%;
+  height: 36px;
+  border-radius: 6px;
+  outline: none;
+}
+.md-content :deep(.file-embed video) {
+  max-width: 100%;
+  border-radius: 8px;
+}
+.md-content :deep(.file-embed img) {
+  max-width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+.md-content :deep(.file-download) {
+  font-size: 11px;
+  color: var(--accent);
+  text-decoration: none;
+  align-self: flex-end;
+}
+.md-content :deep(.file-download:hover) {
+  text-decoration: underline;
+}
+.md-content :deep(.doc-embed .file-link) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  text-decoration: none;
+  color: var(--text-primary);
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.md-content :deep(.doc-embed .file-link:hover) {
+  background: var(--bg-hover);
+  text-decoration: none;
+}
+.md-content :deep(.doc-embed .file-link .file-icon) {
+  font-size: 22px;
+}
+.md-content :deep(.doc-embed .file-link .file-name) {
+  flex: 1;
+  font-weight: 500;
+  font-size: 13px;
+}
+.md-content :deep(.doc-embed .file-link .file-action) {
+  font-size: 11px;
+  color: var(--accent);
+  white-space: nowrap;
+}
 
 /* Analysis */
 .msg-analysis { margin-top: 6px; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
@@ -613,6 +1118,8 @@ async function testSkill(skill: SkillStatusEntry) {
 }
 .verdict-chip.allow, .threat-chip.none { background: var(--accent-green-muted); color: var(--accent-green); }
 .verdict-chip.block, .verdict-chip.escalate, .threat-chip.critical, .threat-chip.high { background: var(--accent-red-muted); color: var(--accent-red); }
+.verdict-chip.blocked { background: var(--accent-red-muted); color: var(--accent-red); }
+.verdict-chip.allowed { background: var(--accent-green-muted); color: var(--accent-green); }
 .threat-chip.medium { background: var(--accent-yellow-muted); color: var(--accent-yellow); }
 .threat-chip.low { background: var(--accent-muted); color: var(--accent); }
 .pattern-chip { font-size: 9px; padding: 1px 5px; border-radius: 2px; background: var(--accent-red-muted); color: var(--accent-red); font-family: var(--font-mono); }

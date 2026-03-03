@@ -43,7 +43,7 @@ if _env_path.exists():
 
 from fastapi import FastAPI, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from .audit.logger import AuditLogger
 from .config import FirewallConfig
@@ -228,6 +228,68 @@ def _state(request: Request | None = None) -> AppState:
 @app.get("/health")
 async def health() -> dict[str, str]:
     return {"status": "ok", "service": "agent-firewall"}
+
+
+# ── Local File Serve (for audio/image/doc rendered in ChatLab) ──
+
+import mimetypes
+
+_ALLOWED_EXTENSIONS = {
+    # Audio
+    ".mp3",
+    ".wav",
+    ".ogg",
+    ".m4a",
+    ".flac",
+    ".aac",
+    ".webm",
+    # Image
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".svg",
+    ".bmp",
+    ".ico",
+    # Documents
+    ".txt",
+    ".pdf",
+    ".docx",
+    ".xlsx",
+    ".csv",
+    ".json",
+    ".md",
+    ".html",
+    # Video
+    ".mp4",
+    ".mov",
+    ".avi",
+    ".mkv",
+}
+
+
+@app.get("/api/file")
+async def serve_local_file(path: str) -> FileResponse:
+    """Serve a local file so the browser can render audio/image/doc inline.
+
+    Only serves files with allowed extensions. The *path* query param is the
+    absolute filesystem path, e.g. `/api/file?path=/tmp/voice.mp3`.
+    """
+    file_path = Path(path)
+    if not file_path.exists():
+        return JSONResponse({"error": "File not found"}, status_code=404)  # type: ignore[return-value]
+    if not file_path.is_file():
+        return JSONResponse({"error": "Not a file"}, status_code=400)  # type: ignore[return-value]
+    ext = file_path.suffix.lower()
+    if ext not in _ALLOWED_EXTENSIONS:
+        return JSONResponse({"error": f"Extension {ext} not allowed"}, status_code=403)  # type: ignore[return-value]
+    media_type = mimetypes.guess_type(str(file_path))[0] or "application/octet-stream"
+    return FileResponse(
+        path=str(file_path),
+        media_type=media_type,
+        filename=file_path.name,
+    )
 
 
 # ── Gateway Info (auto-discover token from local config) ────────
