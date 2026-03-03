@@ -22,7 +22,15 @@
       <div class="error-card">
         <span class="error-icon">⚠️</span>
         <p>{{ error }}</p>
+        <p v-if="connectError" class="error-detail">Gateway rejection: {{ connectError }}</p>
         <p class="error-hint">Make sure the Gateway is running and connected.</p>
+        <div v-if="!gwConnected" class="gateway-auth">
+          <p class="auth-hint">If the Gateway requires a token, enter it below:</p>
+          <div class="token-input-row">
+            <input v-model="tokenInput" type="password" placeholder="Gateway token" class="token-input" />
+            <button class="btn btn-primary btn-sm" @click="saveToken">Connect</button>
+          </div>
+        </div>
         <button class="btn btn-primary" @click="refresh">Retry</button>
       </div>
     </div>
@@ -207,10 +215,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import type { GatewayAgentRow, AgentFileEntry, SkillStatusEntry } from '../types'
-import { useGatewayAgents, useGatewaySkills } from '../composables'
+import { useGatewayAgents, useGatewaySkills, useGatewayStatus } from '../composables'
 
 const { agents, defaultAgentId, loading, error, loadAgents, loadAgentFiles, saveAgentFile } = useGatewayAgents()
 const { skills: agentSkills, loading: agentSkillsLoading, loadSkills: loadAgentSkills } = useGatewaySkills()
+const { connected: gwConnected, connectError } = useGatewayStatus()
 
 const selectedAgentId = ref<string | null>(null)
 const activePanel = ref<'overview' | 'files' | 'tools' | 'skills'>('overview')
@@ -220,6 +229,15 @@ const editingFile = ref<string | null>(null)
 const fileContent = ref('')
 const fileSaving = ref(false)
 const blockedTools = ref<Set<string>>(new Set())
+const tokenInput = ref('')
+
+function saveToken() {
+  if (tokenInput.value) {
+    localStorage.setItem('af-gateway-token', tokenInput.value)
+    tokenInput.value = ''
+    window.location.reload()
+  }
+}
 
 const selectedAgent = computed(() =>
   agents.value.find((a) => a.id === selectedAgentId.value) || null,
@@ -478,6 +496,43 @@ watch(agents, (list) => {
   color: var(--text-dim);
   font-size: 13px;
   margin: 8px 0 16px;
+}
+
+.error-detail {
+  color: var(--danger, #e74c3c);
+  font-size: 12px;
+  font-family: monospace;
+  margin: 4px 0 8px;
+}
+
+.gateway-auth {
+  margin: 16px 0;
+  padding: 16px;
+  background: var(--bg-elevated, #1a1a2e);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.auth-hint {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.token-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.token-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 13px;
 }
 
 /* Agent selector */

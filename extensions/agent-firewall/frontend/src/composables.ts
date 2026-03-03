@@ -440,12 +440,12 @@ const GATEWAY_WS_URL =
   localStorage.getItem("af-gateway-url") || `ws://${window.location.hostname}:18789/ws`;
 
 let gwSocket: WebSocket | null = null;
-let gwReqId = 0;
 const gwPendingRequests = new Map<
-  number,
+  string,
   { resolve: (val: any) => void; reject: (err: Error) => void }
 >();
 const gwConnected = ref(false);
+const gwConnectError = ref<string | null>(null);
 const gwReconnectTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
 function gwConnect() {
@@ -460,38 +460,62 @@ function gwConnect() {
   }
 
   gwSocket.onopen = () => {
-    gwConnected.value = true;
-    console.log("[Gateway] WebSocket connected");
+    gwConnectError.value = null;
+    console.log("[Gateway] WebSocket opened, waiting for handshake...");
   };
 
   gwSocket.onmessage = (event) => {
     try {
       const msg = JSON.parse(event.data);
 
-      // Handle challenge — auto-respond with connect
+      // Handle challenge — auto-respond with connect using correct protocol
       if (msg.type === "event" && msg.event === "connect.challenge") {
+        const connectId = crypto.randomUUID();
+        const token = localStorage.getItem("af-gateway-token") || undefined;
+        const password = localStorage.getItem("af-gateway-password") || undefined;
+        const authObj = token || password ? { token, password } : undefined;
+        gwPendingRequests.set(connectId, {
+          resolve: (payload: any) => {
+            // hello-ok received — connection fully established
+            gwConnected.value = true;
+            if (payload?.auth?.deviceToken) {
+              localStorage.setItem("af-gateway-token", payload.auth.deviceToken);
+            }
+            console.log("[Gateway] Connected (hello-ok), protocol:", payload?.protocol);
+          },
+          reject: (err: Error) => {
+            console.error("[Gateway] Connect rejected:", err.message);
+            gwConnectError.value = err.message;
+          },
+        });
         gwSocket?.send(
           JSON.stringify({
             type: "req",
-            id: ++gwReqId,
+            id: connectId,
             method: "connect",
             params: {
-              protocol: 1,
-              clientType: "web-dashboard",
-              clientVersion: "1.0.0",
-              nonce: msg.payload?.nonce,
-              token: localStorage.getItem("af-gateway-token") || undefined,
+              minProtocol: 3,
+              maxProtocol: 3,
+              client: {
+                id: "gateway-client",
+                version: "1.0.0",
+                platform: "web",
+                mode: "backend",
+              },
+              role: "operator",
+              scopes: ["operator.admin"],
+              auth: authObj,
             },
           }),
         );
         return;
       }
 
-      // Handle RPC responses
+      // Handle RPC responses (including hello-ok from connect)
       if (msg.type === "res" && msg.id != null) {
-        const pending = gwPendingRequests.get(msg.id);
+        const pending = gwPendingRequests.get(String(msg.id));
         if (pending) {
-          gwPendingRequests.delete(msg.id);
+          gwPendingRequests.delete(String(msg.id));
           if (msg.ok) {
             pending.resolve(msg.payload);
           } else {
@@ -499,11 +523,6 @@ function gwConnect() {
           }
         }
         return;
-      }
-
-      // Handle hello-ok (auth success)
-      if (msg.type === "res" && msg.payload?.token) {
-        localStorage.setItem("af-gateway-token", msg.payload.token);
       }
     } catch (err) {
       console.error("[Gateway] Parse error:", err);
@@ -533,11 +552,11 @@ function gwDisconnect() {
 
 function gwRequest<T = unknown>(method: string, params: Record<string, unknown> = {}): Promise<T> {
   return new Promise((resolve, reject) => {
-    if (!gwSocket || gwSocket.readyState !== WebSocket.OPEN) {
+    if (!gwSocket || gwSocket.readyState !== WebSocket.OPEN || !gwConnected.value) {
       reject(new Error("Gateway not connected"));
       return;
     }
-    const id = ++gwReqId;
+    const id = crypto.randomUUID();
     gwPendingRequests.set(id, { resolve, reject });
     gwSocket.send(JSON.stringify({ type: "req", id, method, params }));
 
@@ -564,7 +583,45 @@ export function useGateway() {
     gwConnect();
   }
 
-  return { connected: gwConnected, gatewayUrl, updateGatewayUrl, request: gwRequest };
+  function setGatewayToken(token: string) {
+    if (token) {
+      localStorage.setItem("af-gateway-token", token);
+    } else {
+      localStorage.removeItem("af-gateway-token");
+    }
+    gwConnectError.value = null;
+    gwDisconnect();
+    gwConnect();
+  }
+
+  function setGatewayPassword(password: string) {
+    if (password) {
+      localStorage.setItem("af-gateway-password", password);
+    } else {
+      localStorage.removeItem("af-gateway-password");
+    }
+    gwConnectError.value = null;
+    gwDisconnect();
+    gwConnect();
+  }
+
+  return {
+    connected: gwConnected,
+    connectError: gwConnectError,
+    gatewayUrl,
+    updateGatewayUrl,
+    setGatewayToken,
+    setGatewayPassword,
+    request: gwRequest,
+  };
+}
+
+/** Read-only gateway connection state — safe to call from any component without lifecycle side effects */
+export function useGatewayStatus() {
+  return {
+    connected: gwConnected,
+    connectError: gwConnectError,
+  };
 }
 
 // ── Skills API (via Gateway RPC) ────────────────────────────────────
