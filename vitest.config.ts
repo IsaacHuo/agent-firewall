@@ -64,7 +64,6 @@ export default defineConfig({
         // Never count workspace packages/apps toward core coverage thresholds.
         "extensions/**",
         "apps/**",
-        "ui/**",
         "test/**",
         "src/**/*.test.ts",
         // Entrypoints and wiring (covered by CI smoke + manual/e2e flows).

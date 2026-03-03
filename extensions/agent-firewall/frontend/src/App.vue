@@ -9,8 +9,11 @@
       @toggleTheme="toggleTheme"
     />
     <main class="main-content">
+      <ChatLab
+        v-if="currentSection === 'chat'"
+      />
       <Dashboard
-        v-if="currentSection === 'dashboard'"
+        v-else-if="currentSection === 'dashboard'"
         :stats="stats"
         :events="events"
         @navigate="navigateTo"
@@ -49,9 +52,6 @@
         @runAll="handleRunAllTests"
         @clear="clearTestResults"
       />
-      <ChatLab
-        v-else-if="currentSection === 'chat'"
-      />
       <AuditLog
         v-else-if="currentSection === 'audit'"
         :entries="auditEntries"
@@ -59,6 +59,15 @@
         :hasMore="auditHasMore"
         @load="handleLoadAudit"
         @loadMore="handleLoadMoreAudit"
+      />
+      <SkillsManager
+        v-else-if="currentSection === 'skills'"
+      />
+      <AgentsManager
+        v-else-if="currentSection === 'agents'"
+      />
+      <GatewayConfig
+        v-else-if="currentSection === 'gateway-config'"
       />
     </main>
   </div>
@@ -76,6 +85,7 @@ import {
   useAuditLog,
   useNavigation,
   useTheme,
+  useGateway,
 } from './composables'
 
 // Components
@@ -88,11 +98,15 @@ import RateLimitSettings from './components/RateLimitSettings.vue'
 import SecurityTest from './components/SecurityTest.vue'
 import AuditLog from './components/AuditLog.vue'
 import ChatLab from './components/ChatLab.vue'
+import SkillsManager from './components/SkillsManager.vue'
+import AgentsManager from './components/AgentsManager.vue'
+import GatewayConfig from './components/GatewayConfig.vue'
 
 // ── Composables ──────────────────────────────────────────────────
 
 const { connected, events, clearEvents, sendVerdict } = useWebSocket()
 const { stats } = useStats()
+useGateway() // Establish Gateway WS connection for Skills/Agents/Config pages
 const { config, saving: configSaving, loadConfig, saveConfig } = useConfig()
 const { rules: rulesData, loadRules, saveRule, deleteRule, toggleRule } = useRules()
 const { results: testResults, running: testRunning, runTest, runBatch, clearResults: clearTestResults } = useSecurityTest()

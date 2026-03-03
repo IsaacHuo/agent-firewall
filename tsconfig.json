@@ -6,12 +6,7 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ES2023",
-      "ScriptHost"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ES2023", "ScriptHost"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noEmit": true,
@@ -23,25 +18,13 @@
     "target": "es2023",
     "useDefineForClassFields": false,
     "paths": {
-      "*": [
-        "./*"
-      ],
-      "agent-shield/plugin-sdk": [
-        "./src/plugin-sdk/index.ts"
-      ],
-      "agent-shield/plugin-sdk/*": [
-        "./src/plugin-sdk/*.ts"
-      ],
-      "agent-shield/plugin-sdk/account-id": [
-        "./src/plugin-sdk/account-id.ts"
-      ]
+      "*": ["./*"],
+      "agent-shield/plugin-sdk": ["./src/plugin-sdk/index.ts"],
+      "agent-shield/plugin-sdk/*": ["./src/plugin-sdk/*.ts"],
+      "agent-shield/plugin-sdk/account-id": ["./src/plugin-sdk/account-id.ts"]
     }
   },
-  "include": [
-    "src/**/*",
-    "ui/**/*",
-    "extensions/**/*"
-  ],
+  "include": ["src/**/*", "extensions/**/*"],
   "exclude": [
     "node_modules",
     "dist",

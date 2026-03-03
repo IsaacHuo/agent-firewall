@@ -179,11 +179,116 @@ export interface AuditEntry {
 // ── Navigation ──────────────────────────────────────────────────────
 
 export type NavSection =
+  | "chat"
   | "dashboard"
   | "traffic"
   | "rules"
   | "engine"
   | "rate-limit"
   | "test"
-  | "chat"
-  | "audit";
+  | "audit"
+  | "skills"
+  | "agents"
+  | "gateway-config";
+
+// ── Gateway Types (for Skills / Agents / Config) ────────────────────
+
+export interface SkillRequirement {
+  bins: string[];
+  env: string[];
+  config: string[];
+  os: string[];
+}
+
+export interface SkillInstallOption {
+  id: string;
+  kind: "brew" | "node" | "go" | "uv";
+  label: string;
+  bins: string[];
+}
+
+export interface SkillStatusEntry {
+  name: string;
+  description: string;
+  source: string;
+  filePath: string;
+  baseDir: string;
+  skillKey: string;
+  bundled?: boolean;
+  primaryEnv?: string;
+  emoji?: string;
+  homepage?: string;
+  always: boolean;
+  disabled: boolean;
+  blockedByAllowlist: boolean;
+  eligible: boolean;
+  requirements: SkillRequirement;
+  missing: SkillRequirement;
+  configChecks: { path: string; satisfied: boolean }[];
+  install: SkillInstallOption[];
+}
+
+export interface SkillStatusReport {
+  workspaceDir: string;
+  managedSkillsDir: string;
+  skills: SkillStatusEntry[];
+}
+
+export interface GatewayAgentIdentity {
+  name?: string;
+  theme?: string;
+  emoji?: string;
+  avatar?: string;
+  avatarUrl?: string;
+}
+
+export interface GatewayAgentRow {
+  id: string;
+  name?: string;
+  identity?: GatewayAgentIdentity;
+}
+
+export interface AgentsListResult {
+  defaultId: string;
+  mainKey: string;
+  scope: string;
+  agents: GatewayAgentRow[];
+}
+
+export interface AgentFileEntry {
+  name: string;
+  path: string;
+  missing: boolean;
+  size?: number;
+  updatedAtMs?: number;
+  content?: string;
+}
+
+export interface GatewayConfigSnapshot {
+  path?: string | null;
+  exists?: boolean | null;
+  raw?: string | null;
+  hash?: string | null;
+  parsed?: unknown;
+  valid?: boolean | null;
+  config?: Record<string, unknown> | null;
+  issues?: { path: string; message: string }[] | null;
+}
+
+export interface GatewayConfigSchema {
+  schema: unknown;
+  uiHints: Record<
+    string,
+    {
+      label?: string;
+      help?: string;
+      group?: string;
+      order?: number;
+      advanced?: boolean;
+      sensitive?: boolean;
+      placeholder?: string;
+    }
+  >;
+  version: string;
+  generatedAt: string;
+}

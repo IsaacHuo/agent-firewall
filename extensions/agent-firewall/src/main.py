@@ -231,6 +231,47 @@ async def health() -> dict[str, str]:
     return {"status": "ok", "service": "agent-firewall"}
 
 
+# ── Gateway Info (auto-discover token from local config) ────────
+
+
+@app.get("/api/gateway-info")
+async def gateway_info() -> dict[str, Any]:
+    """Read the local OpenClaw gateway config to auto-provide connection details.
+
+    This endpoint reads ~/.openclaw/openclaw.json to extract the gateway port and
+    auth token, so the browser frontend can connect without manual configuration.
+    Only works when the firewall backend runs on the same machine as the gateway.
+    """
+    import json as _json
+
+    config_path = Path.home() / ".openclaw" / "openclaw.json"
+    result: dict[str, Any] = {"configured": False}
+    if not config_path.exists():
+        return result
+    try:
+        raw = config_path.read_text(encoding="utf-8")
+        data = _json.loads(raw)
+        gw = data.get("gateway", {})
+        if not gw:
+            return result
+        result["configured"] = True
+        result["port"] = gw.get("port", 18789)
+        result["bind"] = gw.get("bind", "loopback")
+        result["mode"] = gw.get("mode", "local")
+        # Pass auth info so the frontend can auto-connect
+        auth = gw.get("auth", {})
+        if auth.get("token"):
+            result["token"] = auth["token"]
+        if auth.get("password"):
+            result["hasPassword"] = True
+        # Pass allowed origins so frontend can self-register
+        control_ui = gw.get("controlUi", {})
+        result["allowedOrigins"] = control_ui.get("allowedOrigins", [])
+    except Exception:
+        logging.getLogger(__name__).warning("Failed to read gateway config", exc_info=True)
+    return result
+
+
 # ── Configuration ───────────────────────────────────────────────
 
 
@@ -512,10 +553,53 @@ async def update_default_action(request: Request) -> dict[str, Any]:
 
 
 @app.get("/api/audit")
-async def get_audit(request: Request) -> list[dict[str, Any]]:
+async def get_audit(request: Request) -> JSONResponse:
+    """
+    Return audit log entries in the format expected by the frontend:
+    { "entries": [...], "has_more": boolean }
+
+    Each entry is normalized to include top-level fields that the
+    frontend AuditEntry TypeScript type expects (id, threat_level,
+    matched_patterns, etc.), extracted from the nested analysis object.
+    """
     s = _state(request)
     limit = int(request.query_params.get("limit", 50))
-    return await s.audit_logger.get_recent_entries(limit)
+    offset = int(request.query_params.get("offset", 0))
+    verdict_filter = request.query_params.get("verdict")
+    since_str = request.query_params.get("since")
+
+    raw_entries = await s.audit_logger.get_recent_entries(limit + offset + 1)
+
+    # Apply filters
+    if verdict_filter:
+        raw_entries = [e for e in raw_entries if str(e.get("verdict", "")).upper() == verdict_filter.upper()]
+    if since_str:
+        since_ts = float(since_str)
+        raw_entries = [e for e in raw_entries if e.get("timestamp", 0) >= since_ts]
+
+    total = len(raw_entries)
+    paginated = raw_entries[offset : offset + limit]
+
+    # Transform each entry to match frontend AuditEntry type
+    entries = []
+    for raw in paginated:
+        analysis = raw.get("analysis") or {}
+        entries.append(
+            {
+                "id": analysis.get("request_id", raw.get("session_id", "")),
+                "timestamp": raw.get("timestamp", 0),
+                "session_id": raw.get("session_id", ""),
+                "agent_id": raw.get("agent_id", ""),
+                "method": raw.get("method", ""),
+                "verdict": str(raw.get("verdict", "ALLOW")).upper(),
+                "threat_level": str(analysis.get("threat_level", "NONE")).upper(),
+                "matched_patterns": analysis.get("l1_matched_patterns", []),
+                "payload_hash": raw.get("session_id", ""),
+                "payload_preview": raw.get("params_summary", ""),
+            }
+        )
+
+    return JSONResponse({"entries": entries, "has_more": total > offset + limit})
 
 
 # ── Stats ─────────────────────────────────────────────────────────
@@ -734,16 +818,13 @@ async def chat_send(request: Request) -> JSONResponse:
 
     # Emit audit entry
     audit_entry = AuditEntry(
-        id=analysis_result.request_id,
         timestamp=time.time(),
         session_id="chat-lab",
         agent_id="red-team-tester",
         method="chat/completions",
+        params_summary=analyze_content[:500],
+        analysis=analysis_result,
         verdict=verdict,
-        threat_level=threat_level,
-        matched_patterns=l1_result.matched_patterns,
-        payload_hash="chat-lab",
-        payload_preview=analyze_content[:500],
     )
     await s._emit_audit(audit_entry)
 

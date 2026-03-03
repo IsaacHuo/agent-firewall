@@ -190,12 +190,10 @@ tools/call, completion/complete, sampling/createMessage
 
 ## Quick Start
 
-### One-Click Scripts (Recommended)
+### One-Click Start (Recommended)
 
 ```bash
-cd extensions/agent-firewall
-
-# Start all services (backend + frontend)
+# From repository root — starts backend + frontend
 ./scripts/start-all.sh
 
 # Stop all services
@@ -205,7 +203,7 @@ cd extensions/agent-firewall
 After running `start-all.sh`:
 
 - **Backend API**: http://localhost:9090
-- **Dashboard**: http://localhost:9091
+- **Dashboard (unified console)**: http://localhost:9091
 
 Logs are saved to `/tmp/agent-firewall-backend.log` and `/tmp/agent-firewall-frontend.log`.
 
@@ -228,11 +226,11 @@ cd frontend
 npm install
 npx vite --port 9091 --host
 
-# 5. Open dashboard
+# 5. Open unified console
 open http://localhost:9091
 ```
 
-The backend API runs on **http://localhost:9090** and the frontend dashboard on **http://localhost:9091**.
+The backend API runs on **http://localhost:9090** and the unified console on **http://localhost:9091**. The console includes security monitoring, agent/skills management, and gateway configuration — all in one place.
 
 ---
 
@@ -364,7 +362,14 @@ AF_AUDIT_LOG=./audit/firewall.jsonl
 
 ### Development Mode (Recommended)
 
-Start both backend and frontend with hot-reload:
+Start everything with one command:
+
+```bash
+# From repository root
+./scripts/start-all.sh
+```
+
+Or start manually in two terminals:
 
 **Terminal 1 — Backend (FastAPI on port 9090):**
 
@@ -386,6 +391,8 @@ npx vite --port 9091 --host
 Multi-worker deployment:
 
 ```bash
+cd extensions/agent-firewall
+
 # Backend with 4 workers
 make run
 
@@ -395,6 +402,8 @@ cd frontend && npm run build
 ```
 
 ### Using Makefile
+
+All `make` commands run from `extensions/agent-firewall/`:
 
 | Command        | Description                                       |
 | -------------- | ------------------------------------------------- |
@@ -417,7 +426,7 @@ curl http://127.0.0.1:9090/health
 curl http://127.0.0.1:9090/api/stats
 # → {"uptime_seconds": 42.5, "active_sessions": 0, "dashboard_clients": 1, "audit": {...}}
 
-# Frontend
+# Open unified console
 open http://localhost:9091
 ```
 
@@ -425,38 +434,47 @@ open http://localhost:9091
 
 ## Frontend Dashboard
 
-The unified security console is a Vue 3 SPA providing 7 functional pages:
+The unified console is a Vue 3 SPA providing 11 pages across 4 groups — Chat, Security, Agent Management, and Settings.
 
 ### Pages
 
-| Page                  | Route Hash    | Description                                                                                                                                                           |
-| --------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Dashboard**         | `#dashboard`  | Overview — stat cards, threat distribution chart, recent alerts, engine status, quick actions                                                                         |
-| **Traffic Waterfall** | `#traffic`    | Real-time traffic monitoring — verdict/method/search filtering, auto-scroll, detail panel with Metadata/Analysis/Payload tabs, HITL escalation buttons                |
-| **Rules Config**      | `#rules`      | Full rule management — Pattern rules (regex/literal), Method policies, Agent rules. CRUD with live regex testing, toggle switches, action badges                      |
-| **Engine Settings**   | `#engine`     | L1/L2 engine configuration — network settings, blocked commands, L2 model endpoint/key/timeout, session and audit config                                              |
-| **Rate Limit**        | `#rate-limit` | Token bucket configuration — slider controls, animated bucket visualization, impact scenario calculations                                                             |
-| **Security Test Lab** | `#test`       | Attack/defense testing — 12 built-in payloads (injection, traversal, exfiltration, command), custom payload editor, batch run, pass/fail results with latency metrics |
-| **Audit Log**         | `#audit`      | Security event history — table with verdict/threat/time filters, search, CSV export, detail drawer                                                                    |
+| Group        | Page              | Route Hash        | Description                                                                                                                                 |
+| ------------ | ----------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Chat**     | Chat              | `#chat`           | Interactive chatbot interface — default landing page                                                                                        |
+| **Security** | Dashboard         | `#dashboard`      | Overview — stat cards, threat distribution chart, recent alerts, engine status, quick actions                                               |
+| **Security** | Traffic Waterfall | `#traffic`        | Real-time traffic monitoring — verdict/method/search filtering, auto-scroll, detail panel with HITL escalation                              |
+| **Security** | Rules Config      | `#rules`          | Full rule management — Pattern rules, Method policies, Agent rules. CRUD with live regex testing                                            |
+| **Security** | Engine Settings   | `#engine`         | L1/L2 engine configuration — network settings, blocked commands, L2 model endpoint/key/timeout                                              |
+| **Security** | Rate Limit        | `#rate-limit`     | Token bucket configuration — slider controls, animated bucket visualization                                                                 |
+| **Security** | Security Test Lab | `#test`           | Attack/defense testing — 12 built-in payloads, custom payload editor, batch run, pass/fail results                                          |
+| **Security** | Audit Log         | `#audit`          | Security event history — verdict/threat/time filters, search, CSV export                                                                    |
+| **Agent**    | Agents & Tools    | `#agents`         | Multi-agent management — overview, file editor, MCP tool permissions (Files/Runtime/Web/Memory/Sessions)                                    |
+| **Agent**    | Skills            | `#skills`         | Global skills management — search/filter, grouped display, enable/disable toggles, API key injection, dependency installation               |
+| **Settings** | Gateway Config    | `#gateway-config` | Gateway configuration editor — dual mode (Form + Raw JSON), section navigation, sensitive field masking, optimistic locking via config hash |
 
 ### Architecture
 
 ```
-App.vue (shell + router)
-├── Sidebar.vue (7-section navigation + connection status)
-├── Dashboard.vue
+App.vue (shell + hash-based router)
+├── Sidebar.vue (grouped navigation: Chat / Security / Agent / Settings)
+├── ChatLab.vue            ── Chat group
+├── Dashboard.vue          ── Security group
 ├── TrafficWaterfall.vue
 ├── RulesConfig.vue
 ├── EngineSettings.vue
 ├── RateLimitSettings.vue
 ├── SecurityTest.vue
-└── AuditLog.vue
+├── AuditLog.vue
+├── AgentsManager.vue      ── Agent group
+├── SkillsManager.vue
+└── GatewayConfig.vue      ── Settings group
 ```
 
 **State Management:**
 
-- `composables.ts` — 7 Vue 3 composables: `useWebSocket()`, `useStats()`, `useConfig()`, `useRules()`, `useSecurityTest()`, `useAuditLog()`, `useNavigation()`
-- WebSocket at `/ws/dashboard` for real-time events
+- `composables.ts` — 11 Vue 3 composables: `useWebSocket()`, `useStats()`, `useConfig()`, `useRules()`, `useSecurityTest()`, `useAuditLog()`, `useNavigation()`, `useGateway()`, `useGatewaySkills()`, `useGatewayAgents()`, `useGatewayConfig()`
+- WebSocket at `/ws/dashboard` for real-time firewall events
+- Gateway WebSocket JSON-RPC at `ws://<host>:18789/ws` for agent/skills/config management
 - REST API polling for stats (every 5s)
 - Hash-based routing with browser back/forward support
 
@@ -643,23 +661,27 @@ extensions/agent-firewall/
 │   └── dashboard/                # Real-time monitoring
 │       └── ws_handler.py         # DashboardHub — WS broadcast + HITL escalation
 │
-├── frontend/                     # Vue 3 dashboard SPA
+├── frontend/                     # Vue 3 unified console SPA
 │   ├── index.html                # HTML entry point
 │   ├── package.json              # Node.js dependencies
 │   ├── vite.config.js            # Vite dev server config (port 9091)
 │   └── src/
 │       ├── main.ts               # Vue app bootstrap
-│       ├── types.ts              # TypeScript type definitions (mirrors Python models)
-│       ├── composables.ts        # Vue 3 composables (WebSocket, Stats, Config, etc.)
+│       ├── types.ts              # TypeScript type definitions (Python models + Gateway types)
+│       ├── composables.ts        # Vue 3 composables (11 total: firewall + gateway)
 │       └── components/
-│           ├── Sidebar.vue       # Navigation sidebar (7 sections)
+│           ├── Sidebar.vue       # Grouped navigation (Chat / Security / Agent / Settings)
+│           ├── ChatLab.vue       # Interactive chatbot interface (default page)
 │           ├── Dashboard.vue     # Overview — stats, threats, alerts, engine status
 │           ├── TrafficWaterfall.vue  # Real-time traffic waterfall + detail panel
 │           ├── RulesConfig.vue   # Pattern/Method/Agent rule CRUD management
 │           ├── EngineSettings.vue    # L1/L2 engine + network + session config
 │           ├── RateLimitSettings.vue # Token bucket config + visualization
 │           ├── SecurityTest.vue  # Attack payload tester (12 built-in + custom)
-│           └── AuditLog.vue      # Audit log viewer + CSV export
+│           ├── AuditLog.vue      # Audit log viewer + CSV export
+│           ├── AgentsManager.vue # Agent and MCP tool management
+│           ├── SkillsManager.vue # Global skills management
+│           └── GatewayConfig.vue # Gateway configuration editor (Form + JSON)
 │
 ├── tests/
 │   ├── test_firewall.py          # Unit tests (24 cases, 5 classes)

@@ -165,7 +165,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, watch } from 'vue'
+import { ref, nextTick, watch, onMounted } from 'vue'
 
 // ── Types ──────────────────────────────────────────────────────────
 
@@ -207,12 +207,23 @@ interface InjectTemplate {
 
 const API_BASE = `${window.location.protocol}//${window.location.hostname}:9090`
 
-const chatMessages = ref<ChatMessage[]>([])
+const CHAT_STORAGE_KEY = 'af-chat-messages'
+const CHAT_MODEL_KEY = 'af-chat-model'
+
+function loadStoredMessages(): ChatMessage[] {
+  try {
+    const raw = localStorage.getItem(CHAT_STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch { /* ignore corrupt data */ }
+  return []
+}
+
+const chatMessages = ref<ChatMessage[]>(loadStoredMessages())
 const inputMessage = ref('')
 const sending = ref(false)
 const autoIntercept = ref(true)
 const forceForward = ref(false)
-const selectedModel = ref('deepseek/deepseek-chat')
+const selectedModel = ref(localStorage.getItem(CHAT_MODEL_KEY) || 'deepseek/deepseek-chat')
 const messagesPanel = ref<HTMLElement | null>(null)
 
 // Intercept state
@@ -220,7 +231,22 @@ const interceptActive = ref(false)
 const pendingMessage = ref('')
 const modifiedMessage = ref('')
 
-let msgIdCounter = 0
+let msgIdCounter = chatMessages.value.length
+
+// Persist chat messages to localStorage
+watch(chatMessages, (msgs) => {
+  try {
+    // Keep last 200 messages to avoid localStorage bloat
+    const toStore = msgs.slice(-200)
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(toStore))
+  } catch { /* storage full — silently ignore */ }
+}, { deep: true })
+
+watch(selectedModel, (m) => {
+  localStorage.setItem(CHAT_MODEL_KEY, m)
+})
+
+onMounted(scrollToBottom)
 
 const sampleAttacks: SampleAttack[] = [
   {
@@ -420,6 +446,7 @@ async function sendMessage(content: string, modifiedContent: string | null, anal
 
 function clearChat() {
   chatMessages.value = []
+  localStorage.removeItem(CHAT_STORAGE_KEY)
   interceptActive.value = false
   pendingMessage.value = ''
   modifiedMessage.value = ''

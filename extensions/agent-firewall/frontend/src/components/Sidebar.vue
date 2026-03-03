@@ -6,19 +6,23 @@
     </div>
 
     <div class="sidebar-nav">
-      <button
-        v-for="item in navItems"
-        :key="item.id"
-        class="nav-item"
-        :class="{ active: currentSection === item.id }"
-        @click="$emit('navigate', item.id)"
-      >
-        <span class="nav-icon" v-html="item.icon"></span>
-        <span class="nav-label">{{ item.label }}</span>
-        <span v-if="item.badge" class="nav-badge" :class="item.badgeType">
-          {{ item.badge }}
-        </span>
-      </button>
+      <template v-for="(item, index) in navItems" :key="item.id">
+        <div
+          v-if="index > 0 && item.group !== navItems[index - 1].group"
+          class="nav-separator"
+        ></div>
+        <button
+          class="nav-item"
+          :class="{ active: currentSection === item.id }"
+          @click="$emit('navigate', item.id)"
+        >
+          <span class="nav-icon" v-html="item.icon"></span>
+          <span class="nav-label">{{ item.label }}</span>
+          <span v-if="item.badge" class="nav-badge" :class="item.badgeType">
+            {{ item.badge }}
+          </span>
+        </button>
+      </template>
     </div>
 
     <div class="sidebar-footer">
@@ -101,29 +105,51 @@ const icons = {
   moon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
   </svg>`,
+  skills: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+  </svg>`,
+  agents: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+    <circle cx="9" cy="7" r="4"></circle>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+  </svg>`,
+  config: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+    <line x1="8" y1="21" x2="16" y2="21"></line>
+    <line x1="12" y1="17" x2="12" y2="21"></line>
+  </svg>`,
 }
 
 const navItems = computed(() => [
-  { id: 'dashboard' as const, label: 'Dashboard', icon: icons.dashboard },
+  // ── Chat (first tab) ──
+  { id: 'chat' as const, label: 'Chat', icon: icons.chat, group: 'chat' },
+  // ── Security ──
+  { id: 'dashboard' as const, label: 'Dashboard', icon: icons.dashboard, group: 'security' },
   {
     id: 'traffic' as const,
     label: 'Traffic',
     icon: icons.traffic,
     badge: props.stats?.active_sessions ?? 0,
     badgeType: 'info',
+    group: 'security',
   },
-  { id: 'rules' as const, label: 'Rules', icon: icons.rules },
-  { id: 'engine' as const, label: 'Engine', icon: icons.engine },
-  { id: 'rate-limit' as const, label: 'Rate Limit', icon: icons.rateLimit },
-  { id: 'test' as const, label: 'Security Test', icon: icons.test },
-  { id: 'chat' as const, label: 'Chat Lab', icon: icons.chat },
+  { id: 'rules' as const, label: 'Rules', icon: icons.rules, group: 'security' },
+  { id: 'engine' as const, label: 'Engine', icon: icons.engine, group: 'security' },
+  { id: 'rate-limit' as const, label: 'Rate Limit', icon: icons.rateLimit, group: 'security' },
+  { id: 'test' as const, label: 'Security Test', icon: icons.test, group: 'security' },
   {
     id: 'audit' as const,
     label: 'Audit Log',
     icon: icons.audit,
     badge: props.stats?.audit?.blocked ?? 0,
     badgeType: props.stats?.audit?.blocked ? 'danger' : undefined,
+    group: 'security',
   },
+  // ── Agent Management ──
+  { id: 'agents' as const, label: 'Agents & Tools', icon: icons.agents, group: 'agent' },
+  { id: 'skills' as const, label: 'Skills', icon: icons.skills, group: 'agent' },
+  { id: 'gateway-config' as const, label: 'Gateway Config', icon: icons.config, group: 'settings' },
 ])
 </script>
 
@@ -160,6 +186,12 @@ const navItems = computed(() => [
   flex: 1;
   padding: 12px;
   overflow-y: auto;
+}
+
+.nav-separator {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 16px;
 }
 
 .nav-item {
