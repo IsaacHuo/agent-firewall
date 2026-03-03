@@ -26,11 +26,11 @@ Startup sequence:
 
 from __future__ import annotations
 
+import json
 import logging
-import os
 import time
 from contextlib import asynccontextmanager
-from dataclasses import asdict, replace
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any, AsyncIterator
 
@@ -51,9 +51,9 @@ from .dashboard.ws_handler import DashboardHub
 from .engine.semantic_analyzer import LlmClassifier, MockClassifier, SemanticAnalyzer
 from .engine.static_analyzer import StaticAnalyzer
 from .models import AuditEntry, DashboardEvent
+from .proxy.openai_adapter import OpenAIAdapter
 from .proxy.session_manager import SessionManager
 from .proxy.sse_adapter import SseAdapter, WebSocketAdapter
-from .proxy.openai_adapter import OpenAIAdapter
 
 logger = logging.getLogger("agent_firewall")
 
@@ -216,7 +216,6 @@ app.add_middleware(
 
 def _state(request: Request | None = None) -> AppState:
     """Extract AppState from the ASGI app."""
-    from fastapi import Request as _Req
 
     if request is not None:
         return request.app.state.firewall  # type: ignore[no-any-return]
@@ -572,7 +571,9 @@ async def get_audit(request: Request) -> JSONResponse:
 
     # Apply filters
     if verdict_filter:
-        raw_entries = [e for e in raw_entries if str(e.get("verdict", "")).upper() == verdict_filter.upper()]
+        raw_entries = [
+            e for e in raw_entries if str(e.get("verdict", "")).upper() == verdict_filter.upper()
+        ]
     if since_str:
         since_ts = float(since_str)
         raw_entries = [e for e in raw_entries if e.get("timestamp", 0) >= since_ts]
@@ -619,6 +620,15 @@ async def stats(request: Request) -> JSONResponse:
 
 
 # ── MCP Proxy (HTTP POST) ────────────────────────────────────────
+
+
+@app.get("/api/mcp/tools")
+async def list_mcp_tools(request: Request) -> JSONResponse:
+    """List available MCP tools from the upstream gateway."""
+    s = _state(request)
+    upstream_base = f"http://{s.config.upstream_host}:{s.config.upstream_port}"
+    tools = await _fetch_mcp_tools(upstream_base)
+    return JSONResponse({"tools": tools, "count": len(tools)})
 
 
 @app.post("/mcp/{path:path}")
@@ -684,6 +694,86 @@ async def dashboard_websocket(ws: WebSocket) -> None:
 # ── Red Team Chat Lab ─────────────────────────────────────────────
 
 
+async def _fetch_mcp_tools(upstream_base: str) -> list[dict[str, Any]]:
+    """Fetch available MCP tools from the upstream gateway via tools/list."""
+    import httpx
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                f"{upstream_base}/mcp",
+                json={"jsonrpc": "2.0", "method": "tools/list", "params": {}, "id": 1},
+                headers={"content-type": "application/json"},
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                # Handle both direct result and JSON-RPC wrapper
+                tools = (
+                    data.get("result", {}).get("tools", [])
+                    if "result" in data
+                    else data.get("tools", [])
+                )
+                return tools
+    except Exception as e:
+        logger.debug(f"Failed to fetch MCP tools: {e}")
+    return []
+
+
+def _mcp_tools_to_openai_tools(mcp_tools: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Convert MCP tool definitions to OpenAI function-calling format."""
+    openai_tools: list[dict[str, Any]] = []
+    for tool in mcp_tools:
+        name = tool.get("name", "")
+        desc = tool.get("description", "")
+        schema = tool.get("inputSchema", {"type": "object", "properties": {}})
+        openai_tools.append(
+            {
+                "type": "function",
+                "function": {
+                    "name": name,
+                    "description": desc,
+                    "parameters": schema,
+                },
+            }
+        )
+    return openai_tools
+
+
+async def _execute_mcp_tool(upstream_base: str, tool_name: str, arguments: dict[str, Any]) -> str:
+    """Execute an MCP tool via the upstream gateway and return the result as string."""
+    import httpx
+
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(
+                f"{upstream_base}/mcp",
+                json={
+                    "jsonrpc": "2.0",
+                    "method": "tools/call",
+                    "params": {"name": tool_name, "arguments": arguments},
+                    "id": 1,
+                },
+                headers={"content-type": "application/json"},
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                result = data.get("result", data)
+                # MCP tools/call result has content array
+                content = result.get("content", [])
+                if content:
+                    parts = []
+                    for c in content:
+                        if isinstance(c, dict):
+                            parts.append(c.get("text", str(c)))
+                        else:
+                            parts.append(str(c))
+                    return "\n".join(parts)
+                return str(result)
+            return f"[MCP error {resp.status_code}]: {resp.text[:500]}"
+    except Exception as e:
+        return f"[MCP execution error]: {e}"
+
+
 @app.post("/api/chat/send")
 async def chat_send(request: Request) -> JSONResponse:
     """
@@ -725,7 +815,7 @@ async def chat_send(request: Request) -> JSONResponse:
         return JSONResponse({"error": "No messages provided"}, status_code=400)
 
     # Extract original user content
-    from .models import ThreatLevel, DashboardEvent, AnalysisResult, AuditEntry
+    from .models import AnalysisResult, AuditEntry, DashboardEvent, ThreatLevel
 
     def _extract_text(content: Any) -> str:
         if isinstance(content, str):
@@ -863,31 +953,153 @@ async def chat_send(request: Request) -> JSONResponse:
             if s.openai_adapter.api_key:
                 upstream_headers["Authorization"] = f"Bearer {s.openai_adapter.api_key}"
 
-            chat_body = {
+            # Fetch available MCP tools from the upstream gateway
+            mcp_upstream_base = f"http://{s.config.upstream_host}:{s.config.upstream_port}"
+            mcp_tools_raw = await _fetch_mcp_tools(mcp_upstream_base)
+            openai_tools = _mcp_tools_to_openai_tools(mcp_tools_raw)
+
+            chat_body: dict[str, Any] = {
                 "model": model,
-                "messages": forwarded_messages,
+                "messages": list(forwarded_messages),
                 "stream": False,
             }
+            if openai_tools:
+                chat_body["tools"] = openai_tools
+                chat_body["tool_choice"] = "auto"
 
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                resp = await client.post(
-                    upstream_url,
-                    headers=upstream_headers,
-                    json=chat_body,
-                )
+            tool_calls_log: list[dict[str, Any]] = []
+            max_iterations = 10  # safety: prevent infinite tool-call loops
 
-                if resp.status_code == 200:
+            async with httpx.AsyncClient(timeout=120.0) as client:
+                for iteration in range(max_iterations):
+                    resp = await client.post(
+                        upstream_url,
+                        headers=upstream_headers,
+                        json=chat_body,
+                    )
+
+                    if resp.status_code != 200:
+                        response_data["response"] = (
+                            f"[Upstream error {resp.status_code}]: {resp.text[:500]}"
+                        )
+                        break
+
                     resp_json = resp.json()
                     response_data["response_raw"] = resp_json
-                    # Extract text from response
                     choices = resp_json.get("choices", [])
-                    if choices:
-                        msg = choices[0].get("message", {})
-                        response_data["response"] = msg.get("content", "")
+                    if not choices:
+                        response_data["response"] = "[No choices in LLM response]"
+                        break
+
+                    assistant_msg = choices[0].get("message", {})
+                    finish_reason = choices[0].get("finish_reason", "stop")
+
+                    # Check if the LLM wants to call tools
+                    pending_tool_calls = assistant_msg.get("tool_calls", [])
+
+                    if finish_reason == "tool_calls" or pending_tool_calls:
+                        # Append assistant message with tool_calls to conversation
+                        chat_body["messages"].append(assistant_msg)
+
+                        # Execute each tool call
+                        for tc in pending_tool_calls:
+                            tc_id = tc.get("id", "")
+                            func = tc.get("function", {})
+                            tool_name = func.get("name", "")
+                            try:
+                                tool_args = json.loads(func.get("arguments", "{}"))
+                            except Exception:
+                                tool_args = {}
+
+                            # L1 analysis on the tool call
+                            tool_content_str = f"tools/call {tool_name} {json.dumps(tool_args)}"
+                            tool_l1 = s.static_analyzer.analyze(tool_content_str)
+                            tool_l1_blocked = tool_l1.threat_level in (
+                                ThreatLevel.CRITICAL,
+                                ThreatLevel.HIGH,
+                            )
+
+                            tool_call_record: dict[str, Any] = {
+                                "tool_name": tool_name,
+                                "arguments": tool_args,
+                                "iteration": iteration,
+                                "l1_patterns": tool_l1.matched_patterns,
+                                "l1_blocked": tool_l1_blocked,
+                            }
+
+                            if tool_l1_blocked:
+                                # Block this tool call
+                                tool_result = (
+                                    f"[BLOCKED by firewall L1] Matched patterns: "
+                                    f"{', '.join(tool_l1.matched_patterns)}"
+                                )
+                                tool_call_record["blocked"] = True
+                                tool_call_record["result_preview"] = tool_result[:200]
+                            else:
+                                # Execute tool via MCP upstream
+                                tool_result = await _execute_mcp_tool(
+                                    mcp_upstream_base, tool_name, tool_args
+                                )
+                                tool_call_record["blocked"] = False
+                                tool_call_record["result_preview"] = tool_result[:200]
+
+                            tool_calls_log.append(tool_call_record)
+
+                            # Emit dashboard event for each tool call
+                            tool_event = DashboardEvent(
+                                event_type="chat_lab_tool_call",
+                                timestamp=time.time(),
+                                session_id="chat-lab",
+                                agent_id="red-team-tester",
+                                method=f"tools/call/{tool_name}",
+                                payload_preview=tool_content_str[:200],
+                                analysis=AnalysisResult(
+                                    request_id=str(uuid.uuid4()),
+                                    verdict="BLOCK" if tool_l1_blocked else "ALLOW",
+                                    threat_level=(
+                                        tool_l1.threat_level
+                                        if tool_l1_blocked
+                                        else ThreatLevel.NONE
+                                    ),
+                                    l1_matched_patterns=tool_l1.matched_patterns,
+                                    l2_is_injection=False,
+                                    l2_confidence=0.0,
+                                    l2_reasoning="",
+                                    blocked_reason=(
+                                        f"L1: {', '.join(tool_l1.matched_patterns)}"
+                                        if tool_l1_blocked
+                                        else ""
+                                    ),
+                                ),
+                                is_alert=tool_l1_blocked,
+                            )
+                            await s._emit_dashboard(tool_event)
+
+                            # Append tool result to conversation
+                            chat_body["messages"].append(
+                                {
+                                    "role": "tool",
+                                    "tool_call_id": tc_id,
+                                    "content": tool_result,
+                                }
+                            )
+
+                        # Continue loop — LLM will process tool results
+                        continue
+
+                    # No tool calls — we have the final response
+                    response_data["response"] = assistant_msg.get("content", "")
+                    break
                 else:
-                    response_data["response"] = (
-                        f"[Upstream error {resp.status_code}]: {resp.text[:500]}"
+                    # max iterations reached
+                    response_data["response"] = "[Max tool-call iterations reached] " + (
+                        assistant_msg.get("content", "") if "assistant_msg" in dir() else ""
                     )
+
+            # Attach tool call log to response
+            if tool_calls_log:
+                response_data["tool_calls"] = tool_calls_log
+
         except Exception as e:
             logger.error(f"Chat lab upstream error: {e}")
             response_data["response"] = f"[Error]: {e}"
@@ -900,9 +1112,10 @@ async def chat_send(request: Request) -> JSONResponse:
 
 @app.post("/api/test/analyze")
 async def test_analyze(request: Request) -> dict[str, Any]:
-    from .models import ThreatLevel, DashboardEvent, AnalysisResult
     import json
     import uuid
+
+    from .models import AnalysisResult, DashboardEvent, ThreatLevel
 
     s = _state(request)
     data = await request.json()

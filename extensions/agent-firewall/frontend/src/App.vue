@@ -394,6 +394,95 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
 ::selection { background: var(--accent-muted); color: var(--text-primary); }
 input, textarea, select, button { font-family: inherit; font-size: inherit; }
+
+/* ── Global compact overrides for sub-page components ── */
+.content-main .page-header h2 { font-size: 15px !important; font-weight: 600; margin-bottom: 2px; }
+.content-main .subtitle { font-size: 11px !important; color: var(--text-muted); margin-bottom: 10px; }
+.content-main .page-header { margin-bottom: 12px !important; }
+.content-main h3 { font-size: 12px !important; font-weight: 600; }
+.content-main h4 { font-size: 11px !important; font-weight: 600; }
+
+/* Page-level padding */
+.content-main .dashboard,
+.content-main .rules-page,
+.content-main .engine-page,
+.content-main .rate-limit-page,
+.content-main .test-page,
+.content-main .audit-page,
+.content-main .skills-page,
+.content-main .agents-page,
+.content-main .config-page { padding: 16px !important; }
+
+/* Cards & panels */
+.content-main .stat-card,
+.content-main .card,
+.content-main .settings-card,
+.content-main .section-content,
+.content-main .panel,
+.content-main .payload-card,
+.content-main .skill-card { padding: 12px !important; }
+.content-main .card-header { padding: 10px 14px !important; }
+.content-main .card-body { padding: 12px 14px !important; }
+
+/* Stat values (dashboard) */
+.content-main .stat-value { font-size: 18px !important; }
+.content-main .summary-value { font-size: 16px !important; }
+
+/* Buttons */
+.content-main .btn,
+.content-main .btn-primary,
+.content-main .btn-secondary,
+.content-main .btn-sm,
+.content-main .action-btn { font-size: 11px !important; padding: 5px 12px !important; }
+
+/* Form controls */
+.content-main .form-group label { font-size: 11px !important; margin-bottom: 4px !important; }
+.content-main .form-input,
+.content-main .form-input-sm,
+.content-main .form-select,
+.content-main .filter-input,
+.content-main .filter-select,
+.content-main .field-input,
+.content-main .search-input { font-size: 11px !important; padding: 6px 10px !important; }
+.content-main .form-hint { font-size: 10px !important; }
+
+/* Tabs */
+.content-main .rule-tab,
+.content-main .cat-tab,
+.content-main .mode-btn,
+.content-main .section-nav-item { font-size: 11px !important; padding: 6px 12px !important; }
+
+/* Tables */
+.content-main .audit-table { font-size: 11px !important; }
+.content-main .audit-table th { font-size: 10px !important; padding: 8px 10px !important; }
+.content-main .audit-table td { padding: 6px 10px !important; }
+
+/* Badges & chips */
+.content-main .badge,
+.content-main .chip,
+.content-main .verdict-tag,
+.content-main .threat-tag { font-size: 9px !important; padding: 1px 6px !important; }
+
+/* Info fields (agents/skills) */
+.content-main .info-label { font-size: 10px !important; }
+.content-main .info-value { font-size: 12px !important; }
+.content-main .agent-name,
+.content-main .skill-name,
+.content-main .rule-name,
+.content-main .method-name { font-size: 12px !important; }
+.content-main .skill-description,
+.content-main .rule-description,
+.content-main .card-description { font-size: 11px !important; }
+.content-main .payload-name { font-size: 12px !important; }
+.content-main .payload-code { font-size: 10px !important; }
+
+/* Misc text */
+.content-main .engine-name,
+.content-main .alert-method { font-size: 11px !important; }
+.content-main .bucket-label { font-size: 12px !important; }
+.content-main .tool-name,
+.content-main .skill-row-name { font-size: 11px !important; }
+.content-main .raw-editor { font-size: 11px !important; }
 </style>
 
 <style scoped>

@@ -72,18 +72,18 @@
         >
           <div class="msg-gutter">
             <div class="msg-avatar" :class="msg.role">
-              {{ msg.role === 'user' ? 'A' : msg.role === 'system' ? 'F' : 'L' }}
+              {{ msg.role === 'user' ? 'A' : msg.role === 'system' ? 'F' : msg.role === 'tool' ? '⚡' : 'L' }}
             </div>
           </div>
           <div class="msg-content-wrap">
             <div class="msg-meta">
-              <span class="msg-sender">{{ msg.role === 'user' ? 'Attacker' : msg.role === 'system' ? 'Firewall' : 'LLM' }}</span>
+              <span class="msg-sender">{{ msg.role === 'user' ? 'Attacker' : msg.role === 'system' ? 'Firewall' : msg.role === 'tool' ? 'Tool Call' : 'LLM' }}</span>
               <span class="msg-time">{{ formatTime(msg.timestamp) }}</span>
               <span v-if="msg.wasModified" class="msg-tag modified">Modified</span>
               <span v-if="msg.blocked" class="msg-tag blocked">Blocked</span>
               <span v-if="msg.verdict" class="msg-tag" :class="msg.verdict.toLowerCase()">{{ msg.verdict }}</span>
             </div>
-            <div class="msg-text">{{ msg.content }}</div>
+            <div class="msg-text" :class="{ 'tool-text': msg.role === 'tool' }">{{ msg.content }}</div>
 
             <!-- Analysis collapse -->
             <details v-if="msg.analysis" class="msg-analysis">
@@ -277,9 +277,15 @@ interface ChatAnalysis {
   l2_is_injection: boolean; l2_confidence: number; l2_reasoning: string; blocked_reason: string;
 }
 
+interface ToolCallRecord {
+  tool_name: string; arguments: Record<string, unknown>; iteration: number;
+  l1_patterns: string[]; l1_blocked: boolean; blocked: boolean; result_preview: string;
+}
+
 interface ChatMessage {
-  id: string; role: 'user' | 'assistant' | 'system'; content: string; timestamp: number;
+  id: string; role: 'user' | 'assistant' | 'system' | 'tool'; content: string; timestamp: number;
   analysis?: ChatAnalysis; blocked?: boolean; wasModified?: boolean; originalContent?: string; verdict?: string;
+  toolCalls?: ToolCallRecord[];
 }
 
 interface McpResult {
@@ -427,6 +433,22 @@ async function sendMessage(content: string, modifiedContent: string | null, anal
     if (data.blocked) {
       chatMessages.value.push({ id: generateId(), role: 'system', content: `Blocked: ${data.analysis?.blocked_reason || 'Security policy violation'}`, timestamp: Date.now(), verdict: 'BLOCK' })
     }
+
+    // Show tool calls if any
+    const toolCalls: ToolCallRecord[] = data.tool_calls || []
+    if (toolCalls.length) {
+      for (const tc of toolCalls) {
+        const tcContent = tc.blocked
+          ? `🛡️ **BLOCKED** \`${tc.tool_name}\`(${JSON.stringify(tc.arguments)})\nL1 patterns: ${tc.l1_patterns.join(', ')}`
+          : `🔧 \`${tc.tool_name}\`(${JSON.stringify(tc.arguments)})\n→ ${tc.result_preview}`
+        chatMessages.value.push({
+          id: generateId(), role: 'tool', content: tcContent, timestamp: Date.now(),
+          verdict: tc.blocked ? 'BLOCK' : 'ALLOW', blocked: tc.blocked,
+          toolCalls: [tc],
+        })
+      }
+    }
+
     if (data.response) {
       chatMessages.value.push({ id: generateId(), role: 'assistant', content: data.response, timestamp: Date.now() })
     } else if (analyzeOnlyFlag && !data.blocked) {
@@ -553,6 +575,7 @@ async function testSkill(skill: SkillStatusEntry) {
 .msg-avatar.user { background: var(--accent-red-muted); color: var(--accent-red); }
 .msg-avatar.system { background: var(--accent-yellow-muted); color: var(--accent-yellow); }
 .msg-avatar.assistant { background: var(--accent-muted); color: var(--accent); }
+.msg-avatar.tool { background: #1a2744; color: #58a6ff; font-size: 12px; }
 .msg-content-wrap { flex: 1; min-width: 0; }
 .msg-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
 .msg-sender { font-size: 11px; font-weight: 600; color: var(--text-primary); }
@@ -564,6 +587,9 @@ async function testSkill(skill: SkillStatusEntry) {
 .msg-tag.allow { background: var(--accent-green-muted); color: var(--accent-green); }
 .msg-tag.modified { background: var(--accent-yellow-muted); color: var(--accent-yellow); }
 .msg-text { font-size: 12px; line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap; word-break: break-word; }
+.msg-text.tool-text { font-family: var(--font-mono); font-size: 11px; background: var(--bg-elevated); padding: 6px 8px; border-radius: var(--radius-sm); border-left: 2px solid #58a6ff; }
+.msg-tool { background: rgba(88, 166, 255, 0.04); border-left: 2px solid rgba(88, 166, 255, 0.3); }
+.msg-tool.blocked { background: var(--accent-red-muted); border-left: 2px solid var(--accent-red); }
 
 /* Analysis */
 .msg-analysis { margin-top: 6px; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
