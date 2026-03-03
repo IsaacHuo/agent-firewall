@@ -624,9 +624,29 @@ async def stats(request: Request) -> JSONResponse:
 
 @app.get("/api/mcp/tools")
 async def list_mcp_tools(request: Request) -> JSONResponse:
-    """List available gateway tools (exposed as OpenAI function-calling format)."""
-    tools = _gateway_tools_to_openai_format()
-    return JSONResponse({"tools": tools, "count": len(tools)})
+    """List available tools: gateway (auto-discovered) + skills (from SKILL.md)."""
+    tools = _all_tools_openai_format()
+
+    # Gateway tools info
+    gw_registry = _get_gateway_tool_registry()
+    gateway_info = [
+        {"name": t.name, "description": t.description, "source": "gateway"}
+        for t in gw_registry.tools.values()
+    ]
+
+    # Skill tools info
+    skill_registry = _get_skill_registry()
+    skills_info = [
+        {"name": s.name, "description": s.description, "emoji": s.emoji, "bins": s.required_bins, "source": "skill"}
+        for s in skill_registry.ready_skills.values()
+    ]
+
+    return JSONResponse({
+        "tools": tools,
+        "count": len(tools),
+        "gateway_tools": gateway_info,
+        "skills": skills_info,
+    })
 
 
 @app.post("/mcp/{path:path}")
@@ -691,169 +711,29 @@ async def dashboard_websocket(ws: WebSocket) -> None:
 
 # ── Red Team Chat Lab ─────────────────────────────────────────────
 
-# Gateway tool definitions (OpenClaw gateway exposes these via POST /tools/invoke)
-_GATEWAY_TOOL_DEFS: list[dict[str, Any]] = [
-    {
-        "name": "web_search",
-        "description": "Search the web using Brave/Perplexity/Grok. Returns search results.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {"type": "string", "description": "Search query"},
-                "count": {"type": "integer", "description": "Number of results (default 5)"},
-            },
-            "required": ["query"],
-        },
-    },
-    {
-        "name": "web_fetch",
-        "description": "Fetch content from a URL and convert to markdown or text.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "url": {"type": "string", "description": "URL to fetch"},
-                "extractMode": {
-                    "type": "string",
-                    "description": "Output format: 'markdown' or 'text'",
-                },
-                "maxChars": {"type": "integer", "description": "Maximum characters to return"},
-            },
-            "required": ["url"],
-        },
-    },
-    {
-        "name": "memory_search",
-        "description": "Semantic search across the agent's MEMORY.md knowledge base.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {"type": "string", "description": "Search query"},
-                "maxResults": {"type": "integer", "description": "Max results to return"},
-            },
-            "required": ["query"],
-        },
-    },
-    {
-        "name": "memory_get",
-        "description": "Read a section of a memory file by path and line range.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "path": {"type": "string", "description": "File path within memory directory"},
-                "from": {"type": "integer", "description": "Starting line number"},
-                "lines": {"type": "integer", "description": "Number of lines to read"},
-            },
-            "required": ["path"],
-        },
-    },
-    {
-        "name": "agents_list",
-        "description": "List all available agent IDs configured on the gateway.",
-        "parameters": {"type": "object", "properties": {}},
-    },
-    {
-        "name": "sessions_list",
-        "description": "List active chat sessions on the gateway.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "limit": {"type": "integer", "description": "Max sessions to return"},
-                "activeMinutes": {"type": "integer", "description": "Filter to recently active"},
-            },
-        },
-    },
-    {
-        "name": "sessions_history",
-        "description": "Get message history for a specific session.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "sessionKey": {"type": "string", "description": "Session key to query"},
-                "limit": {"type": "integer", "description": "Max messages to return"},
-                "includeTools": {"type": "boolean", "description": "Include tool call messages"},
-            },
-            "required": ["sessionKey"],
-        },
-    },
-    {
-        "name": "session_status",
-        "description": "Get status card for a session (usage, time, cost).",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "sessionKey": {"type": "string", "description": "Session key"},
-            },
-        },
-    },
-    {
-        "name": "message",
-        "description": "Send, delete, react, or fetch messages across channels (telegram, discord, etc.).",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string",
-                    "description": "Action: send, delete, react, fetch, poll, thread",
-                },
-                "channel": {
-                    "type": "string",
-                    "description": "Channel name (telegram, discord, etc.)",
-                },
-                "target": {"type": "string", "description": "Target chat/user ID"},
-                "message": {"type": "string", "description": "Message text (for send action)"},
-            },
-            "required": ["action"],
-        },
-    },
-    {
-        "name": "tts",
-        "description": "Convert text to speech audio.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "text": {"type": "string", "description": "Text to speak"},
-                "channel": {"type": "string", "description": "Output channel"},
-            },
-            "required": ["text"],
-        },
-    },
-    {
-        "name": "nodes",
-        "description": "Control paired nodes: status, describe, notify, camera, screen, location, run commands.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string",
-                    "description": "Action: status, describe, notify, camera, screen, location, run, invoke",
-                },
-                "node": {"type": "string", "description": "Target node name"},
-                "command": {"type": "string", "description": "Shell command (for 'run' action)"},
-                "cwd": {"type": "string", "description": "Working directory (for 'run' action)"},
-            },
-            "required": ["action"],
-        },
-    },
-    {
-        "name": "cron",
-        "description": "Manage cron/scheduled tasks: list, add, update, remove, run.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string",
-                    "description": "Action: status, list, add, update, remove, run, runs, wake",
-                },
-                "jobId": {"type": "string", "description": "Job ID (for update/remove/run)"},
-                "text": {
-                    "type": "string",
-                    "description": "Job description in natural language (for add)",
-                },
-            },
-            "required": ["action"],
-        },
-    },
-]
+# ── Dynamic tool discovery (skills + gateway) ────────────────────
+
+from .skills import SkillRegistry, get_skill_registry
+from .gateway_tools import GatewayToolRegistry, get_gateway_tool_registry
+
+_skill_registry: SkillRegistry | None = None
+_gateway_tool_registry: GatewayToolRegistry | None = None
+
+
+def _get_skill_registry() -> SkillRegistry:
+    """Lazy-init the global skill registry (scans skills/ once)."""
+    global _skill_registry
+    if _skill_registry is None:
+        _skill_registry = get_skill_registry()
+    return _skill_registry
+
+
+def _get_gateway_tool_registry() -> GatewayToolRegistry:
+    """Lazy-init the global gateway tool registry (scans source once)."""
+    global _gateway_tool_registry
+    if _gateway_tool_registry is None:
+        _gateway_tool_registry = get_gateway_tool_registry()
+    return _gateway_tool_registry
 
 
 def _get_gateway_auth() -> tuple[str, int, str]:
@@ -873,67 +753,17 @@ def _get_gateway_auth() -> tuple[str, int, str]:
     return host, port, token
 
 
-def _gateway_tools_to_openai_format() -> list[dict[str, Any]]:
-    """Convert gateway tool definitions to OpenAI function-calling format."""
-    return [
-        {
-            "type": "function",
-            "function": {
-                "name": t["name"],
-                "description": t["description"],
-                "parameters": t["parameters"],
-            },
-        }
-        for t in _GATEWAY_TOOL_DEFS
-    ]
+def _all_tools_openai_format() -> list[dict[str, Any]]:
+    """Build OpenAI function-calling tools from dynamic registries (gateway + skills)."""
+    # Gateway tools (auto-discovered from TypeScript source)
+    gw_registry = _get_gateway_tool_registry()
+    gateway_tools = gw_registry.get_openai_tools()
 
+    # Skill tools (auto-discovered from SKILL.md files)
+    skill_registry = _get_skill_registry()
+    skill_tools = skill_registry.get_openai_tools()
 
-async def _execute_gateway_tool(
-    host: str, port: int, token: str, tool_name: str, arguments: dict[str, Any]
-) -> str:
-    """Execute a tool via the OpenClaw gateway's /tools/invoke endpoint."""
-    import httpx
-
-    # Separate "action" from args if present (gateway uses top-level action field)
-    action = arguments.pop("action", None)
-    body: dict[str, Any] = {"tool": tool_name, "args": arguments}
-    if action is not None:
-        body["action"] = action
-
-    try:
-        headers: dict[str, str] = {"content-type": "application/json"}
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
-
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(
-                f"http://{host}:{port}/tools/invoke",
-                json=body,
-                headers=headers,
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                if data.get("ok"):
-                    result = data.get("result", {})
-                    content = result.get("content", [])
-                    if content:
-                        parts = []
-                        for c in content:
-                            if isinstance(c, dict):
-                                parts.append(c.get("text", str(c)))
-                            else:
-                                parts.append(str(c))
-                        return "\n".join(parts)
-                    return json.dumps(result, ensure_ascii=False)[:2000]
-                else:
-                    err = data.get("error", {})
-                    return f"[Gateway error] {err.get('type', 'unknown')}: {err.get('message', str(err))}"
-            elif resp.status_code == 401:
-                return "[Gateway auth error]: Invalid or missing token"
-            else:
-                return f"[Gateway HTTP {resp.status_code}]: {resp.text[:500]}"
-    except Exception as e:
-        return f"[Gateway execution error]: {e}"
+    return gateway_tools + skill_tools
 
 
 @app.post("/api/chat/send")
@@ -947,10 +777,13 @@ async def chat_send(request: Request) -> JSONResponse:
     Request body:
       {
         "messages": [{"role": "user", "content": "..."}],
-        "model": "deepseek/deepseek-chat",
+        "model": "openai/gpt-4o-mini",
         "modified_content": "...",     // optional: injected/modified user content
         "force_forward": false,        // optional: forward even if blocked
-        "analyze_only": false          // optional: only analyze, don't forward
+        "analyze_only": false,         // optional: only analyze, don't forward
+        "temperature": 0.7,            // optional: sampling temperature (0-2)
+        "max_tokens": 4096,            // optional: max output tokens
+        "top_p": 1.0                   // optional: nucleus sampling
       }
 
     Response:
@@ -968,10 +801,14 @@ async def chat_send(request: Request) -> JSONResponse:
     s = _state(request)
     data = await request.json()
     messages = data.get("messages", [])
-    model = data.get("model", "deepseek/deepseek-chat")
+    model = data.get("model", "openai/gpt-4o-mini")
     modified_content = data.get("modified_content", None)
     force_forward = data.get("force_forward", False)
     analyze_only = data.get("analyze_only", False)
+    temperature = data.get("temperature", None)
+    max_tokens = data.get("max_tokens", None)
+    top_p = data.get("top_p", None)
+    enable_tools = data.get("enable_tools", True)
 
     if not messages:
         return JSONResponse({"error": "No messages provided"}, status_code=400)
@@ -1115,16 +952,46 @@ async def chat_send(request: Request) -> JSONResponse:
             if s.openai_adapter.api_key:
                 upstream_headers["Authorization"] = f"Bearer {s.openai_adapter.api_key}"
 
-            # Gateway tool definitions (static; gateway has no tools/list endpoint)
+            # Gateway + skill tool definitions (all auto-discovered)
             gw_host, gw_port, gw_token = _get_gateway_auth()
-            openai_tools = _gateway_tools_to_openai_format()
+            openai_tools = _all_tools_openai_format()
+
+            # Inject tool context into the system prompt so the LLM knows
+            # how to use skills (via run_skill) and gateway tools (via invoke_gateway)
+            registry = _get_skill_registry()
+            gw_registry = _get_gateway_tool_registry()
+            skills_prompt = registry.get_skills_system_prompt()
+            gateway_prompt = gw_registry.get_system_prompt()
+            combined_prompt = "\n\n".join(p for p in [gateway_prompt, skills_prompt] if p)
+
+            if combined_prompt and enable_tools:
+                # Prepend tool docs to the conversation as a system message
+                chat_body_messages = list(forwarded_messages)
+                # Check if there's already a system message; if so, append to it
+                has_system = chat_body_messages and chat_body_messages[0].get("role") == "system"
+                if has_system:
+                    existing = chat_body_messages[0].get("content", "")
+                    chat_body_messages[0] = {
+                        "role": "system",
+                        "content": existing + "\n\n" + combined_prompt,
+                    }
+                else:
+                    chat_body_messages.insert(0, {"role": "system", "content": combined_prompt})
+            else:
+                chat_body_messages = list(forwarded_messages)
 
             chat_body: dict[str, Any] = {
                 "model": model,
-                "messages": list(forwarded_messages),
+                "messages": chat_body_messages,
                 "stream": False,
             }
-            if openai_tools:
+            if temperature is not None:
+                chat_body["temperature"] = float(temperature)
+            if max_tokens is not None:
+                chat_body["max_tokens"] = int(max_tokens)
+            if top_p is not None:
+                chat_body["top_p"] = float(top_p)
+            if openai_tools and enable_tools:
                 chat_body["tools"] = openai_tools
                 chat_body["tool_choice"] = "auto"
 
@@ -1166,7 +1033,7 @@ async def chat_send(request: Request) -> JSONResponse:
                         for tc in pending_tool_calls:
                             tc_id = tc.get("id", "")
                             func = tc.get("function", {})
-                            tool_name = func.get("name", "")
+                            tool_name = func.get("name", "").strip()
                             try:
                                 tool_args = json.loads(func.get("arguments", "{}"))
                             except Exception:
@@ -1188,19 +1055,75 @@ async def chat_send(request: Request) -> JSONResponse:
                                 "l1_blocked": tool_l1_blocked,
                             }
 
-                            if tool_l1_blocked:
-                                # Block this tool call
-                                tool_result = (
-                                    f"[BLOCKED by firewall L1] Matched patterns: "
-                                    f"{', '.join(tool_l1.matched_patterns)}"
+                            # L2 analysis on the tool call
+                            tool_l2_confidence = 0.0
+                            tool_l2_reasoning = ""
+                            tool_l2_blocked = False
+                            try:
+                                tool_l2_result = await s.semantic_analyzer.analyze(
+                                    method=f"tools/call/{tool_name}",
+                                    params=tool_content_str,
+                                    session_context=[],
                                 )
+                                tool_l2_confidence = tool_l2_result.confidence
+                                tool_l2_reasoning = tool_l2_result.reasoning
+                                tool_l2_blocked = (
+                                    tool_l2_result.is_injection and tool_l2_confidence >= 0.7
+                                )
+                            except Exception as e:
+                                tool_l2_reasoning = f"L2 tool analysis error: {e}"
+
+                            tool_call_record["l2_confidence"] = tool_l2_confidence
+                            tool_call_record["l2_reasoning"] = tool_l2_reasoning
+                            tool_call_record["l2_blocked"] = tool_l2_blocked
+
+                            if tool_l1_blocked or tool_l2_blocked:
+                                # Block this tool call
+                                block_reasons = []
+                                if tool_l1_blocked:
+                                    block_reasons.append(
+                                        f"L1 patterns: {', '.join(tool_l1.matched_patterns)}"
+                                    )
+                                if tool_l2_blocked:
+                                    block_reasons.append(
+                                        f"L2 ({tool_l2_confidence:.0%}): {tool_l2_reasoning}"
+                                    )
+                                tool_result = f"[BLOCKED by firewall] {'; '.join(block_reasons)}"
                                 tool_call_record["blocked"] = True
                                 tool_call_record["result_preview"] = tool_result[:200]
                             else:
-                                # Execute tool via OpenClaw gateway
-                                tool_result = await _execute_gateway_tool(
-                                    gw_host, gw_port, gw_token, tool_name, tool_args
-                                )
+                                # Execute tool — skill tools or gateway (all dynamically discovered)
+                                if tool_name == "get_skill_docs":
+                                    skill_name = tool_args.get("skill_name", "")
+                                    tool_result = registry.get_skill_docs(skill_name)
+                                elif tool_name == "run_skill":
+                                    skill_name = tool_args.get("skill_name", "")
+                                    command = tool_args.get("command", "")
+                                    explanation = tool_args.get("explanation", "")
+                                    logger.info(
+                                        "run_skill: %s → %s (%s)",
+                                        skill_name,
+                                        command[:100],
+                                        explanation[:80],
+                                    )
+                                    tool_result = await registry.execute_skill(skill_name, command)
+                                elif tool_name == "invoke_gateway":
+                                    # Generic gateway tool invocation
+                                    gw_tool_name = tool_args.get("tool_name", "")
+                                    gw_arguments = tool_args.get("arguments", {})
+                                    logger.info(
+                                        "invoke_gateway: %s args=%s",
+                                        gw_tool_name,
+                                        json.dumps(gw_arguments, ensure_ascii=False)[:200],
+                                    )
+                                    tool_result = await GatewayToolRegistry.execute(
+                                        gw_host, gw_port, gw_token, gw_tool_name, gw_arguments
+                                    )
+                                else:
+                                    # Fallback: try as direct gateway tool invocation
+                                    tool_result = await GatewayToolRegistry.execute(
+                                        gw_host, gw_port, gw_token, tool_name, tool_args
+                                    )
                                 tool_call_record["blocked"] = False
                                 tool_call_record["result_preview"] = tool_result[:200]
 
@@ -1216,23 +1139,29 @@ async def chat_send(request: Request) -> JSONResponse:
                                 payload_preview=tool_content_str[:200],
                                 analysis=AnalysisResult(
                                     request_id=str(uuid.uuid4()),
-                                    verdict="BLOCK" if tool_l1_blocked else "ALLOW",
+                                    verdict=(
+                                        "BLOCK" if (tool_l1_blocked or tool_l2_blocked) else "ALLOW"
+                                    ),
                                     threat_level=(
                                         tool_l1.threat_level
                                         if tool_l1_blocked
-                                        else ThreatLevel.NONE
+                                        else (
+                                            ThreatLevel.HIGH
+                                            if tool_l2_blocked
+                                            else ThreatLevel.NONE
+                                        )
                                     ),
                                     l1_matched_patterns=tool_l1.matched_patterns,
-                                    l2_is_injection=False,
-                                    l2_confidence=0.0,
-                                    l2_reasoning="",
+                                    l2_is_injection=tool_l2_blocked,
+                                    l2_confidence=tool_l2_confidence,
+                                    l2_reasoning=tool_l2_reasoning,
                                     blocked_reason=(
                                         f"L1: {', '.join(tool_l1.matched_patterns)}"
                                         if tool_l1_blocked
-                                        else ""
+                                        else (f"L2: {tool_l2_reasoning}" if tool_l2_blocked else "")
                                     ),
                                 ),
-                                is_alert=tool_l1_blocked,
+                                is_alert=(tool_l1_blocked or tool_l2_blocked),
                             )
                             await s._emit_dashboard(tool_event)
 
