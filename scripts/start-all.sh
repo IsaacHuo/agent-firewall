@@ -2,7 +2,7 @@
 # Start all Agent Firewall services
 # Usage: ./scripts/start-all.sh [--no-gateway] [--no-open]
 
-set -euo pipefail
+set -uo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 FIREWALL_DIR="$ROOT/extensions/agent-firewall"
@@ -116,11 +116,11 @@ fi
 
 # 2) Backend
 log "Starting Agent Firewall Backend on :9090..."
-(cd "$FIREWALL_DIR" && mkdir -p audit && .venv/bin/uvicorn src.main:app --reload --host 0.0.0.0 --port 9090) &
+(cd "$FIREWALL_DIR" && mkdir -p audit && .venv/bin/uvicorn src.main:app --reload --host 0.0.0.0 --port 9090 --log-level warning) &
 PID_BACKEND=$!
 ALL_PIDS+=("$PID_BACKEND")
 
-if wait_for_http "http://localhost:9090/api/stats" 15; then
+if wait_for_http "http://localhost:9090/health" 20; then
   ok "Backend ready (PID $PID_BACKEND)"
 else
   warn "Backend slow to respond — may still be loading"
@@ -148,8 +148,9 @@ echo ""
 ok "════════════════════════════════════════════"
 ok " Agent Firewall — All services running"
 ok "════════════════════════════════════════════"
-$HAS_GATEWAY && \
-ok " Gateway (WS RPC):    ws://localhost:18789/ws"
+if $HAS_GATEWAY; then
+  ok " Gateway (WS RPC):    ws://localhost:18789/ws"
+fi
 ok " Backend (FastAPI):   http://localhost:9090"
 ok " Unified Console:     http://localhost:9091"
 ok "════════════════════════════════════════════"

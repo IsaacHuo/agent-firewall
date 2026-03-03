@@ -2,7 +2,7 @@
 # Stop Agent Firewall services
 # Usage: ./scripts/stop-all.sh
 
-set -euo pipefail
+set -uo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RUN_DIR="$ROOT/.run"
@@ -42,11 +42,16 @@ fi
 # Also kill gateway process by name
 pkill -f "openclaw gateway run" 2>/dev/null && { log "Stopped openclaw gateway"; stopped=$((stopped + 1)); } || true
 
+# Kill uvicorn / vite processes by name (handles --reload workers too)
+pkill -f "uvicorn src.main:app" 2>/dev/null && { log "Stopped uvicorn workers"; stopped=$((stopped + 1)); } || true
+pkill -f "vite --port 9091" 2>/dev/null && { log "Stopped vite"; stopped=$((stopped + 1)); } || true
+sleep 0.3
+
 # Safety net: kill by port
 for port in 9090 9091 18789; do
   pids=$(lsof -ti :"$port" 2>/dev/null || true)
   if [[ -n "$pids" ]]; then
-    log "Killing process on port $port..."
+    log "Killing remaining process on port $port..."
     echo "$pids" | xargs kill -9 2>/dev/null || true
     stopped=$((stopped + 1))
   fi
