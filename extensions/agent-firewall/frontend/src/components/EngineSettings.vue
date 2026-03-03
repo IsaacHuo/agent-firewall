@@ -210,6 +210,7 @@ const showApiKey = ref(false)
 const defaultConfig: FirewallConfig = {
   network: { listen_host: '127.0.0.1', listen_port: 9090, upstream_host: '127.0.0.1', upstream_port: 3000, transport_mode: 'sse' },
   engine: { l1_enabled: true, l2_enabled: true, l2_model_endpoint: 'https://openrouter.ai/api/v1/chat/completions', l2_api_key: '', l2_model: 'deepseek/deepseek-v3.2-speciale', l2_timeout_seconds: 10 },
+  services: { tavily_api_key: '' },
   session: { ring_buffer_size: 64, ttl_seconds: 3600 },
   rate_limit: { requests_per_sec: 100, burst: 200 },
   audit_log_path: './audit/firewall.jsonl',

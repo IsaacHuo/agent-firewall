@@ -29,6 +29,7 @@ from __future__ import annotations
 import json
 import logging
 import mimetypes
+import os
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -360,6 +361,9 @@ async def get_config(request: Request) -> dict[str, Any]:
             "l2_model": c.l2_model,
             "l2_timeout_seconds": c.l2_timeout_seconds,
         },
+        "services": {
+            "tavily_api_key": c.tavily_api_key,
+        },
         "session": {
             # These might be missing in config.py, check source
             "ring_buffer_size": getattr(c, "session_ring_buffer_size", 64),
@@ -391,6 +395,8 @@ async def patch_config(request: Request) -> dict[str, Any]:
         flat_updates.update(updates["network"])
     if "engine" in updates:
         flat_updates.update(updates["engine"])
+    if "services" in updates:
+        flat_updates.update(updates["services"])
     if "session" in updates:
         # Prefix session fields
         for k, v in updates["session"].items():
@@ -434,6 +440,9 @@ async def patch_config(request: Request) -> dict[str, Any]:
             "l2_api_key": c.l2_api_key,
             "l2_model": c.l2_model,
             "l2_timeout_seconds": c.l2_timeout_seconds,
+        },
+        "services": {
+            "tavily_api_key": c.tavily_api_key,
         },
         "session": {
             "ring_buffer_size": getattr(c, "session_ring_buffer_size", 64),
@@ -872,7 +881,6 @@ async def dashboard_websocket(ws: WebSocket) -> None:
 # ── Dynamic tool discovery (skills + gateway) ────────────────────
 
 # Tavily web search (replaces Brave for web_search)
-TAVILY_API_KEY = "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"
 TAVILY_SEARCH_URL = "https://api.tavily.com/search"
 
 
@@ -880,12 +888,16 @@ async def _tavily_web_search(query: str, max_results: int = 5) -> str:
     """Execute a web search via Tavily API."""
     import httpx
 
+    tavily_api_key = os.getenv("AF_TAVILY_API_KEY", "")
+    if not tavily_api_key:
+        return "[Tavily error] AF_TAVILY_API_KEY not configured. Set it in Settings."
+
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(
                 TAVILY_SEARCH_URL,
                 json={
-                    "api_key": TAVILY_API_KEY,
+                    "api_key": tavily_api_key,
                     "query": query,
                     "max_results": max_results,
                     "include_answer": True,

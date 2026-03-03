@@ -41,7 +41,7 @@
           </div>
         </div>
 
-        <select v-model="selectedModel" class="toolbar-select">
+        <select v-model="selectedModel" class="toolbar-select" @change="onModelChange">
           <option value="openai/gpt-4o-mini">gpt-4o-mini</option>
           <option value="openai/gpt-4o">gpt-4o</option>
           <option value="moonshotai/kimi-k2.5">kimi-k2.5</option>
@@ -51,6 +51,8 @@
           <option value="google/gemini-3-flash-preview">gemini-3-flash</option>
           <option value="minimax/minimax-m2.5">minimax-m2.5</option>
           <option value="deepseek/deepseek-chat">deepseek-chat (no tools)</option>
+          <option disabled>──────────</option>
+          <option value="__custom__">⚙️ 自行配置</option>
         </select>
 
         <!-- Settings gear -->
@@ -342,6 +344,36 @@
       </div>
     </div>
   </div>
+
+  <!-- Custom config modal -->
+  <Teleport to="body">
+    <div v-if="showCustomConfigModal" class="modal-overlay" @click.self="showCustomConfigModal = false">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>⚙️ 自行配置 AI Provider</h3>
+          <button class="modal-close" @click="showCustomConfigModal = false">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Chat Lab uses the AI provider configured in <strong>Settings</strong> page. To use your own model provider:</p>
+          <ol class="config-steps">
+            <li>Go to the <strong>Settings</strong> page (sidebar → Config)</li>
+            <li>In <strong>AI Model Provider</strong>, set your endpoint and API key</li>
+            <li>All listed models are routed through your configured provider</li>
+          </ol>
+          <div class="config-note">
+            <p><strong>Supported providers:</strong></p>
+            <ul>
+              <li><a href="https://openrouter.ai" target="_blank">OpenRouter</a> — single key for all models (recommended)</li>
+              <li><a href="https://platform.openai.com" target="_blank">OpenAI</a> — GPT models directly</li>
+              <li><a href="https://console.anthropic.com" target="_blank">Anthropic</a> — Claude models</li>
+              <li><a href="https://platform.deepseek.com" target="_blank">Deepseek</a> — Deepseek models</li>
+              <li>Any OpenAI-compatible API endpoint</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -473,6 +505,8 @@ const sending = ref(false)
 const autoIntercept = ref(false)
 const forceForward = ref(false)
 const selectedModel = ref(localStorage.getItem(CHAT_MODEL_KEY) || 'openai/gpt-4o-mini')
+const showCustomConfigModal = ref(false)
+const prevModel = ref(selectedModel.value)
 const messagesEl = ref<HTMLElement | null>(null)
 const inputEl = ref<HTMLTextAreaElement | null>(null)
 
@@ -506,6 +540,16 @@ const mcpResults = ref<McpResult[]>([])
 
 // Skills
 const { skills, loadSkills } = useGatewaySkills()
+
+/** Handle "自行配置" option — show modal and revert selection */
+function onModelChange() {
+  if (selectedModel.value === '__custom__') {
+    showCustomConfigModal.value = true
+    selectedModel.value = prevModel.value
+  } else {
+    prevModel.value = selectedModel.value
+  }
+}
 
 const modes = [
   { id: 'chat' as const, label: 'Chat', icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>` },
@@ -1255,4 +1299,105 @@ async function testSkill(skill: SkillStatusEntry) {
   color: white; cursor: pointer; font-size: 12px; font-weight: 600; margin-bottom: 8px;
 }
 .skill-empty p { font-size: 11px; color: var(--text-dim); }
+
+/* ── Custom config modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.modal-card {
+  background: var(--bg-surface, #1e1e2e);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  width: 480px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 22px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.modal-body p {
+  margin: 0 0 14px;
+}
+
+.config-steps {
+  margin: 0 0 16px;
+  padding-left: 20px;
+}
+
+.config-steps li {
+  margin-bottom: 8px;
+}
+
+.config-note {
+  background: var(--bg-elevated, #1a1a2e);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.config-note p {
+  margin: 0 0 8px;
+}
+
+.config-note ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.config-note li {
+  margin-bottom: 4px;
+}
+
+.config-note a {
+  color: var(--accent-blue, #3b82f6);
+  text-decoration: none;
+}
+
+.config-note a:hover {
+  text-decoration: underline;
+}
 </style>

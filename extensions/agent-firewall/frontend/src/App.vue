@@ -39,15 +39,7 @@
         <div class="top-left">
           <h1 class="page-title">{{ activePageTitle }}</h1>
         </div>
-        <div class="top-center">
-          <button class="cmd-trigger" @click="showCommandPalette = true" title="Command Palette (⌘K)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            <span>Search commands...</span>
-            <kbd>⌘K</kbd>
-          </button>
-        </div>
+        <div class="top-spacer"></div>
         <div class="top-right">
           <div class="top-stats" v-if="stats">
             <span class="stat-pill">
@@ -69,6 +61,11 @@
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
             </svg>
           </button>
+          <a class="github-link" href="https://github.com/IsaacHuo/agent-firewall" target="_blank" rel="noopener noreferrer" title="GitHub Repository">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
+              <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+            </svg>
+          </a>
         </div>
       </header>
 
@@ -190,7 +187,7 @@ const navItems = computed(() => [
   { id: 'audit' as const, label: 'Audit Log', icon: icons.audit, group: 'security', badge: stats.value?.audit?.blocked ?? 0, badgeType: stats.value?.audit?.blocked ? 'danger' : undefined },
   { id: 'agents' as const, label: 'Agents', icon: icons.agents, group: 'agent', separator: true },
   { id: 'skills' as const, label: 'Skills', icon: icons.skills, group: 'agent' },
-  { id: 'gateway-config' as const, label: 'Config', icon: icons.config, group: 'settings', separator: true },
+  { id: 'gateway-config' as const, label: 'Settings', icon: icons.config, group: 'settings', separator: true },
 ])
 
 const activePageTitle = computed(() => {
@@ -516,14 +513,7 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
 .top-bar { height: 44px; display: flex; align-items: center; padding: 0 14px; border-bottom: 1px solid var(--border); background: var(--bg-secondary); flex-shrink: 0; gap: 12px; }
 .top-left { display: flex; align-items: center; gap: 8px; min-width: 140px; }
 .page-title { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; letter-spacing: -0.01em; }
-.top-center { flex: 1; display: flex; justify-content: center; max-width: 420px; margin: 0 auto; }
-.cmd-trigger {
-  display: flex; align-items: center; gap: 8px; width: 100%; max-width: 360px;
-  padding: 5px 10px; background: var(--bg-surface); border: 1px solid var(--border);
-  border-radius: var(--radius-md); color: var(--text-dim); cursor: pointer; font-size: 11px; transition: all 0.15s;
-}
-.cmd-trigger:hover { border-color: var(--border-hover); color: var(--text-muted); }
-.cmd-trigger kbd { margin-left: auto; padding: 1px 5px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 3px; font-size: 9px; color: var(--text-dim); }
+.top-spacer { flex: 1; }
 .top-right { display: flex; align-items: center; gap: 10px; min-width: 140px; justify-content: flex-end; }
 .top-stats { display: flex; gap: 6px; }
 .stat-pill { display: flex; align-items: center; gap: 4px; padding: 2px 8px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; font-size: 10px; color: var(--text-muted); white-space: nowrap; }
@@ -537,6 +527,12 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
 }
 .traffic-toggle:hover { border-color: var(--border-hover); color: var(--text-secondary); }
 .traffic-toggle.active { background: var(--accent-muted); color: var(--accent); border-color: var(--accent); }
+.github-link {
+  width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-surface);
+  color: var(--text-dim); cursor: pointer; transition: all 0.15s; text-decoration: none;
+}
+.github-link:hover { border-color: var(--border-hover); color: var(--text-secondary); }
 
 /* Content Split */
 .content-split { flex: 1; display: flex; position: relative; overflow: hidden; }

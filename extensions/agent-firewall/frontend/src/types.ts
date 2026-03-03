@@ -94,9 +94,14 @@ export interface RateLimitConfig {
   burst: number;
 }
 
+export interface ServicesConfig {
+  tavily_api_key: string;
+}
+
 export interface FirewallConfig {
   network: NetworkConfig;
   engine: EngineConfig;
+  services: ServicesConfig;
   session: SessionConfig;
   rate_limit: RateLimitConfig;
   audit_log_path: string;

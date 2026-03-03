@@ -44,7 +44,12 @@ class FirewallConfig:
         )
     )
     l2_api_key: str = field(default_factory=lambda: os.getenv("AF_L2_API_KEY", ""))
-    l2_model: str = field(default_factory=lambda: os.getenv("AF_L2_MODEL", "deepseek/deepseek-v3.2-speciale"))
+    l2_model: str = field(
+        default_factory=lambda: os.getenv("AF_L2_MODEL", "deepseek/deepseek-v3.2-speciale")
+    )
+
+    # ── Service API Keys ─────────────────────────────────────────────
+    tavily_api_key: str = field(default_factory=lambda: os.getenv("AF_TAVILY_API_KEY", ""))
     l2_timeout_seconds: float = field(
         default_factory=lambda: float(os.getenv("AF_L2_TIMEOUT", "10.0"))
     )
