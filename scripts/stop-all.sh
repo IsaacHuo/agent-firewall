@@ -33,7 +33,10 @@ if [[ -d "$RUN_DIR" ]]; then
 fi
 
 # Also kill by port as a safety net
-for port in 9090 9091; do
+# Also kill gateway process by name
+pkill -f "openclaw gateway run" 2>/dev/null && { log "Stopped openclaw gateway"; stopped=$((stopped + 1)); } || true
+
+for port in 9090 9091 18789; do
   pids=$(lsof -ti :"$port" 2>/dev/null || true)
   if [[ -n "$pids" ]]; then
     log "Killing process on port $port..."
