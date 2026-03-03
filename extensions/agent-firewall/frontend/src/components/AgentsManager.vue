@@ -203,6 +203,179 @@
             </div>
           </div>
         </div>
+
+        <!-- Custom Config Panel -->
+        <div v-if="activePanel === 'custom'" class="panel custom-panel">
+          <h3 class="panel-title">Custom Configuration</h3>
+          <p class="panel-description">
+            Add your own MCP server connections and custom skill definitions. These extend the built-in tools available to agents.
+          </p>
+
+          <!-- Custom MCP Servers -->
+          <div class="custom-section">
+            <div class="section-header">
+              <h4 class="section-title">
+                <span class="section-icon">🔌</span>
+                MCP Servers
+              </h4>
+              <button class="btn btn-sm btn-primary" @click="openAddMcp">+ Add Server</button>
+            </div>
+
+            <div v-if="customLoading" class="loading-state small"><div class="spinner"></div></div>
+            <div v-else-if="mcpServers.length === 0" class="empty-section">
+              <p>No custom MCP servers configured yet.</p>
+            </div>
+            <div v-else class="custom-list">
+              <div v-for="server in mcpServers" :key="server.id" class="custom-card">
+                <div class="custom-card-header">
+                  <span class="custom-card-icon">🔌</span>
+                  <div class="custom-card-info">
+                    <span class="custom-card-name">{{ server.name }}</span>
+                    <span class="custom-card-url mono">{{ server.url }}</span>
+                  </div>
+                  <div class="custom-card-badges">
+                    <span class="chip" :class="server.enabled ? 'chip-green' : 'chip-red'">
+                      {{ server.enabled ? 'Enabled' : 'Disabled' }}
+                    </span>
+                    <span class="chip chip-blue">{{ server.transport.toUpperCase() }}</span>
+                  </div>
+                </div>
+                <p v-if="server.description" class="custom-card-desc">{{ server.description }}</p>
+                <div class="custom-card-actions">
+                  <button class="btn btn-sm btn-secondary" @click="openEditMcp(server)">Edit</button>
+                  <button class="btn btn-sm btn-danger" @click="confirmDeleteMcp(server.id)">Delete</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- MCP Server Form Modal -->
+            <div v-if="showMcpForm" class="form-overlay" @click.self="showMcpForm = false">
+              <div class="form-card">
+                <h4 class="form-title">{{ editingMcpId ? 'Edit MCP Server' : 'Add MCP Server' }}</h4>
+                <div class="form-fields">
+                  <label class="form-label">
+                    Name
+                    <input v-model="mcpForm.name" class="form-input" placeholder="My MCP Server" />
+                  </label>
+                  <label class="form-label">
+                    URL / Endpoint
+                    <input v-model="mcpForm.url" class="form-input mono" placeholder="http://localhost:3000/mcp" />
+                  </label>
+                  <label class="form-label">
+                    Transport
+                    <select v-model="mcpForm.transport" class="form-input">
+                      <option value="sse">SSE</option>
+                      <option value="http">HTTP</option>
+                      <option value="websocket">WebSocket</option>
+                      <option value="stdio">stdio</option>
+                    </select>
+                  </label>
+                  <label class="form-label">
+                    API Key <span class="form-hint">(optional)</span>
+                    <input v-model="mcpForm.api_key" type="password" class="form-input mono" placeholder="sk-..." />
+                  </label>
+                  <label class="form-label">
+                    Description <span class="form-hint">(optional)</span>
+                    <input v-model="mcpForm.description" class="form-input" placeholder="What this server provides..." />
+                  </label>
+                  <label class="form-check">
+                    <input type="checkbox" v-model="mcpForm.enabled" />
+                    <span>Enabled</span>
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button class="btn btn-secondary" @click="showMcpForm = false">Cancel</button>
+                  <button class="btn btn-primary" :disabled="customSaving" @click="submitMcpForm">
+                    {{ customSaving ? 'Saving...' : (editingMcpId ? 'Update' : 'Add') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Custom Skills -->
+          <div class="custom-section">
+            <div class="section-header">
+              <h4 class="section-title">
+                <span class="section-icon">⚡</span>
+                Custom Skills
+              </h4>
+              <button class="btn btn-sm btn-primary" @click="openAddSkill">+ Add Skill</button>
+            </div>
+
+            <div v-if="customLoading" class="loading-state small"><div class="spinner"></div></div>
+            <div v-else-if="customSkills.length === 0" class="empty-section">
+              <p>No custom skills configured yet.</p>
+            </div>
+            <div v-else class="custom-list">
+              <div v-for="skill in customSkills" :key="skill.id" class="custom-card">
+                <div class="custom-card-header">
+                  <span class="custom-card-icon">{{ skill.emoji || '🔧' }}</span>
+                  <div class="custom-card-info">
+                    <span class="custom-card-name">{{ skill.name }}</span>
+                    <span class="custom-card-desc-inline">{{ skill.description }}</span>
+                  </div>
+                  <div class="custom-card-badges">
+                    <span class="chip" :class="skill.enabled ? 'chip-green' : 'chip-red'">
+                      {{ skill.enabled ? 'Enabled' : 'Disabled' }}
+                    </span>
+                  </div>
+                </div>
+                <div class="custom-card-command">
+                  <span class="command-label">Command:</span>
+                  <code class="command-value">{{ skill.command }}</code>
+                </div>
+                <div v-if="skill.args_template" class="custom-card-command">
+                  <span class="command-label">Args Template:</span>
+                  <code class="command-value">{{ skill.args_template }}</code>
+                </div>
+                <div class="custom-card-actions">
+                  <button class="btn btn-sm btn-secondary" @click="openEditSkill(skill)">Edit</button>
+                  <button class="btn btn-sm btn-danger" @click="confirmDeleteSkill(skill.id)">Delete</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Skill Form Modal -->
+            <div v-if="showSkillForm" class="form-overlay" @click.self="showSkillForm = false">
+              <div class="form-card">
+                <h4 class="form-title">{{ editingSkillId ? 'Edit Skill' : 'Add Skill' }}</h4>
+                <div class="form-fields">
+                  <label class="form-label">
+                    Name
+                    <input v-model="skillForm.name" class="form-input" placeholder="my-skill" />
+                  </label>
+                  <label class="form-label">
+                    Description
+                    <input v-model="skillForm.description" class="form-input" placeholder="What this skill does..." />
+                  </label>
+                  <label class="form-label">
+                    Emoji <span class="form-hint">(optional)</span>
+                    <input v-model="skillForm.emoji" class="form-input" placeholder="🔧" style="width: 80px;" />
+                  </label>
+                  <label class="form-label">
+                    Command Template
+                    <input v-model="skillForm.command" class="form-input mono" placeholder="node my-tool.js" />
+                  </label>
+                  <label class="form-label">
+                    Arguments Template <span class="form-hint">(optional, use {arg} placeholders)</span>
+                    <input v-model="skillForm.args_template" class="form-input mono" placeholder="--query {query} --output {format}" />
+                  </label>
+                  <label class="form-check">
+                    <input type="checkbox" v-model="skillForm.enabled" />
+                    <span>Enabled</span>
+                  </label>
+                </div>
+                <div class="form-actions">
+                  <button class="btn btn-secondary" @click="showSkillForm = false">Cancel</button>
+                  <button class="btn btn-primary" :disabled="customSaving" @click="submitSkillForm">
+                    {{ customSaving ? 'Saving...' : (editingSkillId ? 'Update' : 'Add') }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div v-else class="empty-state">
@@ -214,15 +387,19 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import type { GatewayAgentRow, AgentFileEntry, SkillStatusEntry } from '../types'
-import { useGatewayAgents, useGatewaySkills, useGatewayStatus } from '../composables'
+import type { GatewayAgentRow, AgentFileEntry, SkillStatusEntry, CustomMcpServer, CustomSkillDef } from '../types'
+import { useGatewayAgents, useGatewaySkills, useGatewayStatus, useCustomConfig } from '../composables'
 
 const { agents, defaultAgentId, loading, error, loadAgents, loadAgentFiles, saveAgentFile } = useGatewayAgents()
 const { skills: agentSkills, loading: agentSkillsLoading, loadSkills: loadAgentSkills } = useGatewaySkills()
 const { connected: gwConnected, connectError } = useGatewayStatus()
+const {
+  mcpServers, customSkills, loading: customLoading, saving: customSaving,
+  loadCustomConfig, saveMcpServer, deleteMcpServer, saveCustomSkill, deleteCustomSkill,
+} = useCustomConfig()
 
 const selectedAgentId = ref<string | null>(null)
-const activePanel = ref<'overview' | 'files' | 'tools' | 'skills'>('overview')
+const activePanel = ref<'overview' | 'files' | 'tools' | 'skills' | 'custom'>('overview')
 const agentFiles = ref<AgentFileEntry[]>([])
 const filesLoading = ref(false)
 const editingFile = ref<string | null>(null)
@@ -248,6 +425,7 @@ const panelTabs = [
   { id: 'files' as const, label: 'Files', icon: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>` },
   { id: 'tools' as const, label: 'MCP Tools', icon: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>` },
   { id: 'skills' as const, label: 'Skills', icon: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>` },
+  { id: 'custom' as const, label: 'Custom', icon: `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>` },
 ]
 
 const toolGroups = computed(() => [
@@ -297,6 +475,84 @@ const toolGroups = computed(() => [
     ],
   },
 ])
+
+// ── Custom MCP/Skill form state ────────────────────────────────
+const showMcpForm = ref(false)
+const showSkillForm = ref(false)
+const editingMcpId = ref<string | null>(null)
+const editingSkillId = ref<string | null>(null)
+
+const mcpForm = ref<Partial<CustomMcpServer>>({
+  name: '', url: '', transport: 'sse', api_key: '', description: '', enabled: true,
+})
+const skillForm = ref<Partial<CustomSkillDef>>({
+  name: '', description: '', emoji: '🔧', command: '', args_template: '', enabled: true,
+})
+
+function openAddMcp() {
+  editingMcpId.value = null
+  mcpForm.value = { name: '', url: '', transport: 'sse', api_key: '', description: '', enabled: true }
+  showMcpForm.value = true
+}
+
+function openEditMcp(server: CustomMcpServer) {
+  editingMcpId.value = server.id
+  mcpForm.value = { ...server }
+  showMcpForm.value = true
+}
+
+async function submitMcpForm() {
+  const id = editingMcpId.value || `mcp-${Date.now()}`
+  const server: CustomMcpServer = {
+    id,
+    name: mcpForm.value.name || 'Unnamed',
+    url: mcpForm.value.url || '',
+    transport: mcpForm.value.transport || 'sse',
+    api_key: mcpForm.value.api_key,
+    headers: {},
+    description: mcpForm.value.description || '',
+    enabled: mcpForm.value.enabled ?? true,
+    created_at: mcpForm.value.created_at || Date.now(),
+  }
+  await saveMcpServer(server)
+  showMcpForm.value = false
+}
+
+async function confirmDeleteMcp(id: string) {
+  await deleteMcpServer(id)
+}
+
+function openAddSkill() {
+  editingSkillId.value = null
+  skillForm.value = { name: '', description: '', emoji: '🔧', command: '', args_template: '', enabled: true }
+  showSkillForm.value = true
+}
+
+function openEditSkill(skill: CustomSkillDef) {
+  editingSkillId.value = skill.id
+  skillForm.value = { ...skill }
+  showSkillForm.value = true
+}
+
+async function submitSkillForm() {
+  const id = editingSkillId.value || `skill-${Date.now()}`
+  const skill: CustomSkillDef = {
+    id,
+    name: skillForm.value.name || 'Unnamed',
+    description: skillForm.value.description || '',
+    emoji: skillForm.value.emoji || '🔧',
+    command: skillForm.value.command || '',
+    args_template: skillForm.value.args_template || '',
+    enabled: skillForm.value.enabled ?? true,
+    created_at: skillForm.value.created_at || Date.now(),
+  }
+  await saveCustomSkill(skill)
+  showSkillForm.value = false
+}
+
+async function confirmDeleteSkill(id: string) {
+  await deleteCustomSkill(id)
+}
 
 function selectAgent(agentId: string) {
   selectedAgentId.value = agentId
@@ -372,6 +628,7 @@ watch(selectedAgentId, (id) => {
 
 onMounted(() => {
   loadAgents()
+  loadCustomConfig()
 })
 
 watch(agents, (list) => {
@@ -949,10 +1206,266 @@ watch(agents, (list) => {
   color: var(--accent-yellow);
 }
 
+.chip-blue {
+  background: rgba(68, 136, 255, 0.15);
+  color: var(--accent-blue);
+}
+
 .empty-state,
-.empty-panel {
+.empty-panel,
+.empty-section {
   text-align: center;
   padding: 40px 20px;
   color: var(--text-dim);
+}
+
+.empty-section {
+  padding: 24px 16px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+/* Custom Panel */
+.custom-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.custom-section {
+  margin-top: 24px;
+}
+
+.custom-section:first-of-type {
+  margin-top: 8px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.section-icon {
+  font-size: 18px;
+}
+
+.custom-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.custom-card {
+  padding: 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color 0.2s;
+}
+
+.custom-card:hover {
+  border-color: var(--accent-blue);
+}
+
+.custom-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.custom-card-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.custom-card-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.custom-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.custom-card-url {
+  font-size: 12px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-card-desc-inline {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.custom-card-badges {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.custom-card-desc {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.custom-card-command {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.command-label {
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.command-value {
+  padding: 3px 8px;
+  background: var(--bg-primary);
+  border-radius: 4px;
+  font-family: 'SF Mono', 'Consolas', monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-card-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn-danger {
+  background: rgba(233, 69, 96, 0.12);
+  color: var(--accent-red);
+  border: 1px solid transparent;
+}
+
+.btn-danger:hover {
+  background: rgba(233, 69, 96, 0.25);
+  border-color: var(--accent-red);
+}
+
+/* Form overlay */
+.form-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.form-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px;
+  width: 480px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.form-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+}
+
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.form-hint {
+  font-weight: 400;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+.form-input {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  border-color: var(--accent-blue);
+}
+
+.form-input.mono {
+  font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.form-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-blue);
+}
+
+.form-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.mono {
+  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
 }
 </style>

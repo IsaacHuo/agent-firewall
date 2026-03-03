@@ -657,6 +657,91 @@ async def list_mcp_tools(request: Request) -> JSONResponse:
     )
 
 
+# ── Custom MCP Servers & Skills CRUD ─────────────────────────────
+
+_CUSTOM_CONFIG_PATH = Path(__file__).parent.parent / "custom_config.json"
+
+
+def _load_custom_config() -> dict:
+    """Load custom MCP servers and skills from JSON file."""
+    if _CUSTOM_CONFIG_PATH.exists():
+        try:
+            return json.loads(_CUSTOM_CONFIG_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {"mcp_servers": [], "skills": []}
+
+
+def _save_custom_config(data: dict) -> None:
+    """Persist custom config to JSON file."""
+    _CUSTOM_CONFIG_PATH.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+@app.get("/api/custom-config")
+async def get_custom_config() -> JSONResponse:
+    """Return all custom MCP servers and skills."""
+    return JSONResponse(_load_custom_config())
+
+
+@app.put("/api/custom-config")
+async def save_custom_config(request: Request) -> JSONResponse:
+    """Replace the full custom config (mcp_servers + skills)."""
+    data = await request.json()
+    _save_custom_config(data)
+    return JSONResponse({"ok": True})
+
+
+@app.post("/api/custom-config/mcp-servers")
+async def add_custom_mcp_server(request: Request) -> JSONResponse:
+    """Add or update a custom MCP server."""
+    server = await request.json()
+    cfg = _load_custom_config()
+    servers = cfg.get("mcp_servers", [])
+    # Upsert by id
+    idx = next((i for i, s in enumerate(servers) if s["id"] == server.get("id")), None)
+    if idx is not None:
+        servers[idx] = server
+    else:
+        servers.append(server)
+    cfg["mcp_servers"] = servers
+    _save_custom_config(cfg)
+    return JSONResponse({"ok": True, "server": server})
+
+
+@app.delete("/api/custom-config/mcp-servers/{server_id}")
+async def delete_custom_mcp_server(server_id: str) -> JSONResponse:
+    """Delete a custom MCP server by ID."""
+    cfg = _load_custom_config()
+    cfg["mcp_servers"] = [s for s in cfg.get("mcp_servers", []) if s.get("id") != server_id]
+    _save_custom_config(cfg)
+    return JSONResponse({"ok": True})
+
+
+@app.post("/api/custom-config/skills")
+async def add_custom_skill(request: Request) -> JSONResponse:
+    """Add or update a custom skill definition."""
+    skill = await request.json()
+    cfg = _load_custom_config()
+    skills = cfg.get("skills", [])
+    idx = next((i for i, s in enumerate(skills) if s["id"] == skill.get("id")), None)
+    if idx is not None:
+        skills[idx] = skill
+    else:
+        skills.append(skill)
+    cfg["skills"] = skills
+    _save_custom_config(cfg)
+    return JSONResponse({"ok": True, "skill": skill})
+
+
+@app.delete("/api/custom-config/skills/{skill_id}")
+async def delete_custom_skill(skill_id: str) -> JSONResponse:
+    """Delete a custom skill by ID."""
+    cfg = _load_custom_config()
+    cfg["skills"] = [s for s in cfg.get("skills", []) if s.get("id") != skill_id]
+    _save_custom_config(cfg)
+    return JSONResponse({"ok": True})
+
+
 @app.post("/mcp/{path:path}")
 async def mcp_post(request: Request) -> JSONResponse:
     s = _state(request)

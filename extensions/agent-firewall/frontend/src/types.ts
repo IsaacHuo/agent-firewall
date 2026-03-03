@@ -292,3 +292,33 @@ export interface GatewayConfigSchema {
   version: string;
   generatedAt: string;
 }
+
+// ── Custom MCP Servers & Skills ─────────────────────────────────
+
+export interface CustomMcpServer {
+  id: string;
+  name: string;
+  url: string;
+  transport: "http" | "sse" | "stdio" | "websocket";
+  api_key?: string;
+  headers?: Record<string, string>;
+  enabled: boolean;
+  description?: string;
+  created_at: number;
+}
+
+export interface CustomSkillDef {
+  id: string;
+  name: string;
+  description: string;
+  emoji?: string;
+  command: string;
+  args_template?: string;
+  enabled: boolean;
+  created_at: number;
+}
+
+export interface CustomConfigData {
+  mcp_servers: CustomMcpServer[];
+  skills: CustomSkillDef[];
+}

@@ -821,3 +821,98 @@ export function useGatewayConfig() {
     applyGwConfig,
   };
 }
+
+// ── Custom MCP/Skill Config ─────────────────────────────────────
+
+export function useCustomConfig() {
+  const mcpServers = ref<import("./types").CustomMcpServer[]>([]);
+  const customSkills = ref<import("./types").CustomSkillDef[]>([]);
+  const loading = ref(false);
+  const saving = ref(false);
+  const error = ref<string | null>(null);
+
+  async function loadCustomConfig() {
+    loading.value = true;
+    error.value = null;
+    try {
+      const data = await apiFetch<import("./types").CustomConfigData>("/api/custom-config");
+      mcpServers.value = data.mcp_servers || [];
+      customSkills.value = data.skills || [];
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : "Failed to load custom config";
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function saveMcpServer(server: import("./types").CustomMcpServer) {
+    saving.value = true;
+    try {
+      await apiFetch("/api/custom-config/mcp-servers", {
+        method: "POST",
+        body: JSON.stringify(server),
+      });
+      await loadCustomConfig();
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : "Failed to save MCP server";
+    } finally {
+      saving.value = false;
+    }
+  }
+
+  async function deleteMcpServer(serverId: string) {
+    saving.value = true;
+    try {
+      await apiFetch(`/api/custom-config/mcp-servers/${serverId}`, {
+        method: "DELETE",
+      });
+      await loadCustomConfig();
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : "Failed to delete MCP server";
+    } finally {
+      saving.value = false;
+    }
+  }
+
+  async function saveCustomSkill(skill: import("./types").CustomSkillDef) {
+    saving.value = true;
+    try {
+      await apiFetch("/api/custom-config/skills", {
+        method: "POST",
+        body: JSON.stringify(skill),
+      });
+      await loadCustomConfig();
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : "Failed to save custom skill";
+    } finally {
+      saving.value = false;
+    }
+  }
+
+  async function deleteCustomSkill(skillId: string) {
+    saving.value = true;
+    try {
+      await apiFetch(`/api/custom-config/skills/${skillId}`, {
+        method: "DELETE",
+      });
+      await loadCustomConfig();
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : "Failed to delete custom skill";
+    } finally {
+      saving.value = false;
+    }
+  }
+
+  return {
+    mcpServers,
+    customSkills,
+    loading,
+    saving,
+    error,
+    loadCustomConfig,
+    saveMcpServer,
+    deleteMcpServer,
+    saveCustomSkill,
+    deleteCustomSkill,
+  };
+}
