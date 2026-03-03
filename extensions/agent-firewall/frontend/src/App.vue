@@ -550,7 +550,7 @@ input, textarea, select, button { font-family: inherit; font-size: inherit; }
 
 /* Content Split */
 .content-split { flex: 1; display: flex; position: relative; overflow: hidden; }
-.content-main { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
+.content-main { flex: 1; min-width: 0; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; }
 .content-main.full-width { border-right: none; }
 .content-traffic { width: 420px; flex-shrink: 0; overflow: hidden; transition: width 0.2s ease; display: flex; flex-direction: column; border-left: 1px solid var(--border); }
 .content-traffic.collapsed { width: 0; border-left: none; }
