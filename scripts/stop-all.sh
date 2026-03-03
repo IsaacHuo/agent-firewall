@@ -17,7 +17,7 @@ ok()  { echo -e "${GREEN}[stop-all]${NC} $*"; }
 
 stopped=0
 
-# Kill by saved PIDs
+# Kill by saved PIDs (graceful SIGTERM first)
 if [[ -d "$RUN_DIR" ]]; then
   for pidfile in "$RUN_DIR"/*.pid; do
     [[ -f "$pidfile" ]] || continue
@@ -26,16 +26,23 @@ if [[ -d "$RUN_DIR" ]]; then
     if kill -0 "$pid" 2>/dev/null; then
       log "Stopping $name (PID $pid)..."
       kill "$pid" 2>/dev/null || true
+      # Wait briefly for graceful shutdown
+      for _ in 1 2 3 4; do
+        kill -0 "$pid" 2>/dev/null || break
+        sleep 0.5
+      done
+      # Force kill if still alive
+      kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null || true
       stopped=$((stopped + 1))
     fi
     rm -f "$pidfile"
   done
 fi
 
-# Also kill by port as a safety net
 # Also kill gateway process by name
 pkill -f "openclaw gateway run" 2>/dev/null && { log "Stopped openclaw gateway"; stopped=$((stopped + 1)); } || true
 
+# Safety net: kill by port
 for port in 9090 9091 18789; do
   pids=$(lsof -ti :"$port" 2>/dev/null || true)
   if [[ -n "$pids" ]]; then
@@ -45,11 +52,11 @@ for port in 9090 9091 18789; do
   fi
 done
 
-rmdir "$RUN_DIR" 2>/dev/null || true
+rm -rf "$RUN_DIR" 2>/dev/null || true
 
 echo ""
 if [[ $stopped -gt 0 ]]; then
-  ok "All services stopped."
+  ok "All services stopped ($stopped processes)."
 else
   ok "No running services found."
 fi
