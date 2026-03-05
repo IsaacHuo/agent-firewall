@@ -185,6 +185,7 @@ export interface AuditEntry {
 
 export type NavSection =
   | "chat"
+  | "schematic"
   | "traffic"
   | "rules"
   | "engine"

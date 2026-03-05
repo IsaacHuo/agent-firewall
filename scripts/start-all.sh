@@ -77,10 +77,15 @@ wait_for_http() {
 # --- Pre-checks ---
 HAS_GATEWAY=false
 if [[ "$SKIP_GATEWAY" == "false" ]]; then
-  if command -v openclaw &>/dev/null; then
+  # Check if we're in the main project (has gateway built-in)
+  if [[ -f "$ROOT/package.json" ]] && grep -q "gateway:dev" "$ROOT/package.json"; then
     HAS_GATEWAY=true
+    log "Using built-in Gateway from project"
+  elif command -v openclaw &>/dev/null; then
+    HAS_GATEWAY=true
+    log "Using external openclaw CLI"
   else
-    err "openclaw CLI not found! Gateway is required for tool-calling in Chat Lab."
+    err "Gateway not found! Gateway is required for tool-calling in Chat Lab."
     err "Install with: npm i -g openclaw"
     err "Or skip with: ./scripts/start-all.sh --no-gateway"
     exit 1
@@ -90,6 +95,12 @@ fi
 if [[ ! -f "$FIREWALL_DIR/.venv/bin/uvicorn" ]]; then
   log "Setting up Python virtual environment..."
   (cd "$FIREWALL_DIR" && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt)
+fi
+
+# Check if main project dependencies are installed (for built-in gateway)
+if [[ -f "$ROOT/package.json" ]] && [[ ! -d "$ROOT/node_modules" ]]; then
+  log "Installing main project dependencies (for Gateway)..."
+  (cd "$ROOT" && npm install)
 fi
 
 if [[ ! -d "$FRONTEND_DIR/node_modules" ]]; then
@@ -104,16 +115,28 @@ ALL_PIDS=()
 
 # 1) Gateway
 PID_GATEWAY=""
+USE_BUILTIN_GATEWAY=false
 if [[ "$HAS_GATEWAY" == "true" ]]; then
-  log "Starting OpenClaw Gateway on :18789..."
-  openclaw gateway run --bind loopback --port 18789 --force > /tmp/openclaw-gateway.log 2>&1 &
-  PID_GATEWAY=$!
+  log "Starting Gateway on :18789..."
+
+  # Check if we should use built-in gateway
+  if [[ -f "$ROOT/package.json" ]] && grep -q "gateway:dev" "$ROOT/package.json"; then
+    USE_BUILTIN_GATEWAY=true
+    # Use built-in gateway from project (default port is 18789)
+    (cd "$ROOT" && AGENT_SHIELD_SKIP_CHANNELS=1 node scripts/run-node.mjs --dev gateway) > /tmp/gateway.log 2>&1 &
+    PID_GATEWAY=$!
+  else
+    # Use external openclaw CLI
+    openclaw gateway run --bind loopback --port 18789 --force > /tmp/openclaw-gateway.log 2>&1 &
+    PID_GATEWAY=$!
+  fi
+
   ALL_PIDS+=("$PID_GATEWAY")
 
-  if wait_for_port 18789 8; then
+  if wait_for_port 18789 15; then
     ok "Gateway ready (PID $PID_GATEWAY)"
   else
-    warn "Gateway slow to start — check /tmp/openclaw-gateway.log"
+    warn "Gateway slow to start — check /tmp/gateway.log or /tmp/openclaw-gateway.log"
   fi
 fi
 
