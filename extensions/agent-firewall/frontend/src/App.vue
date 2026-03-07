@@ -73,16 +73,19 @@
       <div class="content-split">
         <!-- Left: Active page -->
         <div class="content-main" :class="{ 'full-width': !showTraffic }">
-          <ChatLab v-if="currentSection === 'chat'" :events="events" />
-          <SchematicDiagram v-else-if="currentSection === 'schematic'" />
-          <RulesConfig v-else-if="currentSection === 'rules'" :rules="rulesData" @save="handleSaveRule" @delete="handleDeleteRule" @toggle="handleToggleRule" @updateMethodAction="handleUpdateMethodAction" @updateDefaultAction="(a: string) => handleUpdateDefaultAction(a as RuleAction)" />
-          <EngineSettings v-else-if="currentSection === 'engine'" :config="config" :saving="configSaving" @save="handleSaveConfig" />
-          <RateLimitSettings v-else-if="currentSection === 'rate-limit'" :config="config?.rate_limit ?? { requests_per_sec: 10, burst: 20 }" @save="handleSaveRateLimit" />
-          <SecurityTest v-else-if="currentSection === 'test'" :results="testResults" :running="testRunning" @run="handleRunTest" @runAll="handleRunAllTests" @clear="clearTestResults" />
-          <AuditLog v-else-if="currentSection === 'audit'" :entries="auditEntries" :loading="auditLoading" :hasMore="auditHasMore" @load="handleLoadAudit" @loadMore="handleLoadMoreAudit" />
-          <SkillsManager v-else-if="currentSection === 'skills'" />
-          <AgentsManager v-else-if="currentSection === 'agents'" />
-          <GatewayConfig v-else-if="currentSection === 'gateway-config'" />
+          <!-- KeepAlive preserves ChatLab state & streaming across tab switches -->
+          <KeepAlive>
+            <ChatLab v-if="currentSection === 'chat'" :events="events" />
+          </KeepAlive>
+          <SchematicDiagram v-if="currentSection === 'schematic'" />
+          <RulesConfig v-if="currentSection === 'rules'" :rules="rulesData" @save="handleSaveRule" @delete="handleDeleteRule" @toggle="handleToggleRule" @updateMethodAction="handleUpdateMethodAction" @updateDefaultAction="(a: string) => handleUpdateDefaultAction(a as RuleAction)" />
+          <EngineSettings v-if="currentSection === 'engine'" :config="config" :saving="configSaving" @save="handleSaveConfig" />
+          <RateLimitSettings v-if="currentSection === 'rate-limit'" :config="config?.rate_limit ?? { requests_per_sec: 10, burst: 20 }" @save="handleSaveRateLimit" />
+          <SecurityTest v-if="currentSection === 'test'" :results="testResults" :running="testRunning" @run="handleRunTest" @runAll="handleRunAllTests" @clear="clearTestResults" />
+          <AuditLog v-if="currentSection === 'audit'" :entries="auditEntries" :loading="auditLoading" :hasMore="auditHasMore" @load="handleLoadAudit" @loadMore="handleLoadMoreAudit" />
+          <SkillsManager v-if="currentSection === 'skills'" />
+          <AgentsManager v-if="currentSection === 'agents'" />
+          <GatewayConfig v-if="currentSection === 'gateway-config'" />
         </div>
 
         <!-- Resize handle -->

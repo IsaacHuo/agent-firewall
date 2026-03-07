@@ -739,6 +739,15 @@ export function useGatewayAgents() {
     }
   }
 
+  async function loadAgentFile(agentId: string, name: string): Promise<string> {
+    try {
+      const result = await gwRequest<{ content: string }>("agents.files.get", { agentId, name });
+      return result.content ?? "";
+    } catch {
+      return "";
+    }
+  }
+
   async function saveAgentFile(agentId: string, name: string, content: string) {
     try {
       error.value = null;
@@ -748,7 +757,16 @@ export function useGatewayAgents() {
     }
   }
 
-  return { agents, defaultAgentId, loading, error, loadAgents, loadAgentFiles, saveAgentFile };
+  return {
+    agents,
+    defaultAgentId,
+    loading,
+    error,
+    loadAgents,
+    loadAgentFiles,
+    loadAgentFile,
+    saveAgentFile,
+  };
 }
 
 // ── Gateway Config API (via Gateway RPC) ────────────────────────────

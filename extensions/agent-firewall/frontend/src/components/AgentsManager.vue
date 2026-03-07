@@ -115,7 +115,7 @@
               <div class="file-info">
                 <span class="file-name">{{ file.name }}</span>
                 <span class="file-meta">
-                  {{ file.missing ? 'Missing' : formatFileSize(file.size || 0) }}
+                  {{ file.missing ? 'Missing — click to create' : formatFileSize(file.size || 0) }}
                   <template v-if="file.updatedAtMs">
                     · {{ formatDate(file.updatedAtMs) }}
                   </template>
@@ -390,7 +390,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import type { GatewayAgentRow, AgentFileEntry, SkillStatusEntry, CustomMcpServer, CustomSkillDef } from '../types'
 import { useGatewayAgents, useGatewaySkills, useGatewayStatus, useCustomConfig } from '../composables'
 
-const { agents, defaultAgentId, loading, error, loadAgents, loadAgentFiles, saveAgentFile } = useGatewayAgents()
+const { agents, defaultAgentId, loading, error, loadAgents, loadAgentFiles, loadAgentFile, saveAgentFile } = useGatewayAgents()
 const { skills: agentSkills, loading: agentSkillsLoading, loadSkills: loadAgentSkills } = useGatewaySkills()
 const { connected: gwConnected, connectError } = useGatewayStatus()
 const {
@@ -570,13 +570,22 @@ async function loadFiles() {
 }
 
 async function openFile(file: AgentFileEntry) {
-  if (file.missing) return
+  if (!selectedAgentId.value) return
   editingFile.value = file.name
-  fileContent.value = file.content || '(loading...)'
-  // If content not preloaded, we'd need to fetch it
-  if (!file.content) {
-    // Content should be available from the file entry
+  fileContent.value = '(loading...)'
+
+  if (file.missing) {
+    // Allow creating missing files — start with empty content
     fileContent.value = ''
+    return
+  }
+
+  // Fetch file content from gateway
+  try {
+    const content = await loadAgentFile(selectedAgentId.value, file.name)
+    fileContent.value = content
+  } catch {
+    fileContent.value = file.content || ''
   }
 }
 
@@ -974,8 +983,12 @@ watch(agents, (list) => {
 }
 
 .file-item.missing {
-  opacity: 0.5;
-  cursor: not-allowed;
+  opacity: 0.6;
+  cursor: pointer;
+}
+.file-item.missing:hover {
+  opacity: 0.85;
+  background: rgba(255, 100, 100, 0.06);
 }
 
 .file-icon {

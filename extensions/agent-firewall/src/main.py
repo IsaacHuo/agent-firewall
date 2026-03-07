@@ -26,6 +26,7 @@ Startup sequence:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import mimetypes
@@ -1193,22 +1194,71 @@ async def chat_send(request: Request):
                 chat_body["tool_choice"] = "auto"
 
             tool_calls_log: list[dict[str, Any]] = []
-            max_iterations = 10
+            max_iterations = 100
+            max_retries = 4
 
-            async with httpx.AsyncClient(timeout=120.0) as client:
+            async with httpx.AsyncClient(
+                timeout=httpx.Timeout(connect=15.0, read=120.0, write=30.0, pool=30.0),
+                limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
+            ) as client:
                 for iteration in range(max_iterations):
-                    resp = await client.post(upstream_url, headers=upstream_headers, json=chat_body)
+                    # Retry loop: fetch + parse as one atomic unit
+                    resp = None
+                    resp_json = None
+                    for attempt in range(max_retries):
+                        try:
+                            resp = await client.post(
+                                upstream_url, headers=upstream_headers, json=chat_body
+                            )
+                            if resp.status_code == 429 or resp.status_code >= 502:
+                                wait = (2**attempt) + 0.5
+                                logger.warning(
+                                    "Upstream %d on attempt %d/%d, retrying in %.1fs",
+                                    resp.status_code,
+                                    attempt + 1,
+                                    max_retries,
+                                    wait,
+                                )
+                                await asyncio.sleep(wait)
+                                continue
+                            if resp.status_code == 200:
+                                resp_json = resp.json()
+                            break  # success or non-retryable error
+                        except (
+                            httpx.RemoteProtocolError,
+                            httpx.ReadError,
+                            httpx.ReadTimeout,
+                            httpx.ConnectError,
+                            httpx.ConnectTimeout,
+                        ) as exc:
+                            wait = (2**attempt) + 0.5
+                            logger.warning(
+                                "Upstream connection error on attempt %d/%d: %s, retrying in %.1fs",
+                                attempt + 1,
+                                max_retries,
+                                exc,
+                                wait,
+                            )
+                            if attempt < max_retries - 1:
+                                await asyncio.sleep(wait)
+                            else:
+                                raise
 
-                    if resp.status_code != 200:
+                    if resp is None or resp.status_code != 200:
+                        err_detail = resp.text[:500] if resp else "No response"
+                        status = resp.status_code if resp else 0
                         yield _emit(
                             {
                                 "type": "error",
-                                "error": f"Upstream error {resp.status_code}: {resp.text[:500]}",
+                                "error": f"Upstream error {status}: {err_detail}",
                             }
                         )
                         break
 
-                    resp_json = resp.json()
+                    if not resp_json:
+                        yield _emit({"type": "error", "error": "Empty response body from upstream"})
+                        break
+
                     choices = resp_json.get("choices", [])
                     if not choices:
                         yield _emit({"type": "error", "error": "No choices in LLM response"})

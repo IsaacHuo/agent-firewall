@@ -203,7 +203,10 @@ Examples of BENIGN requests:
         self._api_key = cfg.l2_api_key
         self._model = cfg.l2_model
         self._timeout = cfg.l2_timeout_seconds
-        self._client = httpx.AsyncClient(timeout=self._timeout)
+        self._client = httpx.AsyncClient(
+            timeout=httpx.Timeout(self._timeout, connect=10.0),
+            limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
+        )
 
     async def classify(
         self,
@@ -223,21 +226,76 @@ Examples of BENIGN requests:
             headers = {"Content-Type": "application/json"}
             if self._api_key:
                 headers["Authorization"] = f"Bearer {self._api_key}"
-            response = await self._client.post(
-                self._endpoint,
-                headers=headers,
-                json={
-                    "model": self._model,
-                    "messages": [
-                        {"role": "system", "content": self._SYSTEM_PROMPT},
-                        {"role": "user", "content": user_content},
-                    ],
-                    "temperature": 0.1,  # Near-deterministic for security
-                    "max_tokens": 200,
-                },
-            )
-            response.raise_for_status()
-            data = response.json()
+            payload = {
+                "model": self._model,
+                "messages": [
+                    {"role": "system", "content": self._SYSTEM_PROMPT},
+                    {"role": "user", "content": user_content},
+                ],
+                "temperature": 0.1,  # Near-deterministic for security
+                "max_tokens": 4096,  # Reasoning models need headroom for CoT + output
+            }
+            # Ask provider to suppress verbose reasoning if possible
+            # (OpenRouter / DeepSeek respect this to keep content shorter)
+            if "deepseek" in self._model.lower() or "reasoning" in self._model.lower():
+                payload["reasoning"] = {"effort": "low"}
+
+            # Retry with exponential backoff for transient network errors
+            import asyncio as _asyncio
+
+            max_retries = 3
+            data = None
+            last_exc: Exception | None = None
+            for attempt in range(max_retries):
+                try:
+                    response = await self._client.post(
+                        self._endpoint,
+                        headers=headers,
+                        json=payload,
+                    )
+                    response.raise_for_status()
+                    data = response.json()
+                    break
+                except (
+                    httpx.RemoteProtocolError,
+                    httpx.ReadError,
+                    httpx.ReadTimeout,
+                    httpx.ConnectError,
+                    httpx.ConnectTimeout,
+                ) as exc:
+                    last_exc = exc
+                    if attempt < max_retries - 1:
+                        wait = 1.5**attempt
+                        logger.info(
+                            "L2 retry %d/%d after %s (wait %.1fs)",
+                            attempt + 1,
+                            max_retries,
+                            type(exc).__name__,
+                            wait,
+                        )
+                        await _asyncio.sleep(wait)
+                    else:
+                        raise
+                except httpx.HTTPStatusError as exc:
+                    if exc.response.status_code in (429, 502, 503, 504):
+                        last_exc = exc
+                        if attempt < max_retries - 1:
+                            wait = 2.0**attempt
+                            logger.info(
+                                "L2 retry %d/%d after HTTP %d (wait %.1fs)",
+                                attempt + 1,
+                                max_retries,
+                                exc.response.status_code,
+                                wait,
+                            )
+                            await _asyncio.sleep(wait)
+                        else:
+                            raise
+                    else:
+                        raise
+
+            if data is None:
+                return L2Result(reasoning=f"L2 exhausted retries — fail-open: {last_exc}")
 
             # Parse LLM response — strip whitespace
             choices = data.get("choices", [])
@@ -245,9 +303,19 @@ Examples of BENIGN requests:
                 logger.warning("L2 LLM returned no choices — fail-open. Full response: %r", data)
                 return L2Result(reasoning="LLM returned no choices — fail-open")
 
-            raw_content = choices[0].get("message", {}).get("content")
+            msg_obj = choices[0].get("message", {})
+            raw_content = msg_obj.get("content")
+            # Some reasoning models (e.g. DeepSeek-R1 / speciale variants) put
+            # chain-of-thought in "reasoning" and the final answer in "content".
+            # When content is null/empty, fall back to reasoning fields.
+            reasoning_text = msg_obj.get("reasoning") or msg_obj.get("reasoning_content") or ""
+            if not raw_content and reasoning_text:
+                raw_content = reasoning_text
             logger.debug(
-                "L2 raw response content: %r", raw_content[:500] if raw_content else "(empty)"
+                "L2 raw response — content: %r, reasoning: %r (keys=%s)",
+                (raw_content or "")[:300],
+                reasoning_text[:300] if reasoning_text else "(none)",
+                list(msg_obj.keys()),
             )
             content = raw_content.strip() if raw_content else ""
 
@@ -258,19 +326,37 @@ Examples of BENIGN requests:
                 return L2Result(reasoning="LLM returned empty content — fail-open")
 
             import orjson
+            import re
 
             # Try direct parse first (model usually returns clean JSON)
+            result = None
             try:
                 result = orjson.loads(content)
             except orjson.JSONDecodeError:
-                # Fallback: extract JSON from markdown code blocks or surrounding text
-                import re
-
-                # Match JSON object allowing nested braces
-                json_match = re.search(r'\{(?:[^{}]|"[^"]*")*\}', content, re.DOTALL)
+                # Fallback: extract JSON object from surrounding text / markdown / CoT
+                json_match = re.search(r'\{[^{}]*"is_injection"[^{}]*\}', content, re.DOTALL)
                 if json_match:
-                    content = json_match.group(0)
-                result = orjson.loads(content)
+                    try:
+                        result = orjson.loads(json_match.group(0))
+                    except orjson.JSONDecodeError:
+                        pass
+
+            # Last resort: scan reasoning text for JSON (may differ from content)
+            if result is None and reasoning_text and reasoning_text != content:
+                json_match = re.search(r'\{[^{}]*"is_injection"[^{}]*\}', reasoning_text, re.DOTALL)
+                if json_match:
+                    try:
+                        result = orjson.loads(json_match.group(0))
+                    except orjson.JSONDecodeError:
+                        pass
+
+            if result is None:
+                logger.warning(
+                    "L2 could not extract JSON from response — fail-open. content=%r reasoning=%r",
+                    content[:200],
+                    reasoning_text[:200],
+                )
+                return L2Result(reasoning="LLM returned non-JSON content — fail-open")
 
             is_injection = bool(result.get("is_injection", False))
             confidence = float(result.get("confidence", 0.0))

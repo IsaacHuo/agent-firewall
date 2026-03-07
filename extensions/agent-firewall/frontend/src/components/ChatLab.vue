@@ -238,7 +238,12 @@
           rows="1"
           ref="inputEl"
         ></textarea>
-        <button class="send-btn" @click="handleSend" :disabled="!inputMessage.trim() || sending">
+        <button v-if="sending" class="stop-btn" @click="stopResponse" title="Stop response">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+            <rect x="4" y="4" width="16" height="16" rx="2"/>
+          </svg>
+        </button>
+        <button v-else class="send-btn" @click="handleSend" :disabled="!inputMessage.trim()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
             <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
           </svg>
@@ -519,6 +524,7 @@ const mode = ref<'chat' | 'mcp' | 'skill'>('chat')
 const chatMessages = ref<ChatMessage[]>([])
 const inputMessage = ref('')
 const sending = ref(false)
+let abortController: AbortController | null = null
 const autoIntercept = ref(false)
 const forceForward = ref(false)
 const selectedModel = ref(localStorage.getItem(CHAT_MODEL_KEY) || 'openai/gpt-4o-mini')
@@ -800,6 +806,7 @@ async function sendMessage(content: string, modifiedContent: string | null, anal
   }
 
   sending.value = true
+  abortController = new AbortController()
 
   try {
     const body: Record<string, unknown> = {
@@ -817,6 +824,7 @@ async function sendMessage(content: string, modifiedContent: string | null, anal
     const res = await fetch(`${API_BASE}/api/chat/send`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
+      signal: abortController.signal,
     })
 
     // Stream NDJSON events from backend
@@ -904,9 +912,20 @@ async function sendMessage(content: string, modifiedContent: string | null, anal
       })
     }
   } catch (err) {
-    chatMessages.value.push({ id: generateId(), role: 'system', content: `Error: ${err instanceof Error ? err.message : 'Unknown error'}`, timestamp: Date.now() })
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      chatMessages.value.push({ id: generateId(), role: 'system', content: '[Stopped by user]', timestamp: Date.now() })
+    } else {
+      chatMessages.value.push({ id: generateId(), role: 'system', content: `Error: ${err instanceof Error ? err.message : 'Unknown error'}`, timestamp: Date.now() })
+    }
   } finally {
+    abortController = null
     sending.value = false; scrollToBottom()
+  }
+}
+
+function stopResponse() {
+  if (abortController) {
+    abortController.abort()
   }
 }
 
@@ -1308,6 +1327,12 @@ async function testSkill(skill: SkillStatusEntry) {
 }
 .send-btn:hover:not(:disabled) { background: var(--accent-hover); }
 .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.stop-btn {
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  background: #e74c3c; border: none; border-radius: var(--radius-md);
+  color: white; cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+}
+.stop-btn:hover { background: #c0392b; }
 
 /* MCP area */
 .mcp-area, .skill-area { flex: 1; overflow-y: auto; }
