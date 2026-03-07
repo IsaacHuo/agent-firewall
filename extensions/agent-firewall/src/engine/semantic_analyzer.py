@@ -203,8 +203,11 @@ Examples of BENIGN requests:
         self._api_key = cfg.l2_api_key
         self._model = cfg.l2_model
         self._timeout = cfg.l2_timeout_seconds
+        # Reasoning models (DeepSeek-R1, speciale) can take 30-60s for CoT + output.
+        # Use a generous read timeout; connect stays tight to fail fast on bad hosts.
+        read_timeout = max(self._timeout, 45.0)
         self._client = httpx.AsyncClient(
-            timeout=httpx.Timeout(self._timeout, connect=10.0),
+            timeout=httpx.Timeout(read_timeout, connect=10.0),
             limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
         )
 
@@ -417,7 +420,12 @@ class SemanticAnalyzer:
             self._classifier = LlmClassifier(cfg)
         else:
             self._classifier = MockClassifier()
-        self._timeout = cfg.l2_timeout_seconds
+        # Per-request timeout used by the httpx client
+        self._request_timeout = cfg.l2_timeout_seconds
+        # Outer envelope timeout: must be large enough for retries + backoff.
+        # 3 retries × request_timeout + backoff ≈ 3.5× the per-request timeout.
+        # Use a minimum of 60s for reasoning models that need thinking time.
+        self._envelope_timeout = max(cfg.l2_timeout_seconds * 4, 60.0)
 
     async def analyze(
         self,
@@ -443,7 +451,7 @@ class SemanticAnalyzer:
         try:
             result = await asyncio.wait_for(
                 self._classifier.classify(method, params, context),
-                timeout=self._timeout,
+                timeout=self._envelope_timeout,
             )
             logger.info(
                 "L2 result: injection=%s confidence=%.2f method=%s",
@@ -454,7 +462,11 @@ class SemanticAnalyzer:
             return result
 
         except asyncio.TimeoutError:
-            logger.warning("L2 analysis timed out for method=%s", method)
+            logger.warning(
+                "L2 analysis timed out after %.0fs for method=%s",
+                self._envelope_timeout,
+                method,
+            )
             return L2Result(reasoning="Analysis timeout — fail-open")
 
         except Exception as exc:
