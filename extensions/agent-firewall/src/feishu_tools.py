@@ -1,113 +1,45 @@
 """
-Feishu MCP Tools - Expose Feishu capabilities as MCP tools.
+Feishu Tools Integration - Proxy to OpenClaw Gateway.
 
-This module registers Feishu document/spreadsheet creation tools
-that can be invoked by AI agents through the MCP protocol.
+This module was previously used to manually register Feishu tools.
+Now all Feishu tools (doc, drive, perm, wiki, bitable, chat) are
+automatically discovered from the TypeScript implementation via
+the Gateway tool registry.
+
+The feishu plugin is enabled in ~/.openclaw/openclaw.json and
+all 46+ tools are available through the invoke_gateway mechanism.
 """
 
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from .channels.feishu_adapter import FeishuAdapter
 
 logger = logging.getLogger("agent_firewall.feishu_tools")
 
 
 class FeishuToolRegistry:
-    """Registry of Feishu tools exposed via MCP."""
+    """
+    Legacy registry - now a no-op placeholder.
 
-    def __init__(self, feishu_adapter: FeishuAdapter) -> None:
-        self.adapter = feishu_adapter
-        self._tools = self._register_tools()
+    All Feishu tools are handled by the Gateway tool discovery system.
+    The TypeScript implementation in channel/feishu/src/ provides:
+    - feishu_doc (18+ actions: read, write, append, create, list_blocks, etc.)
+    - feishu_drive (5 actions: list, info, create_folder, move, delete)
+    - feishu_perm (3 actions: list, add, remove)
+    - feishu_wiki (6 actions: spaces, nodes, get, create, move, rename)
+    - feishu_bitable (9 tools: get_meta, list_fields, list_records, create_record, etc.)
+    - feishu_chat (2 actions: members, info)
+    """
 
-    def _register_tools(self) -> dict[str, dict[str, Any]]:
-        """Register all Feishu tools with their schemas."""
-        return {
-            "feishu_create_document": {
-                "name": "feishu_create_document",
-                "description": "Create a new Feishu document with the given title and content",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "title": {
-                            "type": "string",
-                            "description": "Document title",
-                        },
-                        "content": {
-                            "type": "string",
-                            "description": "Document content (markdown or plain text)",
-                        },
-                        "folder_token": {
-                            "type": "string",
-                            "description": "Optional folder token to create document in",
-                            "default": "",
-                        },
-                    },
-                    "required": ["title", "content"],
-                },
-            },
-            "feishu_create_spreadsheet": {
-                "name": "feishu_create_spreadsheet",
-                "description": "Create a new Feishu spreadsheet (bitable) with the given title",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "title": {
-                            "type": "string",
-                            "description": "Spreadsheet title",
-                        },
-                        "folder_token": {
-                            "type": "string",
-                            "description": "Optional folder token to create spreadsheet in",
-                            "default": "",
-                        },
-                    },
-                    "required": ["title"],
-                },
-            },
-        }
+    def __init__(self, feishu_adapter=None) -> None:
+        # No longer needed - tools are discovered from TypeScript source
+        logger.info("FeishuToolRegistry initialized (tools handled by Gateway)")
 
-    def get_tool_definitions(self) -> list[dict[str, Any]]:
-        """Get all tool definitions in OpenAI function calling format."""
-        openai_tools = []
-        for tool_name, tool_def in self._tools.items():
-            openai_tools.append({
-                "type": "function",
-                "function": {
-                    "name": tool_def["name"],
-                    "description": tool_def["description"],
-                    "parameters": tool_def["parameters"],
-                }
-            })
-        return openai_tools
+    def get_tool_definitions(self) -> list:
+        """Return empty list - tools are provided by Gateway registry."""
+        return []
 
-    async def invoke_tool(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
-        """Invoke a Feishu tool by name."""
-        if name == "feishu_create_document":
-            doc_id = await self.adapter.create_document(
-                title=arguments["title"],
-                content=arguments["content"],
-                folder_token=arguments.get("folder_token", ""),
-            )
-            return {
-                "success": bool(doc_id),
-                "document_id": doc_id,
-                "message": f"Created document: {doc_id}" if doc_id else "Failed to create document",
-            }
-
-        if name == "feishu_create_spreadsheet":
-            app_token = await self.adapter.create_spreadsheet(
-                title=arguments["title"],
-                folder_token=arguments.get("folder_token", ""),
-            )
-            return {
-                "success": bool(app_token),
-                "app_token": app_token,
-                "message": f"Created spreadsheet: {app_token}" if app_token else "Failed to create spreadsheet",
-            }
-
-        msg = f"Unknown Feishu tool: {name}"
-        raise ValueError(msg)
+    async def invoke_tool(self, name: str, arguments: dict) -> dict:
+        """Not used - tools are invoked via Gateway."""
+        msg = f"Feishu tool {name} should be invoked via Gateway, not directly"
+        raise NotImplementedError(msg)
