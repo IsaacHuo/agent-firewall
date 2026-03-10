@@ -1,5 +1,5 @@
 #!/bin/bash
-# Agent Firewall — Start All Services
+# Agent Firewall — Start All Services (Backend + Frontend + Gateway)
 # Usage: ./scripts/start-all.sh
 
 set -e
@@ -23,7 +23,22 @@ fi
 echo "🔄 Stopping existing services..."
 lsof -ti :9090 | xargs kill -9 2>/dev/null || true
 lsof -ti :9091 | xargs kill -9 2>/dev/null || true
+lsof -ti :18789 | xargs kill -9 2>/dev/null || true
 sleep 1
+
+# Start OpenClaw Gateway (port 18789)
+echo "🚀 Starting OpenClaw Gateway (port 18789)..."
+openclaw gateway --port 18789 > /tmp/agent-firewall-gateway.log 2>&1 &
+GATEWAY_PID=$!
+echo "   Gateway PID: $GATEWAY_PID"
+
+# Wait for gateway to start
+sleep 3
+if ! curl -s http://localhost:18789/health > /dev/null 2>&1; then
+    echo "❌ Gateway failed to start. Check /tmp/agent-firewall-gateway.log"
+    exit 1
+fi
+echo "   ✅ Gateway healthy"
 
 # Start Backend (port 9090)
 echo "🚀 Starting Backend (port 9090)..."
@@ -33,7 +48,7 @@ BACKEND_PID=$!
 echo "   Backend PID: $BACKEND_PID"
 
 # Wait for backend to start
-sleep 2
+sleep 3
 if ! curl -s http://localhost:9090/health > /dev/null; then
     echo "❌ Backend failed to start. Check /tmp/agent-firewall-backend.log"
     exit 1
@@ -59,10 +74,12 @@ echo "============================================"
 echo "✅ All services started successfully!"
 echo ""
 echo "📍 Access Points:"
+echo "   Gateway:      http://localhost:18789"
 echo "   Backend API:  http://localhost:9090"
 echo "   Dashboard:    http://localhost:9091"
 echo ""
 echo "📄 Logs:"
+echo "   Gateway:  /tmp/agent-firewall-gateway.log"
 echo "   Backend:  /tmp/agent-firewall-backend.log"
 echo "   Frontend: /tmp/agent-firewall-frontend.log"
 echo ""
