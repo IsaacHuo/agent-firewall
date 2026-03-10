@@ -153,7 +153,7 @@
                     </svg>
                   </span>
                   <span class="tool-icon">⚡</span>
-                  <span class="tool-name">{{ msg.toolCalls[0].tool_name }}</span>
+                  <span class="tool-name">{{ getToolDisplayName(msg.toolCalls[0].tool_name, msg.toolCalls[0].arguments) }}</span>
                 </div>
                 <div class="tool-status-badge" :class="msg.blocked ? 'blocked' : 'allowed'">
                   {{ msg.blocked ? 'Blocked' : 'Allowed' }}
@@ -164,6 +164,12 @@
                 <div class="code-block-wrapper">
                   <div class="code-header">Arguments</div>
                   <pre class="code-content">{{ JSON.stringify(msg.toolCalls[0].arguments, null, 2) }}</pre>
+                </div>
+
+                <!-- Tool Output (inside card) -->
+                <div v-if="!msg.blocked && msg.toolCalls[0].result_preview" class="tool-output-wrapper">
+                  <div class="code-header">Output</div>
+                  <div class="tool-output-content" v-html="renderMarkdown(msg.toolCalls[0].result_preview)"></div>
                 </div>
                 
                 <!-- Compact Analysis -->
@@ -184,12 +190,12 @@
             <!-- Markdown rendered content for assistant messages -->
             <div v-if="msg.role === 'assistant' && msg.content" class="msg-text md-content" v-html="renderMarkdown(msg.content)"></div>
             <!-- Tool call content (monospace) -->
-            <div v-else-if="msg.role === 'tool'" class="msg-text tool-text">
+            <div v-else-if="msg.role === 'tool' && !msg.toolCalls?.length" class="msg-text tool-text">
               <div class="tool-output-label">Tool Output</div>
               <div v-html="renderMarkdown(msg.content)"></div>
             </div>
             <!-- Plain text for user/system -->
-            <div v-else-if="msg.content" class="msg-text">{{ msg.content }}</div>
+            <div v-else-if="msg.content && msg.role !== 'tool'" class="msg-text">{{ msg.content }}</div>
 
             <!-- Analysis collapse (Message level) -->
             <details v-if="msg.analysis" class="msg-analysis">
@@ -602,6 +608,13 @@ const mcpResults = ref<McpResult[]>([])
 
 // Skills
 const { skills, loadSkills } = useGatewaySkills()
+
+const getToolDisplayName = (name: string, args: any) => {
+  if ((name === 'run_skill' || name === 'skill') && args?.skill_name) {
+    return args.skill_name
+  }
+  return name
+}
 
 /** Handle "自行配置" option — show modal and revert selection */
 function onModelChange() {
