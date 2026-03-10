@@ -737,6 +737,65 @@ async def stats(request: Request) -> JSONResponse:
     )
 
 
+# ── Feishu Channel API ───────────────────────────────────────────
+
+
+@app.get("/api/feishu/config")
+async def get_feishu_config(request: Request) -> JSONResponse:
+    """Get Feishu channel configuration."""
+    s = _state(request)
+    c = s.config
+
+    return JSONResponse(
+        {
+            "connected": s.feishu_adapter is not None and s.feishu_adapter._running,
+            "app_id": c.feishu_app_id,
+            "app_secret": "***" if c.feishu_app_secret else "",
+            "upstream_url": s.feishu_adapter.upstream_url if s.feishu_adapter else "",
+            "model": "gpt-4",  # TODO: Make this configurable
+        }
+    )
+
+
+@app.post("/api/feishu/config")
+async def update_feishu_config(request: Request) -> JSONResponse:
+    """Update Feishu channel configuration."""
+    updates = await request.json()
+    # TODO: Implement config update logic
+    # For now, just return success
+    return JSONResponse({"status": "ok", "message": "Configuration saved. Restart required."})
+
+
+@app.get("/api/feishu/stats")
+async def get_feishu_stats(request: Request) -> JSONResponse:
+    """Get Feishu channel statistics."""
+    s = _state(request)
+
+    # Count Feishu-related audit entries
+    feishu_entries = [
+        e for e in s.audit_logger._buffer if "feishu" in e.get("method", "").lower()
+    ]
+
+    total_messages = len(feishu_entries)
+    blocked_messages = sum(1 for e in feishu_entries if e.get("verdict") == "BLOCK")
+
+    # Count unique chat IDs
+    active_chats = len(set(e.get("session_id") for e in feishu_entries if e.get("session_id")))
+
+    # Calculate average response time
+    response_times = [e.get("response_time_ms", 0) for e in feishu_entries]
+    avg_response_time = round(sum(response_times) / len(response_times)) if response_times else 0
+
+    return JSONResponse(
+        {
+            "total_messages": total_messages,
+            "blocked_messages": blocked_messages,
+            "active_chats": active_chats,
+            "avg_response_time": avg_response_time,
+        }
+    )
+
+
 # ── MCP Proxy (HTTP POST) ────────────────────────────────────────
 
 

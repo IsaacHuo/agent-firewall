@@ -19,6 +19,7 @@ Configuration via environment variables:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import threading
@@ -82,6 +83,7 @@ class FeishuAdapter:
         self._running = False
         self._ws_client: Any = None
         self._http_client = httpx.AsyncClient(timeout=30.0)
+        self._event_loop: asyncio.AbstractEventLoop | None = None
 
     async def start(self) -> None:
         """Start the Feishu WebSocket event listener in a separate thread."""
@@ -92,11 +94,14 @@ class FeishuAdapter:
         self._running = True
         logger.info(f"Starting Feishu adapter (App ID: {self.config.app_id})")
 
-        # Create event handler
+        # Store the current event loop for async operations
+        self._event_loop = asyncio.get_event_loop()
+
+        # Create event handler with sync wrapper
         event_handler = lark.EventDispatcherHandler.builder(
             self.config.verification_token or "",
             self.config.encrypt_key or "",
-        ).register_p2_im_message_receive_v1(self._handle_message).build()
+        ).register_p2_im_message_receive_v1(self._handle_message_sync).build()
 
         # Start WebSocket client
         self._ws_client = lark.ws.Client(
@@ -127,6 +132,16 @@ class FeishuAdapter:
             # Give thread time to finish
             self._ws_thread.join(timeout=2.0)
         logger.info("Feishu adapter stopped")
+
+    def _handle_message_sync(self, data: Any) -> None:  # noqa: ANN401
+        """Synchronous wrapper for async message handler (called by lark SDK)."""
+        if self._event_loop and self._event_loop.is_running():
+            # Schedule the async handler in the main event loop
+            asyncio.run_coroutine_threadsafe(
+                self._handle_message(data), self._event_loop
+            )
+        else:
+            logger.error("Event loop not available for message handling")
 
     async def _handle_message(self, data: Any) -> None:  # noqa: ANN401
         """Handle incoming Feishu message event with full security analysis."""
