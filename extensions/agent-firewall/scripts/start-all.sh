@@ -28,7 +28,7 @@ sleep 1
 # Start Backend (port 9090)
 echo "🚀 Starting Backend (port 9090)..."
 cd "$PROJECT_DIR"
-"$VENV_DIR/bin/uvicorn" src.main:app --host 127.0.0.1 --port 9090 --reload > /tmp/agent-firewall-backend.log 2>&1 &
+AF_UPSTREAM_PORT=19001 "$VENV_DIR/bin/uvicorn" src.main:app --host 127.0.0.1 --port 9090 --reload > /tmp/agent-firewall-backend.log 2>&1 &
 BACKEND_PID=$!
 echo "   Backend PID: $BACKEND_PID"
 
