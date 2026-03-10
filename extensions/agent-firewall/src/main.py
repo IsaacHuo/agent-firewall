@@ -124,7 +124,14 @@ class AppState:
                 encrypt_key=config.feishu_encrypt_key or None,
                 verification_token=config.feishu_verification_token or None,
             )
-            self.feishu_adapter = FeishuAdapter(feishu_config, engine=None)  # type: ignore[arg-type]
+            self.feishu_adapter = FeishuAdapter(
+                config=feishu_config,
+                static_analyzer=self.static_analyzer,
+                semantic_analyzer=self.semantic_analyzer,
+                upstream_url=openai_upstream,
+                emit_dashboard_event=self._emit_dashboard,
+                emit_audit_entry=self._emit_audit,
+            )
 
         self._start_time = time.time()
 
