@@ -305,6 +305,18 @@ class GatewayToolRegistry:
             "Use `invoke_gateway(tool_name, arguments)` to call these OpenClaw gateway tools.",
             "Pass arguments as a JSON object with the expected fields for each tool.",
             "",
+            "## Feishu Tools Usage",
+            "",
+            "Feishu tools use an `action` parameter to specify the operation:",
+            "- **feishu_doc**: `{\"action\": \"create\", \"title\": \"...\", \"owner_open_id\": \"ou_xxx\"}` or `{\"action\": \"read\", \"doc_token\": \"...\"}` or `{\"action\": \"write\", \"doc_token\": \"...\", \"content\": \"markdown...\"}`",
+            "- **feishu_drive**: `{\"action\": \"list\"}` or `{\"action\": \"create_folder\", \"name\": \"...\"}` or `{\"action\": \"info\", \"file_token\": \"...\", \"type\": \"docx\"}`",
+            "- **feishu_wiki**: `{\"action\": \"spaces\"}` or `{\"action\": \"create\", \"space_id\": \"...\", \"title\": \"...\"}`",
+            "- **feishu_perm**: `{\"action\": \"list\", \"token\": \"...\", \"type\": \"docx\"}` or `{\"action\": \"add\", \"token\": \"...\", \"type\": \"docx\", \"member_type\": \"email\", \"member_id\": \"...\", \"perm\": \"edit\"}`",
+            "- **feishu_chat**: `{\"action\": \"info\", \"chat_id\": \"...\"}` or `{\"action\": \"members\", \"chat_id\": \"...\"}`",
+            "- **feishu_bitable_***: Direct parameters like `{\"url\": \"...\"}` or `{\"app_token\": \"...\", \"table_id\": \"...\", \"fields\": {...}}`",
+            "",
+            "## All Tools",
+            "",
         ]
 
         for name in sorted(self._tools.keys()):
