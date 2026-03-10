@@ -9,6 +9,7 @@ ahocorasick-rs>=0.22.0
 orjson>=3.10.0
 python-dotenv>=1.0.0
 PyYAML>=6.0
+lark-oapi>=1.3.0
 
 # Dev / Test
 pytest>=8.0

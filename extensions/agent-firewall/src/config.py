@@ -88,3 +88,16 @@ class FirewallConfig:
             ).split(",")
         )
     )
+
+    # ── Feishu/Lark Channel ──────────────────────────────────────────
+    feishu_enabled: bool = field(
+        default_factory=lambda: os.getenv("AF_FEISHU_ENABLED", "0") == "1"
+    )
+    feishu_app_id: str = field(default_factory=lambda: os.getenv("AF_FEISHU_APP_ID", ""))
+    feishu_app_secret: str = field(default_factory=lambda: os.getenv("AF_FEISHU_APP_SECRET", ""))
+    feishu_encrypt_key: str = field(
+        default_factory=lambda: os.getenv("AF_FEISHU_ENCRYPT_KEY", "")
+    )
+    feishu_verification_token: str = field(
+        default_factory=lambda: os.getenv("AF_FEISHU_VERIFICATION_TOKEN", "")
+    )

@@ -50,6 +50,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from .audit.logger import AuditLogger
+from .channels.feishu_adapter import FeishuAdapter, FeishuConfig
 from .config import FirewallConfig
 from .dashboard.ws_handler import DashboardHub
 from .engine.semantic_analyzer import LlmClassifier, MockClassifier, SemanticAnalyzer
@@ -113,6 +114,17 @@ class AppState:
             semantic_analyzer=self.semantic_analyzer,
             api_key=config.l2_api_key,
         )
+
+        # Initialize Feishu channel adapter if enabled
+        self.feishu_adapter: FeishuAdapter | None = None
+        if config.feishu_enabled and config.feishu_app_id:
+            feishu_config = FeishuConfig(
+                app_id=config.feishu_app_id,
+                app_secret=config.feishu_app_secret,
+                encrypt_key=config.feishu_encrypt_key or None,
+                verification_token=config.feishu_verification_token or None,
+            )
+            self.feishu_adapter = FeishuAdapter(feishu_config, engine=None)  # type: ignore[arg-type]
 
         self._start_time = time.time()
 
@@ -180,6 +192,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await state.session_manager.start()
     await state.audit_logger.start()
 
+    # Start Feishu channel if enabled
+    if state.feishu_adapter:
+        logger.info("🚀 Starting Feishu channel adapter...")
+        try:
+            await state.feishu_adapter.start()
+            logger.info("✅ Feishu channel connected successfully")
+        except Exception as e:
+            logger.error(f"❌ Failed to start Feishu channel: {e}")
+            logger.warning("⚠️  Please check your Feishu App ID and Secret in .env file")
+            logger.warning("⚠️  Also ensure you've enabled event subscriptions in Feishu Admin Console")
+
     logger.info(
         "🛡️  Agent Firewall started on %s:%d → upstream %s:%d",
         config.listen_host,
@@ -191,6 +214,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     yield
 
     # Graceful shutdown
+    if state.feishu_adapter:
+        logger.info("Stopping Feishu channel...")
+        await state.feishu_adapter.stop()
+
     await state.semantic_analyzer.close()
 
     await state.audit_logger.stop()
