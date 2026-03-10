@@ -10,6 +10,7 @@ orjson>=3.10.0
 python-dotenv>=1.0.0
 PyYAML>=6.0
 lark-oapi>=1.3.0
+python-socks>=2.4.0
 
 # Dev / Test
 pytest>=8.0
