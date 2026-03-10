@@ -23,7 +23,7 @@ fi
 echo "🔄 Stopping existing services..."
 lsof -ti :9090 | xargs kill -9 2>/dev/null || true
 lsof -ti :9091 | xargs kill -9 2>/dev/null || true
-lsof -ti :18789 | xargs kill -9 2>/dev/null || true
+openclaw gateway stop 2>/dev/null || true
 sleep 1
 
 # Start OpenClaw Gateway (port 18789)
@@ -32,9 +32,14 @@ openclaw gateway --port 18789 > /tmp/agent-firewall-gateway.log 2>&1 &
 GATEWAY_PID=$!
 echo "   Gateway PID: $GATEWAY_PID"
 
-# Wait for gateway to start
-sleep 3
-if ! curl -s http://localhost:18789/health > /dev/null 2>&1; then
+# Wait for gateway to start (check if port is listening)
+for i in $(seq 1 10); do
+    if lsof -ti :18789 > /dev/null 2>&1; then
+        break
+    fi
+    sleep 1
+done
+if ! lsof -ti :18789 > /dev/null 2>&1; then
     echo "❌ Gateway failed to start. Check /tmp/agent-firewall-gateway.log"
     exit 1
 fi
@@ -47,9 +52,14 @@ cd "$PROJECT_DIR"
 BACKEND_PID=$!
 echo "   Backend PID: $BACKEND_PID"
 
-# Wait for backend to start
-sleep 3
-if ! curl -s http://localhost:9090/health > /dev/null; then
+# Wait for backend to start (Feishu WebSocket init takes time)
+for i in $(seq 1 15); do
+    if curl -s http://localhost:9090/health > /dev/null 2>&1; then
+        break
+    fi
+    sleep 1
+done
+if ! curl -s http://localhost:9090/health > /dev/null 2>&1; then
     echo "❌ Backend failed to start. Check /tmp/agent-firewall-backend.log"
     exit 1
 fi

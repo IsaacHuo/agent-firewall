@@ -7,9 +7,7 @@ echo "============================================"
 
 # Stop Gateway (port 18789)
 echo "🛑 Stopping OpenClaw Gateway (port 18789)..."
-GATEWAY_PIDS=$(lsof -ti :18789 2>/dev/null || true)
-if [ -n "$GATEWAY_PIDS" ]; then
-    echo "$GATEWAY_PIDS" | xargs kill -9 2>/dev/null || true
+if openclaw gateway stop 2>/dev/null; then
     echo "   ✅ Gateway stopped"
 else
     echo "   ℹ️  Gateway not running"
