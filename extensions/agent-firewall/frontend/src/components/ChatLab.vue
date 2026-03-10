@@ -197,6 +197,18 @@
             <!-- Plain text for user/system -->
             <div v-else-if="msg.content && msg.role !== 'tool'" class="msg-text">{{ msg.content }}</div>
 
+            <!-- Message Actions (Copy/Retry) -->
+            <div v-if="msg.role === 'assistant'" class="msg-actions">
+              <button class="action-btn" @click="copyMessage(msg.content)" title="Copy">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy
+              </button>
+              <button class="action-btn" @click="retryMessage(msg)" title="Retry">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                Retry
+              </button>
+            </div>
+
             <!-- Analysis collapse (Message level) -->
             <details v-if="msg.analysis" class="msg-analysis">
               <summary class="analysis-summary">
@@ -981,6 +993,28 @@ function stopResponse() {
   }
 }
 
+function copyMessage(text: string) {
+  navigator.clipboard.writeText(text)
+}
+
+function retryMessage(msg: ChatMessage) {
+  // Find the last user message before this assistant message
+  const msgIndex = chatMessages.value.findIndex(m => m.id === msg.id)
+  if (msgIndex <= 0) return
+  
+  // Look backwards for the user prompt
+  for (let i = msgIndex - 1; i >= 0; i--) {
+    if (chatMessages.value[i].role === 'user') {
+      const userContent = chatMessages.value[i].content
+      // Remove all messages from this point forward
+      chatMessages.value = chatMessages.value.slice(0, i)
+      // Resend
+      sendMessage(userContent, null)
+      return
+    }
+  }
+}
+
 function clearChat() {
   autoSaveCurrentConv()
   chatMessages.value = []
@@ -1190,6 +1224,19 @@ async function testSkill(skill: SkillStatusEntry) {
 .msg-tool .msg-text {
   background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-secondary); font-family: var(--font-mono); font-size: 12px;
 }
+
+/* Message Actions */
+.msg-actions {
+  display: flex; gap: 8px; margin-top: 8px; opacity: 0; transition: opacity 0.2s;
+  justify-content: flex-start;
+}
+.message:hover .msg-actions { opacity: 1; }
+.action-btn {
+  display: flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 11px;
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: 4px;
+  color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+}
+.action-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-hover); }
 
 /* Tool Invocation Card */
 .tool-invocation-card {
