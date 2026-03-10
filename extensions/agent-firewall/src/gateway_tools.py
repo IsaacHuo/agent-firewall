@@ -305,17 +305,7 @@ class GatewayToolRegistry:
             "Use `invoke_gateway(tool_name, arguments)` to call these OpenClaw gateway tools.",
             "Pass arguments as a JSON object with the expected fields for each tool.",
             "",
-            "## Feishu Tools Usage",
-            "",
-            "Feishu tools use an `action` parameter to specify the operation:",
-            "- **feishu_doc**: `{\"action\": \"create\", \"title\": \"...\", \"owner_open_id\": \"ou_xxx\"}` or `{\"action\": \"read\", \"doc_token\": \"...\"}` or `{\"action\": \"write\", \"doc_token\": \"...\", \"content\": \"markdown...\"}`",
-            "- **feishu_drive**: `{\"action\": \"list\"}` or `{\"action\": \"create_folder\", \"name\": \"...\"}` or `{\"action\": \"info\", \"file_token\": \"...\", \"type\": \"docx\"}`",
-            "- **feishu_wiki**: `{\"action\": \"spaces\"}` or `{\"action\": \"create\", \"space_id\": \"...\", \"title\": \"...\"}`",
-            "- **feishu_perm**: `{\"action\": \"list\", \"token\": \"...\", \"type\": \"docx\"}` or `{\"action\": \"add\", \"token\": \"...\", \"type\": \"docx\", \"member_type\": \"email\", \"member_id\": \"...\", \"perm\": \"edit\"}`",
-            "- **feishu_chat**: `{\"action\": \"info\", \"chat_id\": \"...\"}` or `{\"action\": \"members\", \"chat_id\": \"...\"}`",
-            "- **feishu_bitable_***: Direct parameters like `{\"url\": \"...\"}` or `{\"app_token\": \"...\", \"table_id\": \"...\", \"fields\": {...}}`",
-            "",
-            "## All Tools",
+            "**IMPORTANT**: For plugin tools (feishu_*, etc.), call `get_gateway_tool_docs(tool_name)` FIRST to learn the exact parameters and usage before invoking.",
             "",
         ]
 
@@ -325,6 +315,47 @@ class GatewayToolRegistry:
 
         parts.append("")
         return "\n".join(parts)
+
+    def get_tool_docs(self, tool_name: str) -> str:
+        """Get detailed documentation for a specific tool."""
+        tool = self._tools.get(tool_name)
+        if not tool:
+            return f"Tool '{tool_name}' not found. Available tools: {', '.join(sorted(self._tools.keys()))}"
+
+        # Check if this is a plugin tool with SKILL.md
+        source_path = Path(tool.source_file)
+
+        # Try to find SKILL.md in parent directories
+        # Pattern: channel/feishu/src/docx.ts -> channel/feishu/skills/feishu-doc/SKILL.md
+        if "channel" in source_path.parts:
+            channel_idx = source_path.parts.index("channel")
+            if channel_idx + 1 < len(source_path.parts):
+                plugin_name = source_path.parts[channel_idx + 1]
+                channel_root = Path(*source_path.parts[:channel_idx + 2])
+                skills_dir = channel_root / "skills"
+
+                if skills_dir.is_dir():
+                    # Try to find matching SKILL.md
+                    for skill_dir in skills_dir.iterdir():
+                        if not skill_dir.is_dir():
+                            continue
+                        skill_md = skill_dir / "SKILL.md"
+                        if skill_md.is_file():
+                            try:
+                                text = skill_md.read_text(encoding="utf-8")
+                                # Check if this SKILL.md mentions the tool
+                                if tool_name in text or tool_name.replace("_", "-") in text:
+                                    # Strip YAML frontmatter
+                                    if text.startswith("---"):
+                                        end = text.find("---", 3)
+                                        if end != -1:
+                                            text = text[end + 3:].strip()
+                                    return text
+                            except Exception:
+                                continue
+
+        # Fallback: return basic info
+        return f"**{tool_name}**\n\nDescription: {tool.description}\n\nSource: {tool.source_file}\n\nNo detailed documentation available. Try calling with common parameters based on the description."
 
     # ── Execution ────────────────────────────────────────────────
 
@@ -339,13 +370,13 @@ class GatewayToolRegistry:
         """Execute a tool via the OpenClaw gateway's /tools/invoke endpoint."""
         import httpx
 
-        # Separate "action" from args if present (gateway expects top-level action)
+        # Pass arguments directly; Gateway tool handlers expect arguments to contain 'action'
+        # if the tool schema defines it (e.g. feishu_doc).
+        # We DO NOT extract 'action' to the top-level body because plugins
+        # receive the entire 'args' object as parameters.
         args = dict(arguments) if arguments else {}
-        action = args.pop("action", None)
-
+        
         body: dict[str, Any] = {"tool": tool_name, "args": args}
-        if action is not None:
-            body["action"] = action
 
         try:
             headers: dict[str, str] = {"content-type": "application/json"}

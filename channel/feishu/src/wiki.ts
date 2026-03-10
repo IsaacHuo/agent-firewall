@@ -178,7 +178,7 @@ export function registerFeishuWikiTools(api: OpenClawPluginApi) {
         name: "feishu_wiki",
         label: "Feishu Wiki",
         description:
-          "Feishu knowledge base operations. Actions: spaces, nodes, get, create, move, rename",
+          "Feishu knowledge base operations. REQUIRED: You must provide an 'action' parameter in arguments. Actions: spaces, nodes, get, create, move, rename",
         parameters: FeishuWikiSchema,
         async execute(_toolCallId, params) {
           const p = params as FeishuWikiExecuteParams;

@@ -198,10 +198,10 @@ tools/call, completion/complete, sampling/createMessage
 
 ```bash
 # From repository root — starts Gateway + backend + frontend
-./scripts/start-all.sh
+./extensions/agent-firewall/scripts/start-all.sh
 
 # Stop all services
-./scripts/stop-all.sh
+./extensions/agent-firewall/scripts/stop-all.sh
 ```
 
 After running `start-all.sh`:

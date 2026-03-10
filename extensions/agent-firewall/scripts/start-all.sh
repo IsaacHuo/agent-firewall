@@ -33,7 +33,7 @@ GATEWAY_PID=$!
 echo "   Gateway PID: $GATEWAY_PID"
 
 # Wait for gateway to start (check if port is listening)
-for i in $(seq 1 10); do
+for i in $(seq 1 30); do
     if lsof -ti :18789 > /dev/null 2>&1; then
         break
     fi

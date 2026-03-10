@@ -1,10 +1,10 @@
+import type * as Lark from "@larksuiteoapi/node-sdk";
+import type { OpenClawPluginApi } from "openclaw/plugin-sdk/feishu";
+import { Type } from "@sinclair/typebox";
 import { existsSync, promises as fs } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute } from "node:path";
 import { basename } from "node:path";
-import type * as Lark from "@larksuiteoapi/node-sdk";
-import { Type } from "@sinclair/typebox";
-import type { OpenClawPluginApi } from "openclaw/plugin-sdk/feishu";
 import { listEnabledFeishuAccounts } from "./accounts.js";
 import { FeishuDocSchema, type FeishuDocParams } from "./doc-schema.js";
 import { BATCH_SIZE, insertBlocksInBatches } from "./docx-batch-insert.js";
@@ -113,8 +113,12 @@ async function convertMarkdown(client: Lark.Client, markdown: string) {
   };
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any -- SDK block types */
 function sortBlocksByFirstLevel(blocks: any[], firstLevelIds: string[]): any[] {
-  if (!firstLevelIds || firstLevelIds.length === 0) {return blocks;}
+  if (!firstLevelIds || firstLevelIds.length === 0) {
+    return blocks;
+  }
+  /* eslint-enable @typescript-eslint/no-explicit-any */
   const sorted = firstLevelIds.map((id) => blocks.find((b) => b.block_id === id)).filter(Boolean);
   const sortedIds = new Set(firstLevelIds);
   const remaining = blocks.filter((b) => !sortedIds.has(b.block_id));
@@ -141,6 +145,7 @@ async function insertBlocks(
   // The batch API (sending all children at once) does not guarantee ordering
   // because Feishu processes the batch asynchronously.  Sequential single-block
   // inserts (each appended to the end) produce deterministic results.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- SDK block types
   const allInserted: any[] = [];
   for (const [offset, block] of cleaned.entries()) {
     const res = await client.docx.documentBlockChildren.create({
@@ -271,7 +276,7 @@ async function chunkedConvertMarkdown(client: Lark.Client, markdown: string) {
 
 /** Insert blocks in batches of MAX_BLOCKS_PER_INSERT to avoid API 400 errors */
 /* eslint-disable @typescript-eslint/no-explicit-any -- SDK block types */
-async function chunkedInsertBlocks(
+export async function chunkedInsertBlocks(
   client: Lark.Client,
   docToken: string,
   blocks: any[],
@@ -665,6 +670,7 @@ async function uploadFileBlock(
   const items = childrenRes.data?.items ?? [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- SDK block type
   const placeholderIdx = items.findIndex(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- SDK block types
     (item: any) => item.block_id === placeholderBlock.block_id,
   );
   if (placeholderIdx >= 0) {
@@ -882,7 +888,9 @@ async function insertDoc(
   const blockInfo = await client.docx.documentBlock.get({
     path: { document_id: docToken, block_id: afterBlockId },
   });
-  if (blockInfo.code !== 0) {throw new Error(blockInfo.msg);}
+  if (blockInfo.code !== 0) {
+    throw new Error(blockInfo.msg);
+  }
 
   const parentId = blockInfo.data?.block?.parent_id ?? docToken;
 
@@ -897,7 +905,9 @@ async function insertDoc(
       path: { document_id: docToken, block_id: parentId },
       params: pageToken ? { page_token: pageToken } : {},
     });
-    if (childrenRes.code !== 0) {throw new Error(childrenRes.msg);}
+    if (childrenRes.code !== 0) {
+      throw new Error(childrenRes.msg);
+    }
     items.push(...(childrenRes.data?.items ?? []));
     pageToken = childrenRes.data?.page_token ?? undefined;
   } while (pageToken);
@@ -913,7 +923,9 @@ async function insertDoc(
 
   logger?.info?.("feishu_doc: Converting markdown...");
   const { blocks, firstLevelBlockIds } = await chunkedConvertMarkdown(client, markdown);
-  if (blocks.length === 0) {throw new Error("Content is empty");}
+  if (blocks.length === 0) {
+    throw new Error("Content is empty");
+  }
   const sortedBlocks = sortBlocksByFirstLevel(blocks, firstLevelBlockIds);
 
   logger?.info?.(
@@ -1044,7 +1056,9 @@ async function writeTableCells(
 
     for (let c = 0; c < writeCols; c++) {
       const cellId = cellIds[r * cols + c];
-      if (!cellId) {continue;}
+      if (!cellId) {
+        continue;
+      }
 
       // table cell is a container block: clear existing children, then create text child blocks
       const childrenRes = await client.docx.documentBlockChildren.get({
@@ -1268,7 +1282,7 @@ export function registerFeishuDocTools(api: OpenClawPluginApi) {
           name: "feishu_doc",
           label: "Feishu Doc",
           description:
-            "Feishu document operations. Actions: read, write, append, insert, create, list_blocks, get_block, update_block, delete_block, create_table, write_table_cells, create_table_with_values, insert_table_row, insert_table_column, delete_table_rows, delete_table_columns, merge_table_cells, upload_image, upload_file, color_text",
+            "Feishu document operations. REQUIRED: You must provide an 'action' parameter in arguments. Actions: read, write, append, insert, create, list_blocks, get_block, update_block, delete_block, create_table, write_table_cells, create_table_with_values, insert_table_row, insert_table_column, delete_table_rows, delete_table_columns, merge_table_cells, upload_image, upload_file, color_text",
           parameters: FeishuDocSchema,
           async execute(_toolCallId, params) {
             const p = params as FeishuDocExecuteParams;

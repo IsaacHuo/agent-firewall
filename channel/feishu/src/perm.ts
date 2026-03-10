@@ -138,7 +138,8 @@ export function registerFeishuPermTools(api: OpenClawPluginApi) {
       return {
         name: "feishu_perm",
         label: "Feishu Perm",
-        description: "Feishu permission management. Actions: list, add, remove",
+        description:
+          "Feishu permission management. REQUIRED: You must provide an 'action' parameter in arguments. Actions: list, add, remove",
         parameters: FeishuPermSchema,
         async execute(_toolCallId, params) {
           const p = params as FeishuPermExecuteParams;

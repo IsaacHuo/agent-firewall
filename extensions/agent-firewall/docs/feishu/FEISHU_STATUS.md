@@ -105,4 +105,4 @@ If connection fails:
 1. Check `.env` has correct App ID and Secret
 2. Verify Feishu app has event subscription enabled
 3. Check logs for error messages
-4. Restart services: `./scripts/stop-all.sh && ./scripts/start-all.sh`
+4. Restart services: `./extensions/agent-firewall/scripts/stop-all.sh && ./extensions/agent-firewall/scripts/start-all.sh`

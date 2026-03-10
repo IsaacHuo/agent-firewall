@@ -1095,11 +1095,32 @@ def _all_tools_openai_format(request: Request) -> list[dict[str, Any]]:
     gw_registry = _get_gateway_tool_registry()
     gateway_tools = gw_registry.get_openai_tools()
 
+    # Add get_gateway_tool_docs tool
+    tool_names = sorted(gw_registry.tools.keys())
+    gateway_docs_tool = {
+        "type": "function",
+        "function": {
+            "name": "get_gateway_tool_docs",
+            "description": f"Get detailed documentation for a gateway tool. Available tools: {', '.join(tool_names)}. Call this BEFORE invoke_gateway to learn the exact parameters and usage.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "tool_name": {
+                        "type": "string",
+                        "description": f"Gateway tool to get docs for. One of: {', '.join(tool_names)}",
+                        "enum": tool_names,
+                    }
+                },
+                "required": ["tool_name"],
+            },
+        },
+    }
+
     # Skill tools (auto-discovered from SKILL.md files)
     skill_registry = _get_skill_registry()
     skill_tools = skill_registry.get_openai_tools()
 
-    return gateway_tools + skill_tools
+    return gateway_tools + [gateway_docs_tool] + skill_tools
 
 
 @app.post("/api/chat/send")
@@ -1455,6 +1476,10 @@ async def chat_send(request: Request):
                                 if tool_name == "get_skill_docs":
                                     skill_name = tool_args.get("skill_name", "")
                                     tool_result = registry.get_skill_docs(skill_name)
+                                elif tool_name == "get_gateway_tool_docs":
+                                    gw_tool_name = tool_args.get("tool_name", "")
+                                    gw_registry = _get_gateway_tool_registry()
+                                    tool_result = gw_registry.get_tool_docs(gw_tool_name)
                                 elif tool_name == "run_skill":
                                     skill_name = tool_args.get("skill_name", "")
                                     command = tool_args.get("command", "")
