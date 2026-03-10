@@ -42,16 +42,36 @@ class GatewayToolRegistry:
             repo_root = Path(__file__).resolve().parent.parent.parent.parent
             tools_source_dir = repo_root / "src" / "agents" / "tools"
         self._source_dir = Path(tools_source_dir)
+        self._repo_root = Path(__file__).resolve().parent.parent.parent.parent
         self._tools: dict[str, GatewayToolDef] = {}
 
     def discover(self) -> None:
         """Scan TypeScript tool source files for name + description."""
         self._tools.clear()
 
-        if not self._source_dir.is_dir():
+        # Scan core tools directory
+        if self._source_dir.is_dir():
+            self._scan_directory(self._source_dir)
+        else:
             logger.warning("Gateway tools source dir not found: %s", self._source_dir)
-            return
 
+        # Scan plugin directories (channel/*/src/*.ts)
+        channel_dir = self._repo_root / "channel"
+        if channel_dir.is_dir():
+            for plugin_dir in channel_dir.iterdir():
+                if plugin_dir.is_dir():
+                    plugin_src = plugin_dir / "src"
+                    if plugin_src.is_dir():
+                        self._scan_directory(plugin_src)
+
+        logger.info(
+            "Gateway tools discovered: %d (%s)",
+            len(self._tools),
+            ", ".join(sorted(self._tools.keys())),
+        )
+
+    def _scan_directory(self, directory: Path) -> None:
+        """Scan a single directory for tool definitions."""
         # Utility/helper files that are NOT tool definitions
         skip_names = {
             "common.ts",
@@ -66,14 +86,51 @@ class GatewayToolRegistry:
             "image-tool.helpers.ts",
             "browser-tool.schema.ts",
             "agent-step.ts",
+            # Plugin helper files
+            "accounts.ts",
+            "client.ts",
+            "channel.ts",
+            "runtime.ts",
+            "tool-account.ts",
+            "tools-config.ts",
+            "config-schema.ts",
+            "monitor.ts",
+            "bot.ts",
+            "send.ts",
+            "media.ts",
+            "probe.ts",
+            "reactions.ts",
+            "mention.ts",
+            "typing.ts",
+            "targets.ts",
+            "policy.ts",
+            "onboarding.ts",
+            "outbound.ts",
+            "reply-dispatcher.ts",
+            "send-message.ts",
+            "send-result.ts",
+            "send-target.ts",
+            "streaming-card.ts",
+            "tool-result.ts",
+            "tool-factory-test-harness.ts",
+            "dedup.ts",
+            "directory.ts",
+            "external-keys.ts",
+            "feishu-command-handler.ts",
+            "secret-input.ts",
+            "dynamic-agent.ts",
+            "async.ts",
+            "post.ts",
         }
 
-        for fpath in sorted(self._source_dir.iterdir()):
+        for fpath in sorted(directory.iterdir()):
             if not fpath.name.endswith(".ts"):
                 continue
             if fpath.name in skip_names:
                 continue
             if ".test." in fpath.name or ".e2e." in fpath.name:
+                continue
+            if fpath.name.endswith("-schema.ts"):
                 continue
 
             try:
@@ -98,12 +155,6 @@ class GatewayToolRegistry:
                     description=desc,
                     source_file=str(fpath),
                 )
-
-        logger.info(
-            "Gateway tools discovered: %d (%s)",
-            len(self._tools),
-            ", ".join(sorted(self._tools.keys())),
-        )
 
     def _extract_description(self, text: str, name_start: int, name_end: int) -> str:
         """Extract the description string near a tool's name definition."""
