@@ -101,3 +101,9 @@ class FirewallConfig:
     feishu_verification_token: str = field(
         default_factory=lambda: os.getenv("AF_FEISHU_VERIFICATION_TOKEN", "")
     )
+    feishu_model: str = field(
+        default_factory=lambda: os.getenv("AF_FEISHU_MODEL", "anthropic/claude-3.5-sonnet")
+    )
+    feishu_upstream_url: str = field(
+        default_factory=lambda: os.getenv("AF_FEISHU_UPSTREAM_URL", "https://openrouter.ai/api/v1")
+    )

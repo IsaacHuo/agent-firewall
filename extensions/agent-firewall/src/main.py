@@ -123,6 +123,8 @@ class AppState:
                 app_secret=config.feishu_app_secret,
                 encrypt_key=config.feishu_encrypt_key or None,
                 verification_token=config.feishu_verification_token or None,
+                model=config.feishu_model,
+                upstream_url=config.feishu_upstream_url,
             )
             self.feishu_adapter = FeishuAdapter(
                 config=feishu_config,
@@ -751,8 +753,8 @@ async def get_feishu_config(request: Request) -> JSONResponse:
             "connected": s.feishu_adapter is not None and s.feishu_adapter._running,
             "app_id": c.feishu_app_id,
             "app_secret": "***" if c.feishu_app_secret else "",
-            "upstream_url": s.feishu_adapter.upstream_url if s.feishu_adapter else "",
-            "model": "gpt-4",  # TODO: Make this configurable
+            "upstream_url": c.feishu_upstream_url,
+            "model": c.feishu_model,
         }
     )
 
@@ -794,6 +796,28 @@ async def get_feishu_stats(request: Request) -> JSONResponse:
             "avg_response_time": avg_response_time,
         }
     )
+
+
+@app.post("/api/feishu/test-send")
+async def test_feishu_send(request: Request) -> JSONResponse:
+    """Test endpoint to send a message via Feishu API."""
+    s = _state(request)
+
+    if not s.feishu_adapter:
+        return JSONResponse({"error": "Feishu adapter not initialized"}, status_code=503)
+
+    data = await request.json()
+    chat_id = data.get("chat_id")
+    message = data.get("message", "Hello from Agent Firewall!")
+
+    if not chat_id:
+        return JSONResponse({"error": "chat_id is required"}, status_code=400)
+
+    try:
+        success = await s.feishu_adapter.send_message(chat_id, message)
+        return JSONResponse({"success": success, "chat_id": chat_id, "message": message})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 # ── MCP Proxy (HTTP POST) ────────────────────────────────────────

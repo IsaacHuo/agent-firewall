@@ -52,11 +52,15 @@ class FeishuConfig:
         app_secret: str,
         encrypt_key: str | None = None,
         verification_token: str | None = None,
+        model: str = "anthropic/claude-3.5-sonnet",
+        upstream_url: str = "https://openrouter.ai/api/v1",
     ) -> None:
         self.app_id = app_id
         self.app_secret = app_secret
         self.encrypt_key = encrypt_key
         self.verification_token = verification_token
+        self.model = model
+        self.upstream_url = upstream_url
 
 
 class FeishuAdapter:
@@ -108,13 +112,16 @@ class FeishuAdapter:
             self.config.app_id, self.config.app_secret, event_handler=event_handler
         )
 
-        # Run in separate thread with its own event loop
+        # Run in separate thread - lark SDK will create its own event loop
         def _run_ws() -> None:
             try:
+                # Create a new event loop for this thread
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
                 self._ws_client.start()
             except Exception as e:
-                logger.error(f"Feishu WebSocket error: {e}")
-                self._running = False
+                logger.error(f"Feishu WebSocket thread error: {e}")
+                # Don't set _running = False here, as SDK has auto-reconnect
 
         self._ws_thread = threading.Thread(target=_run_ws, daemon=True)
         self._ws_thread.start()
@@ -144,7 +151,7 @@ class FeishuAdapter:
             logger.error("Event loop not available for message handling")
 
     async def _handle_message(self, data: Any) -> None:  # noqa: ANN401
-        """Handle incoming Feishu message event with full security analysis."""
+        """Handle incoming Feishu message event with optimized security analysis."""
         start_time = time.time()
         try:
             event = data.event
@@ -169,60 +176,22 @@ class FeishuAdapter:
                 f"type={message_type}, content={text_content[:50]}..."
             )
 
-            # ── Step 1: L1 Static Analysis ──
+            # ── Step 1: Quick L1 Static Analysis (fast, <1ms) ──
             l1_result = self.static_analyzer.analyze(text_content)
             l1_patterns = l1_result.matched_patterns
             l1_threat = l1_result.threat_level
 
-            # ── Step 2: L2 Semantic Analysis ──
-            l2_result = await self.semantic_analyzer.analyze(
-                method="feishu.message",
-                params={"text": text_content, "chat_id": chat_id},
-                session_context=[],
-            )
-
-            # ── Step 3: Policy Decision ──
-            analysis = AnalysisResult(
-                l1_matched_patterns=l1_patterns,
-                l1_threat_level=l1_threat,
-                l2_is_injection=l2_result.is_injection,
-                l2_confidence=l2_result.confidence,
-                l2_reasoning=l2_result.reasoning,
-            )
-
-            # Compute verdict
+            # Quick block on L1 HIGH/CRITICAL
             if l1_threat.value in ("HIGH", "CRITICAL"):
-                analysis.verdict = Verdict.BLOCK
-                analysis.blocked_reason = f"L1 detected: {', '.join(l1_patterns)}"
-            elif l2_result.is_injection and l2_result.confidence > 0.8:
-                analysis.verdict = Verdict.BLOCK
-                analysis.blocked_reason = f"L2 injection detected: {l2_result.reasoning}"
-            else:
-                analysis.verdict = Verdict.ALLOW
-
-            # ── Step 4: Emit Dashboard Event ──
-            await self.emit_dashboard(
-                DashboardEvent(
-                    event_type="feishu_message",
-                    session_id=chat_id,
-                    agent_id=f"feishu:{sender_id}",
-                    method="feishu.message.receive",
-                    payload_preview=text_content[:100],
-                    analysis=analysis,
-                    is_alert=(analysis.verdict != Verdict.ALLOW),
-                )
-            )
-
-            # ── Step 5: Handle Verdict ──
-            if analysis.verdict == Verdict.BLOCK:
-                logger.warning(f"🚫 Blocked Feishu message: {analysis.blocked_reason}")
+                logger.warning(f"🚫 Blocked by L1: {', '.join(l1_patterns)}")
                 await self.send_message(
                     chat_id,
-                    f"⚠️ 消息被安全防火墙拦截：{analysis.blocked_reason}",
+                    f"⚠️ 消息被安全防火墙拦截：检测到高风险模式 {', '.join(l1_patterns)}",
                 )
                 return
 
-            # ── Step 6: Forward to AI Agent (upstream) ──
+            # ── Step 2: Forward to AI immediately (don't wait for L2) ──
+            # L2 analysis will run in background for audit/monitoring
             try:
                 ai_response = await self._call_upstream_ai(text_content, chat_id, sender_id)
                 await self.send_message(chat_id, ai_response)
@@ -231,14 +200,66 @@ class FeishuAdapter:
                 logger.error(f"Error calling upstream AI: {e}")
                 await self.send_message(chat_id, f"❌ AI服务暂时不可用: {e}")
 
-            # ── Step 7: Audit Log ──
+            # ── Step 3: L2 Analysis in background (for audit) ──
+            # This runs async and doesn't block the response
+            asyncio.create_task(self._background_l2_analysis(
+                text_content, chat_id, sender_id, l1_result, start_time
+            ))
+
+        except Exception as e:
+            logger.error(f"Error handling Feishu message: {e}", exc_info=True)
+
+    async def _background_l2_analysis(
+        self, text: str, chat_id: str, sender_id: str, l1_result: Any, start_time: float
+    ) -> None:
+        """Run L2 analysis in background for audit/monitoring."""
+        try:
+            l2_result = await self.semantic_analyzer.analyze(
+                method="feishu.message",
+                params={"text": text, "chat_id": chat_id},
+                session_context=[],
+            )
+
+            # Build analysis result
+            analysis = AnalysisResult(
+                l1_matched_patterns=l1_result.matched_patterns,
+                l1_threat_level=l1_result.threat_level,
+                l2_is_injection=l2_result.is_injection,
+                l2_confidence=l2_result.confidence,
+                l2_reasoning=l2_result.reasoning,
+            )
+
+            # Determine verdict (for audit only, message already sent)
+            if l1_result.threat_level.value in ("HIGH", "CRITICAL"):
+                analysis.verdict = Verdict.BLOCK
+                analysis.blocked_reason = f"L1 detected: {', '.join(l1_result.matched_patterns)}"
+            elif l2_result.is_injection and l2_result.confidence > 0.8:
+                analysis.verdict = Verdict.ESCALATE  # Flag for review
+                analysis.blocked_reason = f"L2 injection detected: {l2_result.reasoning}"
+            else:
+                analysis.verdict = Verdict.ALLOW
+
+            # Emit dashboard event
+            await self.emit_dashboard(
+                DashboardEvent(
+                    event_type="feishu_message",
+                    session_id=chat_id,
+                    agent_id=f"feishu:{sender_id}",
+                    method="feishu.message.receive",
+                    payload_preview=text[:100],
+                    analysis=analysis,
+                    is_alert=(analysis.verdict != Verdict.ALLOW),
+                )
+            )
+
+            # Emit audit entry
             response_time = (time.time() - start_time) * 1000
             await self.emit_audit(
                 AuditEntry(
                     session_id=chat_id,
                     agent_id=f"feishu:{sender_id}",
                     method="feishu.message.receive",
-                    params_summary=text_content[:200],
+                    params_summary=text[:200],
                     analysis=analysis,
                     verdict=analysis.verdict,
                     response_time_ms=response_time,
@@ -246,7 +267,7 @@ class FeishuAdapter:
             )
 
         except Exception as e:
-            logger.error(f"Error handling Feishu message: {e}", exc_info=True)
+            logger.error(f"Background L2 analysis failed: {e}")
 
     async def send_message(self, chat_id: str, content: str) -> bool:
         """Send a text message to Feishu chat."""
@@ -277,28 +298,52 @@ class FeishuAdapter:
             return False
 
     async def _call_upstream_ai(self, text: str, chat_id: str, sender_id: str) -> str:
-        """Call upstream AI agent with user message."""
+        """Call upstream AI agent with user message through internal chat API."""
         try:
-            # Call upstream AI endpoint (assuming OpenAI-compatible API)
+            # Call internal chat API to get full tool-calling capability
             response = await self._http_client.post(
-                f"{self.upstream_url}/chat/completions",
+                "http://127.0.0.1:9090/api/chat/send",
                 json={
-                    "model": "gpt-4",
                     "messages": [
-                        {"role": "system", "content": "You are a helpful AI assistant in Feishu."},
+                        {"role": "system", "content": "You are a helpful AI assistant in Feishu. You have access to various tools including Feishu document operations."},
                         {"role": "user", "content": text},
                     ],
-                    "metadata": {
-                        "channel": "feishu",
-                        "chat_id": chat_id,
-                        "sender_id": sender_id,
-                    },
+                    "model": self.config.model,
+                    "enable_tools": True,
+                    "temperature": 0.7,
                 },
-                timeout=30.0,
+                timeout=60.0,
             )
             response.raise_for_status()
-            data = response.json()
-            return data["choices"][0]["message"]["content"]
+
+            # Parse NDJSON stream to extract final response
+            content_parts = []
+            tool_calls_info = []
+
+            for line in response.text.strip().split('\n'):
+                if not line.strip():
+                    continue
+                try:
+                    event = json.loads(line)
+                    if event.get("type") == "content":
+                        content_parts.append(event.get("content", ""))
+                    elif event.get("type") == "tool_call":
+                        tc = event.get("tool_call", {})
+                        tool_name = tc.get("tool_name", "")
+                        result_preview = tc.get("result_preview", "")
+                        if not tc.get("blocked"):
+                            tool_calls_info.append(f"🔧 {tool_name}: {result_preview}")
+                except json.JSONDecodeError:
+                    continue
+
+            # Combine tool calls and content
+            final_response = ""
+            if tool_calls_info:
+                final_response += "\n".join(tool_calls_info) + "\n\n"
+            final_response += "".join(content_parts)
+
+            return final_response if final_response.strip() else "抱歉，我无法生成回复。"
+
         except Exception as e:
             logger.error(f"Upstream AI call failed: {e}")
             raise
