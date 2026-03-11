@@ -1,0 +1,57 @@
+INFO:     Will watch for changes in these directories: ['/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall']
+INFO:     Uvicorn running on http://127.0.0.1:9090 (Press CTRL+C to quit)
+INFO:     Started reloader process [89327] using WatchFiles
+INFO:     Started server process [89338]
+INFO:     Waiting for application startup.
+2026-03-10T23:48:55 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
+2026-03-10T23:48:55 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
+2026-03-10T23:48:55 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
+INFO:     Application startup complete.
+INFO:     127.0.0.1:59444 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61595 - "OPTIONS /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61595 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50192 - "OPTIONS /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50204 - "WebSocket /ws/dashboard" [accepted]
+2026-03-11T21:49:21 [INFO] agent_firewall.dashboard: Dashboard client connected: 4423723936 (total: 1)
+INFO:     127.0.0.1:50192 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50208 - "OPTIONS /api/stats HTTP/1.1" 200 OK
+INFO:     connection open
+INFO:     127.0.0.1:50192 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50485 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     connection closed
+2026-03-11T21:50:31 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4423723936 (total: 0)
+INFO:     127.0.0.1:51376 - "WebSocket /ws/dashboard" [accepted]
+2026-03-11T21:50:40 [INFO] agent_firewall.dashboard: Dashboard client connected: 4423959040 (total: 1)
+INFO:     127.0.0.1:51377 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     connection open
+INFO:     127.0.0.1:51378 - "GET /api/gateway-info HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51379 - "OPTIONS /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51380 - "OPTIONS /api/rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51381 - "OPTIONS /api/audit?limit=50 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51377 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51378 - "GET /api/rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51379 - "GET /api/audit?limit=50 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51380 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51380 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51380 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51524 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51661 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51661 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51683 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51683 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51732 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51732 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51768 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51768 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51768 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51768 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51768 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51768 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51768 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51850 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51850 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51892 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51892 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51902 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51943 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51943 - "GET /api/stats HTTP/1.1" 200 OK

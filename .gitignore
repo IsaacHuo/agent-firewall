@@ -123,4 +123,6 @@ scripts/test-*-docker.sh
 docs/install/docker.md
 docs/install/podman.md
 docs/zh-CN/install/docker.md
+node_modules
+
 public/client_secret_*.json

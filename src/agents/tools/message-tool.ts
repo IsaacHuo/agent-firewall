@@ -476,7 +476,15 @@ function buildMessageToolDescription(options?: {
     }
   }
 
-  return `${baseDescription} Supports actions: send, delete, react, poll, pin, threads, and more.`;
+  return [
+    baseDescription,
+    "Actions:",
+    "- send: Send a message. Params: action='send', channel='<telegram|feishu|...>', target='<chatId|user>', message='text'.",
+    "- reply: Reply to a message. Params: action='reply', channel='...', target='...', message='text', replyTo='<msgId>'.",
+    "- list_channels: List available channels/chats. Params: action='list_channels', channel='<provider>'.",
+    "- react: Add reaction. Params: action='react', channel='...', target='...', messageId='...', emoji='👍'.",
+    "Note: 'target' is required for most actions. For Feishu, target can be 'chat_id' or 'user_id'.",
+  ].join(" ");
 }
 
 export function createMessageTool(options?: MessageToolOptions): AnyAgentTool {

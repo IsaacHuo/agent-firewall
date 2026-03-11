@@ -184,7 +184,8 @@ class SkillRegistry:
             return []
 
         skill_names = sorted(self._ready_skills.keys())
-        skill_list_desc = ", ".join(f"'{s}'" for s in skill_names)
+        # Use simple list format for description to save tokens and reduce confusion
+        skill_list_desc = ", ".join(skill_names)
 
         return [
             {
@@ -192,19 +193,17 @@ class SkillRegistry:
                 "function": {
                     "name": "get_skill_docs",
                     "description": (
-                        "Get the full CLI documentation for a skill. "
+                        "Get the usage documentation for a specific skill. "
                         f"Available skills: {skill_list_desc}. "
-                        "Call this BEFORE run_skill to learn the exact commands and flags."
+                        "Call this FIRST to learn how to use a skill. "
+                        "Supports fuzzy matching if exact name is not known."
                     ),
                     "parameters": {
                         "type": "object",
                         "properties": {
                             "skill_name": {
                                 "type": "string",
-                                "description": (
-                                    f"The skill to get docs for. One of: {skill_list_desc}"
-                                ),
-                                "enum": skill_names,
+                                "description": "The name of the skill to inspect. Can be a keyword.",
                             },
                         },
                         "required": ["skill_name"],
@@ -216,30 +215,25 @@ class SkillRegistry:
                 "function": {
                     "name": "run_skill",
                     "description": (
-                        "Execute a shell command for one of the available skills. "
-                        f"Skills: {skill_list_desc}. "
-                        "IMPORTANT: Call get_skill_docs first to learn the correct CLI syntax. "
-                        "Returns the stdout/stderr output."
+                        "Execute a skill's CLI command. "
+                        "You MUST read the docs via `get_skill_docs` first to know the correct command syntax. "
+                        "Do not guess flags or arguments."
                     ),
                     "parameters": {
                         "type": "object",
                         "properties": {
                             "skill_name": {
                                 "type": "string",
-                                "description": f"The skill to use. One of: {skill_list_desc}",
+                                "description": "The skill to use.",
                                 "enum": skill_names,
                             },
                             "command": {
                                 "type": "string",
-                                "description": (
-                                    "The exact shell command to execute. "
-                                    "Must use the skill's CLI binary as "
-                                    "documented in the skill docs."
-                                ),
+                                "description": "The full shell command string to run (e.g. 'feishu-doc create ...').",
                             },
                             "explanation": {
                                 "type": "string",
-                                "description": "Brief explanation of what this command does",
+                                "description": "Why you are running this command.",
                             },
                         },
                         "required": ["skill_name", "command"],
@@ -248,17 +242,47 @@ class SkillRegistry:
             },
         ]
 
+    # ── Helpers ──────────────────────────────────────────────────
+
     def get_skill_docs(self, skill_name: str) -> str:
-        """Return the full SKILL.md content for a specific skill."""
+        """Get the full SKILL.md content for a skill (supports fuzzy match)."""
+        # 1. Exact match
         skill = self._ready_skills.get(skill_name)
-        if not skill:
-            available = ", ".join(sorted(self._ready_skills.keys()))
-            return f"[Error] Skill '{skill_name}' not available. Ready skills: {available}"
-        header = f"# {skill.emoji} {skill.name}\n{skill.description}\n"
-        if skill.required_bins:
-            header += f"CLI binaries: {', '.join(skill.required_bins)}\n"
-        header += "\n"
-        return header + skill.skill_md_content
+        if skill:
+            header = f"# {skill.emoji} {skill.name}\n{skill.description}\n"
+            if skill.required_bins:
+                header += f"CLI binaries: {', '.join(skill.required_bins)}\n"
+            header += "\n"
+            return header + skill.skill_md_content
+
+        # 2. Fuzzy match
+        matches = []
+        name_lower = skill_name.lower()
+        for s in self._ready_skills.values():
+            if name_lower in s.name.lower() or name_lower in s.description.lower():
+                matches.append(s)
+        
+        if matches:
+            # If only one match, return it directly? Maybe risky if ambiguous.
+            # Better to return a list of suggestions.
+            if len(matches) == 1:
+                s = matches[0]
+                return (
+                    f"Skill '{skill_name}' not found, but found match: {s.name}.\n\n"
+                    f"# {s.emoji} {s.name}\n{s.description}\n\n"
+                    f"CLI binaries: {', '.join(s.required_bins)}\n\n"
+                    f"{s.skill_md_content}"
+                )
+            
+            # Multiple matches
+            parts = [f"Skill '{skill_name}' not found. Did you mean one of these?"]
+            for s in matches:
+                parts.append(f"- **{s.name}**: {s.description}")
+            return "\n".join(parts)
+
+        # 3. No match
+        available = ", ".join(sorted(self._ready_skills.keys()))
+        return f"[Error] Skill '{skill_name}' not available. Ready skills: {available}"
 
     def get_skills_system_prompt(self) -> str:
         """

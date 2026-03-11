@@ -1153,6 +1153,7 @@ async def chat_send(request: Request):
     max_tokens = data.get("max_tokens", None)
     top_p = data.get("top_p", None)
     enable_tools = data.get("enable_tools", True)
+    external_tools = data.get("external_tools", [])  # tools provided by frontend (e.g. gateway skills)
 
     if not messages:
         return JSONResponse({"error": "No messages provided"}, status_code=400)
@@ -1297,13 +1298,88 @@ async def chat_send(request: Request):
                 upstream_headers["Authorization"] = f"Bearer {s.openai_adapter.api_key}"
 
             gw_host, gw_port, gw_token = _get_gateway_auth()
-            openai_tools = _all_tools_openai_format(request)
 
             registry = _get_skill_registry()
             gw_registry = _get_gateway_tool_registry()
+
+            # Merge external tools from frontend (e.g. gateway skills)
+            gw_tools_map = gw_registry.tools.copy()
+            if external_tools:
+                from .gateway_tools import GatewayToolDef
+
+                for t in external_tools:
+                    name = t.get("name")
+                    desc = t.get("description", "")
+                    # Treat external tools as gateway tools so they use invoke_gateway
+                    if name and name not in gw_tools_map:
+                        gw_tools_map[name] = GatewayToolDef(
+                            name=name, description=desc, source_file="external"
+                        )
+
+            # Re-generate invoke_gateway tool definition with expanded tool list
+            tool_names = sorted(gw_tools_map.keys())
+            invoke_gateway_tool = {
+                "type": "function",
+                "function": {
+                    "name": "invoke_gateway",
+                    "description": (
+                        "Invoke an OpenClaw gateway tool. "
+                        f"Available tools: {', '.join(tool_names)}. "
+                        "Check the system prompt for tool descriptions and expected arguments."
+                    ),
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "tool_name": {
+                                "type": "string",
+                                "description": (
+                                    f"Gateway tool to invoke. One of: {', '.join(tool_names)}"
+                                ),
+                                "enum": tool_names,
+                            },
+                            "arguments": {
+                                "type": "object",
+                                "description": (
+                                    "Arguments to pass to the tool as a JSON object. "
+                                    "Refer to tool descriptions for expected fields."
+                                ),
+                            },
+                        },
+                        "required": ["tool_name"],
+                    },
+                },
+            }
+
+            openai_tools = [invoke_gateway_tool] + registry.get_openai_tools()
+
+            # Re-generate system prompt for gateway tools
+            gw_parts = [
+                "# Available Gateway Tools",
+                "",
+                "Use `invoke_gateway(tool_name, arguments)` to call these OpenClaw gateway tools.",
+                "Pass arguments as a JSON object with the expected fields for each tool.",
+                "",
+            ]
+            for name in tool_names:
+                t = gw_tools_map[name]
+                gw_parts.append(f"- **{name}**: {t.description}")
+            gw_parts.append("")
+            gateway_prompt = "\n".join(gw_parts)
+
+            # NEW: Tool Selection Policy (to guide LLM preference)
+            policy_prompt = (
+                "# Tool Selection Policy\n"
+                "1. **Prioritize Specialized Skills**: Always check the 'Available Skills' list via `get_skill_docs`. If a skill exists, use `run_skill`.\n"
+                "2. **Feishu/Lark Operations**: \n"
+                "   - **Docs/Wiki**: The `feishu_doc` tool is a Gateway Tool. Use `invoke_gateway(tool_name='feishu_doc', arguments={'action': 'create', 'title': '...', 'content': '...'})`. Do NOT use `run_skill` for it.\n"
+                "   - **Chat/Messages**: Use `invoke_gateway(tool_name='message', arguments={'action': 'send', 'channel': 'feishu', 'target': '...', 'message': '...'})`.\n"
+                "3. **Skill Usage**: \n"
+                "   - For CLI skills (e.g. `apple-notes`), use `get_skill_docs` then `run_skill`.\n"
+                "   - For Gateway tools (e.g. `feishu_doc`, `browser`), use `invoke_gateway`.\n"
+            )
+
             skills_prompt = registry.get_skills_system_prompt()
-            gateway_prompt = gw_registry.get_system_prompt()
-            combined_prompt = "\n\n".join(p for p in [gateway_prompt, skills_prompt] if p)
+            combined_prompt = "\n\n".join(p for p in [gateway_prompt, skills_prompt, policy_prompt] if p)
 
             if combined_prompt and enable_tools:
                 chat_body_messages = list(forwarded_messages)
@@ -1494,6 +1570,15 @@ async def chat_send(request: Request):
                                 elif tool_name == "invoke_gateway":
                                     gw_tool_name = tool_args.get("tool_name", "")
                                     gw_arguments = tool_args.get("arguments", {})
+
+                                    # Fix: Handle stringified JSON for arguments (LLM confusion)
+                                    if isinstance(gw_arguments, str):
+                                        try:
+                                            gw_arguments = json.loads(gw_arguments)
+                                        except Exception:
+                                            # If not valid JSON, treat as dict with 'arguments' key if possible, or fail
+                                            pass
+
                                     logger.info(
                                         "invoke_gateway: %s args=%s",
                                         gw_tool_name,
@@ -1509,10 +1594,46 @@ async def chat_send(request: Request):
                                         tool_result = await GatewayToolRegistry.execute(
                                             gw_host, gw_port, gw_token, gw_tool_name, gw_arguments
                                         )
+                                        # Fix: Retry with underscore if hyphenated name not found (e.g. feishu-doc -> feishu_doc)
+                                        if (
+                                            "[Gateway HTTP 404]" in tool_result
+                                            and "not available" in tool_result
+                                            and "-" in gw_tool_name
+                                        ):
+                                            alt_name = gw_tool_name.replace("-", "_")
+                                            logger.info(
+                                                "Retrying tool %s as %s", gw_tool_name, alt_name
+                                            )
+                                            tool_result = await GatewayToolRegistry.execute(
+                                                gw_host, gw_port, gw_token, alt_name, gw_arguments
+                                            )
                                 else:
+                                    # Fix: Handle wrapped arguments (LLM confusion when calling tools directly)
+                                    real_args = tool_args
+                                    if isinstance(tool_args, dict) and "arguments" in tool_args and len(tool_args) == 1:
+                                        val = tool_args["arguments"]
+                                        if isinstance(val, dict):
+                                            real_args = val
+                                        elif isinstance(val, str):
+                                            try:
+                                                real_args = json.loads(val)
+                                            except Exception:
+                                                pass
+
                                     tool_result = await GatewayToolRegistry.execute(
-                                        gw_host, gw_port, gw_token, tool_name, tool_args
+                                        gw_host, gw_port, gw_token, tool_name, real_args
                                     )
+                                    # Fix: Retry with underscore if hyphenated name not found
+                                    if (
+                                        "[Gateway HTTP 404]" in tool_result
+                                        and "not available" in tool_result
+                                        and "-" in tool_name
+                                    ):
+                                        alt_name = tool_name.replace("-", "_")
+                                        logger.info("Retrying tool %s as %s", tool_name, alt_name)
+                                        tool_result = await GatewayToolRegistry.execute(
+                                            gw_host, gw_port, gw_token, alt_name, real_args
+                                        )
                                 tool_call_record["blocked"] = False
                                 tool_call_record["result_preview"] = tool_result[:200]
 

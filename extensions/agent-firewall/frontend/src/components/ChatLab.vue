@@ -143,14 +143,73 @@
               <span v-if="msg.blocked" class="msg-tag blocked">Blocked</span>
               <span v-if="msg.verdict" class="msg-tag" :class="msg.verdict.toLowerCase()">{{ msg.verdict }}</span>
             </div>
-            <!-- Markdown rendered content for assistant messages -->
-            <div v-if="msg.role === 'assistant'" class="msg-text md-content" v-html="renderMarkdown(msg.content)"></div>
-            <!-- Tool call content (monospace) -->
-            <div v-else-if="msg.role === 'tool'" class="msg-text tool-text" v-html="renderMarkdown(msg.content)"></div>
-            <!-- Plain text for user/system -->
-            <div v-else class="msg-text">{{ msg.content }}</div>
+            <!-- Tool Call Card (Modern) -->
+            <div v-if="msg.toolCalls?.length" class="tool-invocation-card" :class="{ expanded: msg.toolCallsExpanded }">
+              <div class="tool-card-header" @click="msg.toolCallsExpanded = !msg.toolCallsExpanded" title="Toggle details">
+                <div class="tool-info">
+                  <span class="tool-chevron">
+                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                  </span>
+                  <span class="tool-icon">⚡</span>
+                  <span class="tool-name">{{ getToolDisplayName(msg.toolCalls[0].tool_name, msg.toolCalls[0].arguments) }}</span>
+                </div>
+                <div class="tool-status-badge" :class="msg.blocked ? 'blocked' : 'allowed'">
+                  {{ msg.blocked ? 'Blocked' : 'Allowed' }}
+                </div>
+              </div>
+              
+              <div class="tool-card-body" v-show="msg.toolCallsExpanded">
+                <div class="code-block-wrapper">
+                  <div class="code-header">Arguments</div>
+                  <pre class="code-content">{{ JSON.stringify(msg.toolCalls[0].arguments, null, 2) }}</pre>
+                </div>
 
-            <!-- Analysis collapse -->
+                <!-- Tool Output (inside card) -->
+                <div v-if="!msg.blocked && msg.toolCalls[0].result_preview" class="tool-output-wrapper">
+                  <div class="code-header">Output</div>
+                  <div class="tool-output-content" v-html="renderMarkdown(msg.toolCalls[0].result_preview)"></div>
+                </div>
+                
+                <!-- Compact Analysis -->
+                <div v-if="msg.toolCalls[0].l2_confidence || msg.toolCalls[0].l1_patterns?.length" class="tool-analysis-compact">
+                   <div class="analysis-meta">
+                     <span v-if="msg.toolCalls[0].l2_confidence" class="confidence-badge" :class="confClass(msg.toolCalls[0].l2_confidence)">
+                       {{ (msg.toolCalls[0].l2_confidence * 100).toFixed(0) }}% Risk
+                     </span>
+                     <span v-for="p in msg.toolCalls[0].l1_patterns" :key="p" class="pattern-badge">{{ p }}</span>
+                   </div>
+                   <div v-if="msg.toolCalls[0].l2_reasoning" class="analysis-reasoning">
+                     {{ msg.toolCalls[0].l2_reasoning }}
+                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Markdown rendered content for assistant messages -->
+            <div v-if="msg.role === 'assistant' && msg.content" class="msg-text md-content" v-html="renderMarkdown(msg.content)"></div>
+            <!-- Tool call content (monospace) -->
+            <div v-else-if="msg.role === 'tool' && !msg.toolCalls?.length" class="msg-text tool-text">
+              <div class="tool-output-label">Tool Output</div>
+              <div v-html="renderMarkdown(msg.content)"></div>
+            </div>
+            <!-- Plain text for user/system -->
+            <div v-else-if="msg.content && msg.role !== 'tool'" class="msg-text">{{ msg.content }}</div>
+
+            <!-- Message Actions (Copy/Retry) -->
+            <div v-if="msg.role === 'assistant'" class="msg-actions">
+              <button class="action-btn" @click="copyMessage(msg.content)" title="Copy">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy
+              </button>
+              <button class="action-btn" @click="retryMessage(msg)" title="Retry">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>
+                Retry
+              </button>
+            </div>
+
+            <!-- Analysis collapse (Message level) -->
             <details v-if="msg.analysis" class="msg-analysis">
               <summary class="analysis-summary">
                 <span class="verdict-chip" :class="msg.analysis.verdict.toLowerCase()">{{ msg.analysis.verdict }}</span>
@@ -174,29 +233,7 @@
               </div>
             </details>
 
-            <!-- Tool call L1/L2 analysis -->
-            <details v-if="msg.toolCalls?.length" class="msg-analysis">
-              <summary class="analysis-summary">
-                <span class="verdict-chip" :class="msg.blocked ? 'block' : 'allow'">{{ msg.blocked ? 'BLOCKED' : 'ALLOWED' }}</span>
-                <span class="conf-text">Tool: {{ msg.toolCalls[0].tool_name }}</span>
-                <span v-if="msg.toolCalls[0].l2_confidence" class="conf-text">L2: {{ ((msg.toolCalls[0].l2_confidence || 0) * 100).toFixed(0) }}%</span>
-              </summary>
-              <div class="analysis-body">
-                <div v-if="msg.toolCalls[0].l1_patterns?.length" class="analysis-row">
-                  <span class="al">L1 Patterns</span>
-                  <span class="pattern-chip" v-for="p in msg.toolCalls[0].l1_patterns" :key="p">{{ p }}</span>
-                </div>
-                <div v-if="msg.toolCalls[0].l2_confidence" class="analysis-row">
-                  <span class="al">L2 Confidence</span>
-                  <div class="conf-bar"><div class="conf-fill" :class="confClass(msg.toolCalls[0].l2_confidence || 0)" :style="{ width: ((msg.toolCalls[0].l2_confidence || 0) * 100) + '%' }"></div></div>
-                  <span class="conf-val">{{ ((msg.toolCalls[0].l2_confidence || 0) * 100).toFixed(1) }}%</span>
-                </div>
-                <div v-if="msg.toolCalls[0].l2_reasoning" class="analysis-row">
-                  <span class="al">L2 Reasoning</span>
-                  <span class="reasoning">{{ msg.toolCalls[0].l2_reasoning }}</span>
-                </div>
-              </div>
-            </details>
+
 
             <div v-if="msg.originalContent && msg.wasModified" class="msg-original">
               <span class="orig-label">Original:</span>
@@ -230,11 +267,18 @@
 
       <!-- Input -->
       <div class="input-bar">
+        <button class="attach-btn" @click="triggerFileUpload" title="Attach file">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+          </svg>
+        </button>
+        <input type="file" ref="fileInput" style="display: none" @change="handleFileSelect" multiple />
+        
         <textarea
           v-model="inputMessage"
           @keydown.enter.exact.prevent="handleSend"
           class="msg-input"
-          placeholder="Type a message to test... (Enter to send)"
+          placeholder="Message Agent Firewall..."
           rows="1"
           ref="inputEl"
         ></textarea>
@@ -487,6 +531,7 @@ interface ChatMessage {
   id: string; role: 'user' | 'assistant' | 'system' | 'tool'; content: string; timestamp: number;
   analysis?: ChatAnalysis; blocked?: boolean; wasModified?: boolean; originalContent?: string; verdict?: string;
   toolCalls?: ToolCallRecord[];
+  toolCallsExpanded?: boolean;
 }
 
 interface SavedConversation {
@@ -532,6 +577,18 @@ const showCustomConfigModal = ref(false)
 const prevModel = ref(selectedModel.value)
 const messagesEl = ref<HTMLElement | null>(null)
 const inputEl = ref<HTMLTextAreaElement | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
+
+const triggerFileUpload = () => fileInput.value?.click()
+const handleFileSelect = (e: Event) => {
+  const files = (e.target as HTMLInputElement).files
+  if (!files?.length) return
+  const names = Array.from(files).map(f => `[File: ${f.name}]`).join(' ')
+  inputMessage.value = (inputMessage.value + ' ' + names).trim()
+  if (inputEl.value) inputEl.value.focus()
+  // Reset input
+  ;(e.target as HTMLInputElement).value = ''
+}
 
 const interceptActive = ref(false)
 const pendingMessage = ref('')
@@ -563,6 +620,16 @@ const mcpResults = ref<McpResult[]>([])
 
 // Skills
 const { skills, loadSkills } = useGatewaySkills()
+
+const getToolDisplayName = (name: string, args: any) => {
+  if ((name === 'run_skill' || name === 'skill') && args?.skill_name) {
+    return args.skill_name
+  }
+  if (name === 'invoke_gateway' && args?.tool_name) {
+    return args.tool_name
+  }
+  return name
+}
 
 /** Handle "自行配置" option — show modal and revert selection */
 function onModelChange() {
@@ -734,7 +801,12 @@ function onDocClick(e: MouseEvent) {
     showHistoryMenu.value = false
   }
 }
-onMounted(() => { document.addEventListener('click', onDocClick); scrollToBottom(); inputEl.value?.focus() })
+onMounted(() => {
+  document.addEventListener('click', onDocClick)
+  scrollToBottom()
+  inputEl.value?.focus()
+  loadSkillsList() // Auto-load skills for chat context
+})
 onBeforeUnmount(() => { document.removeEventListener('click', onDocClick) })
 
 // ── Watches ──
@@ -808,6 +880,11 @@ async function sendMessage(content: string, modifiedContent: string | null, anal
   sending.value = true
   abortController = new AbortController()
 
+  // Collect active skills to send to backend (so LLM knows about them)
+  const activeSkills = skills.value
+    .filter(s => s.eligible && !s.disabled)
+    .map(s => ({ name: s.name, description: s.description }))
+
   try {
     const body: Record<string, unknown> = {
       messages: apiMessages,
@@ -819,6 +896,7 @@ async function sendMessage(content: string, modifiedContent: string | null, anal
       max_tokens: maxTokens.value,
       top_p: topP.value,
       enable_tools: enableTools.value,
+      external_tools: activeSkills, // Pass skills to backend
     }
 
     const res = await fetch(`${API_BASE}/api/chat/send`, {
@@ -926,6 +1004,28 @@ async function sendMessage(content: string, modifiedContent: string | null, anal
 function stopResponse() {
   if (abortController) {
     abortController.abort()
+  }
+}
+
+function copyMessage(text: string) {
+  navigator.clipboard.writeText(text)
+}
+
+function retryMessage(msg: ChatMessage) {
+  // Find the last user message before this assistant message
+  const msgIndex = chatMessages.value.findIndex(m => m.id === msg.id)
+  if (msgIndex <= 0) return
+  
+  // Look backwards for the user prompt
+  for (let i = msgIndex - 1; i >= 0; i--) {
+    if (chatMessages.value[i].role === 'user') {
+      const userContent = chatMessages.value[i].content
+      // Remove all messages from this point forward
+      chatMessages.value = chatMessages.value.slice(0, i)
+      // Resend
+      sendMessage(userContent, null)
+      return
+    }
   }
 }
 
@@ -1073,77 +1173,245 @@ async function testSkill(skill: SkillStatusEntry) {
 .setting-range { width: 100%; accent-color: var(--accent); height: 4px; }
 
 /* Chat area */
-.chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.messages { flex: 1; overflow-y: auto; padding: 12px 16px; }
+.chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+.messages {
+  flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 20px;
+  scroll-behavior: smooth;
+}
 
 /* Empty state */
-.empty-state { display: flex; flex-direction: column; align-items: center; padding: 48px 20px; color: var(--text-muted); }
-.empty-icon { margin-bottom: 12px; color: var(--accent); opacity: 0.5; }
-.empty-state h3 { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
-.empty-state p { font-size: 12px; margin-bottom: 20px; }
-.quick-actions { display: flex; flex-wrap: wrap; gap: 6px; max-width: 520px; justify-content: center; }
-.quick-btn {
-  display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: var(--bg-surface);
-  border: 1px solid var(--border); border-radius: var(--radius-md); color: var(--text-secondary);
-  cursor: pointer; font-size: 11px; transition: all 0.15s;
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 48px 20px; color: var(--text-muted); height: 100%;
 }
-.quick-btn:hover { border-color: var(--accent-red); background: var(--accent-red-muted); }
+.empty-icon { margin-bottom: 24px; color: var(--accent); opacity: 0.8; width: 64px; height: 64px; }
+.empty-state h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; }
+.empty-state p { font-size: 14px; margin-bottom: 32px; max-width: 400px; text-align: center; }
+.quick-actions { display: flex; flex-wrap: wrap; gap: 8px; max-width: 600px; justify-content: center; }
+.quick-btn {
+  display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--bg-surface);
+  border: 1px solid var(--border); border-radius: var(--radius-lg); color: var(--text-primary);
+  cursor: pointer; font-size: 13px; transition: all 0.2s; box-shadow: var(--shadow-sm);
+}
+.quick-btn:hover { border-color: var(--accent); transform: translateY(-1px); box-shadow: var(--shadow-md); }
 .quick-tag {
-  font-size: 9px; padding: 1px 5px; border-radius: 3px; background: var(--accent-red-muted);
-  color: var(--accent-red); font-family: var(--font-mono); text-transform: uppercase;
+  font-size: 10px; padding: 2px 6px; border-radius: 4px; background: var(--bg-elevated);
+  color: var(--text-muted); font-family: var(--font-mono); text-transform: uppercase; font-weight: 600;
 }
 
 /* Messages */
-.message { display: flex; gap: 8px; margin-bottom: 10px; padding: 8px 10px; border-radius: var(--radius-md); transition: all 0.15s; }
-.message:hover { background: var(--bg-hover); }
-.message.blocked { background: var(--accent-red-muted); border-left: 2px solid var(--accent-red); }
-.message.modified { border-left: 2px solid var(--accent-yellow); }
-.msg-gutter { flex-shrink: 0; padding-top: 2px; }
+.message { display: flex; gap: 12px; max-width: 85%; align-self: flex-start; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.message.msg-user { align-self: flex-end; flex-direction: row-reverse; }
+
 .msg-avatar {
-  width: 24px; height: 24px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 700; color: var(--text-primary);
+  width: 32px; height: 32px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; flex-shrink: 0; box-shadow: var(--shadow-sm);
 }
-.msg-avatar.user { background: var(--accent-red-muted); color: var(--accent-red); }
-.msg-avatar.system { background: var(--accent-yellow-muted); color: var(--accent-yellow); }
-.msg-avatar.assistant { background: var(--accent-muted); color: var(--accent); }
-.msg-avatar.tool { background: #1a2744; color: #58a6ff; font-size: 12px; }
-.msg-content-wrap { flex: 1; min-width: 0; }
-.msg-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
-.msg-sender { font-size: 11px; font-weight: 600; color: var(--text-primary); }
-.msg-time { font-size: 9px; color: var(--text-dim); font-family: var(--font-mono); }
-.msg-tag {
-  font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 600; text-transform: uppercase;
+.msg-avatar.user { background: var(--accent); color: white; }
+.msg-avatar.assistant { background: var(--bg-surface); border: 1px solid var(--border); color: var(--accent-cyan); }
+.msg-avatar.system { background: var(--accent-orange); color: white; }
+.msg-avatar.tool { background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-muted); }
+
+.msg-content-wrap {
+  display: flex; flex-direction: column; min-width: 0; gap: 4px;
 }
-.msg-tag.blocked, .msg-tag.block, .msg-tag.escalate { background: var(--accent-red-muted); color: var(--accent-red); }
-.msg-tag.allow { background: var(--accent-green-muted); color: var(--accent-green); }
-.msg-tag.modified { background: var(--accent-yellow-muted); color: var(--accent-yellow); }
-.msg-text { font-size: 12px; line-height: 1.6; color: var(--text-secondary); word-break: break-word; }
-.msg-text.tool-text { font-family: var(--font-mono); font-size: 11px; background: var(--bg-elevated); padding: 6px 8px; border-radius: var(--radius-sm); border-left: 2px solid #58a6ff; }
+.msg-user .msg-content-wrap { align-items: flex-end; }
+
+.msg-meta { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+.msg-user .msg-meta { flex-direction: row-reverse; }
+
+.msg-text {
+  padding: 12px 16px; border-radius: 12px; font-size: 14px; line-height: 1.6; word-break: break-word;
+  box-shadow: var(--shadow-sm); position: relative;
+}
+.msg-user .msg-text {
+  background: var(--accent); color: white; border-top-right-radius: 2px;
+}
+.msg-assistant .msg-text {
+  background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); border-top-left-radius: 2px;
+}
+.msg-system .msg-text {
+  background: var(--accent-orange); color: white;
+}
+.msg-tool .msg-text {
+  background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-secondary); font-family: var(--font-mono); font-size: 12px;
+}
+
+/* Message Actions */
+.msg-actions {
+  display: flex; gap: 8px; margin-top: 8px; opacity: 0; transition: opacity 0.2s;
+  justify-content: flex-start;
+}
+.message:hover .msg-actions { opacity: 1; }
+.action-btn {
+  display: flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 11px;
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: 4px;
+  color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+}
+.action-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-hover); }
+
+/* Tool Invocation Card */
+.tool-invocation-card {
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  overflow: hidden; margin-bottom: 8px; width: 100%; min-width: 300px;
+  box-shadow: var(--shadow-sm); transition: all 0.2s;
+}
+.tool-invocation-card:hover { border-color: var(--border-hover); box-shadow: var(--shadow-md); }
+
+.tool-card-header {
+  padding: 10px 14px; background: var(--bg-hover); border-bottom: 1px solid var(--border-subtle);
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; user-select: none;
+}
+.tool-info { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; color: var(--text-primary); }
+.tool-chevron { display: flex; align-items: center; color: var(--text-muted); transition: transform 0.2s ease; }
+.tool-invocation-card.expanded .tool-chevron { transform: rotate(90deg); }
+.tool-icon { font-size: 14px; }
+.tool-name { font-family: var(--font-mono); color: var(--accent); }
+
+.tool-status-badge {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 4px;
+}
+.tool-status-badge.allowed { background: var(--accent-green-muted); color: var(--accent-green); }
+.tool-status-badge.blocked { background: var(--accent-red-muted); color: var(--accent-red); }
+
+.tool-card-body { padding: 0; }
+.code-block-wrapper { position: relative; }
+.code-header {
+  position: absolute; top: 0; right: 0; padding: 4px 8px; font-size: 9px;
+  color: var(--text-muted); text-transform: uppercase; pointer-events: none;
+  background: var(--bg-surface); border-bottom-left-radius: 4px;
+}
+.code-content {
+  margin: 0; padding: 16px 14px 12px; font-family: 'JetBrains Mono', var(--font-mono); font-size: 12px;
+  background: var(--bg-surface); color: var(--text-secondary); overflow-x: auto;
+  white-space: pre-wrap; border-bottom: 1px solid var(--border-subtle);
+  line-height: 1.5;
+}
+
+.tool-output-wrapper { position: relative; }
+.tool-output-content {
+  padding: 24px 14px 14px; font-family: var(--font-sans); font-size: 13px;
+  background: var(--bg-surface); color: var(--text-primary); overflow-x: auto;
+  border-bottom: 1px solid var(--border-subtle);
+}
+/* Style raw JSON/code output specifically */
+.tool-output-content :deep(pre) {
+  background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px;
+  padding: 10px; overflow-x: auto; font-family: 'JetBrains Mono', var(--font-mono); font-size: 12px;
+  margin: 0;
+}
+
+/* Tool output markdown heading overrides - prevent huge fonts */
+.tool-output-content :deep(h1),
+.tool-output-content :deep(h2),
+.tool-output-content :deep(h3),
+.tool-output-content :deep(h4),
+.tool-output-content :deep(h5),
+.tool-output-content :deep(h6) {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 12px 0 6px;
+  line-height: 1.4;
+  border: none;
+  padding: 0;
+  color: var(--text-primary);
+}
+
+.tool-output-content :deep(p) { margin: 0 0 10px; line-height: 1.6; }
+.tool-output-content :deep(p:last-child) { margin-bottom: 0; }
+.tool-output-content :deep(ul), .tool-output-content :deep(ol) { margin: 8px 0 12px 24px; padding: 0; }
+.tool-output-content :deep(li) { margin-bottom: 6px; padding-left: 4px; line-height: 1.6; }
+.tool-output-content :deep(li::marker) { color: var(--text-muted); font-weight: 600; }
+.tool-output-content :deep(blockquote) { margin: 12px 0; padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--bg-hover); border-radius: 0 4px 4px 0; color: var(--text-secondary); }
+
+.tool-analysis-compact { padding: 10px 14px; background: var(--bg-elevated); display: flex; flex-direction: column; gap: 8px; }
+.analysis-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.confidence-badge {
+  font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px;
+  background: var(--bg-surface); border: 1px solid var(--border);
+}
+.confidence-badge.high { color: var(--accent-red); border-color: var(--accent-red-muted); }
+.confidence-badge.medium { color: var(--accent-yellow); border-color: var(--accent-yellow-muted); }
+.confidence-badge.low { color: var(--accent-green); border-color: var(--accent-green-muted); }
+
+.pattern-badge {
+  font-size: 10px; padding: 2px 6px; border-radius: 4px; background: var(--bg-surface);
+  border: 1px solid var(--border); color: var(--text-muted); font-family: var(--font-mono);
+}
+.analysis-reasoning { font-size: 12px; color: var(--text-secondary); font-style: italic; }
+
+.tool-output-label {
+  font-size: 10px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;
+}
 
 /* Markdown content styling */
-.md-content :deep(p) { margin: 0 0 8px 0; }
+.md-content { font-size: 14px; line-height: 1.6; color: var(--text-primary); }
+.md-content :deep(p) { margin: 0 0 12px 0; }
 .md-content :deep(p:last-child) { margin-bottom: 0; }
+.md-content :deep(ul), .md-content :deep(ol) { margin: 8px 0 16px 24px; padding: 0; }
+.md-content :deep(li) { margin-bottom: 6px; padding-left: 4px; }
+.md-content :deep(li::marker) { color: var(--text-muted); font-weight: 600; }
 .md-content :deep(code) {
-  font-family: var(--font-mono); font-size: 11px;
-  padding: 1px 4px; border-radius: 3px;
-  background: var(--bg-elevated); color: var(--accent);
+  font-family: var(--font-mono); font-size: 12px;
+  padding: 2px 5px; border-radius: 4px;
+  background: rgba(0,0,0,0.1); color: inherit;
 }
+.msg-user .md-content :deep(code) { background: rgba(255,255,255,0.2); color: white; }
 .md-content :deep(pre) {
   background: var(--bg-elevated); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); padding: 10px 12px; margin: 8px 0;
-  overflow-x: auto; font-size: 11px; line-height: 1.5;
+  border-radius: var(--radius-md); padding: 12px; margin: 12px 0;
+  overflow-x: auto; font-size: 12px; line-height: 1.5;
 }
-.md-content :deep(pre code) {
-  background: none; padding: 0; color: var(--text-primary);
+.msg-user .md-content :deep(pre) { background: rgba(0,0,0,0.2); border-color: rgba(255,255,255,0.1); color: white; }
+.md-content :deep(pre code) { background: none; padding: 0; color: inherit; }
+
+/* Input Bar */
+.input-bar {
+  padding: 16px 24px; background: var(--bg-primary); border-top: 1px solid var(--border);
+  display: flex; align-items: flex-end; gap: 12px; flex-shrink: 0;
+  position: relative; z-index: 20;
 }
-.md-content :deep(ul), .md-content :deep(ol) {
-  margin: 4px 0 8px 0; padding-left: 20px;
+.attach-btn {
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--bg-surface); border: 1px solid var(--border);
+  color: var(--text-muted); cursor: pointer; transition: all 0.2s; flex-shrink: 0;
 }
-.md-content :deep(li) { margin-bottom: 2px; }
-.md-content :deep(h1), .md-content :deep(h2), .md-content :deep(h3),
-.md-content :deep(h4), .md-content :deep(h5), .md-content :deep(h6) {
-  color: var(--text-primary); margin: 12px 0 6px 0; font-weight: 600;
+.attach-btn:hover { color: var(--text-primary); border-color: var(--border-hover); background: var(--bg-hover); }
+
+.msg-input {
+  flex: 1; padding: 12px 16px; border-radius: 24px; border: 1px solid var(--border);
+  background: var(--bg-surface); color: var(--text-primary); font-size: 14px;
+  resize: none; max-height: 200px; transition: all 0.2s; box-shadow: var(--shadow-sm);
 }
+.msg-input:focus {
+  outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-muted);
+}
+.send-btn, .stop-btn {
+  width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; border: none; cursor: pointer; transition: all 0.2s; flex-shrink: 0;
+}
+.send-btn { background: var(--accent); color: white; box-shadow: 0 2px 8px rgba(59,130,246,0.4); }
+.send-btn:hover:not(:disabled) { background: var(--accent-hover); transform: scale(1.05); }
+.send-btn:disabled { background: var(--bg-hover); color: var(--text-disabled); box-shadow: none; cursor: not-allowed; }
+.stop-btn { background: var(--bg-surface); border: 1px solid var(--border); color: var(--text-primary); }
+.stop-btn:hover { background: var(--bg-hover); }
+
+/* Typing indicator */
+.typing-indicator {
+  display: flex; align-items: center; gap: 4px; padding: 12px 24px;
+  font-size: 12px; color: var(--text-muted);
+}
+.dot {
+  width: 4px; height: 4px; background: var(--text-muted); border-radius: 50%;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+.dot:nth-child(1) { animation-delay: -0.32s; }
+.dot:nth-child(2) { animation-delay: -0.16s; }
+@keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
 .md-content :deep(h1) { font-size: 16px; }
 .md-content :deep(h2) { font-size: 14px; }
 .md-content :deep(h3) { font-size: 13px; }

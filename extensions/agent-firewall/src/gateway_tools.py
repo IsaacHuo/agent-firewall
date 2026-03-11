@@ -309,9 +309,23 @@ class GatewayToolRegistry:
             "",
         ]
 
+        # Manual overrides for better LLM guidance on complex tools
+        hints = {
+            "message": (
+                "Send/manage messages. Actions: 'send', 'reply', 'react'. "
+                "Required args: `action`, `channel` (e.g. 'telegram', 'feishu'), `target` (chatId/userId), `message` (content)."
+            ),
+            "feishu_doc": (
+                "Create Feishu Docs. Args: `action`='create' (required), `title` (optional), `content` (optional markdown text)."
+            ),
+            "web_fetch": "Fetch URL content. Args: `url` (required).",
+            "browser": "Control browser. Actions: `snapshot` (view page), `navigate` (goto url), `click`, `type`.",
+        }
+
         for name in sorted(self._tools.keys()):
             t = self._tools[name]
-            parts.append(f"- **{name}**: {t.description}")
+            desc = hints.get(name, t.description)
+            parts.append(f"- **{name}**: {desc}")
 
         parts.append("")
         return "\n".join(parts)
