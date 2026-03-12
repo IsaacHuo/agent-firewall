@@ -1278,3 +1278,57 @@ INFO:     127.0.0.1:60934 - "POST /api/chat/send HTTP/1.1" 200 OK
 INFO:     127.0.0.1:60936 - "GET /api/stats HTTP/1.1" 200 OK
 INFO:     127.0.0.1:60964 - "GET /api/stats HTTP/1.1" 200 OK
 INFO:     127.0.0.1:60964 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60975 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60975 - "POST /api/chat/send HTTP/1.1" 200 OK
+2026-03-12T22:28:01 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
+2026-03-12T22:28:02 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:60995 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60995 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61001 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61001 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61001 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61001 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61001 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61001 - "POST /api/chat/send HTTP/1.1" 200 OK
+2026-03-12T22:28:39 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
+INFO:     127.0.0.1:61068 - "GET /api/stats HTTP/1.1" 200 OK
+2026-03-12T22:28:40 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:61068 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61068 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61101 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61143 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61162 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61186 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61186 - "GET /api/logs/stream HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61201 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61201 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61237 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61272 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61288 - "GET /api/stats HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'src/main.py'. Reloading...
+INFO:     Shutting down
+INFO:     connection closed
+2026-03-12T22:32:35 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4527105536 (total: 0)
+INFO:     Waiting for application shutdown.
+2026-03-12T22:32:35 [INFO] agent_firewall.agent_scan: Agent-Scan cache cleared
+2026-03-12T22:32:35 [INFO] agent_firewall.audit: Audit logger stopped, 4 entries written
+2026-03-12T22:32:35 [INFO] agent_firewall.session: Session manager stopped, 0 sessions cleared
+2026-03-12T22:32:35 [INFO] agent_firewall: Agent Firewall shut down gracefully
+INFO:     Application shutdown complete.
+INFO:     Finished server process [92255]
+INFO:     Started server process [94916]
+INFO:     Waiting for application startup.
+2026-03-12T22:32:44 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
+2026-03-12T22:32:44 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
+2026-03-12T22:32:44 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
+2026-03-12T22:32:44 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
+2026-03-12T22:32:44 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
+2026-03-12T22:32:44 [INFO] agent_firewall: JsonlStorage initialized at ./data
+2026-03-12T22:32:45 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
+  in "<unicode string>", line 2, column 125:
+     ... explicit user approval. Triggers: order food, reorder, track ETA.
+                                         ^
+2026-03-12T22:32:45 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
+2026-03-12T22:32:45 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
+2026-03-12T22:32:45 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
+INFO:     Application startup complete.

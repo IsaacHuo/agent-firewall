@@ -1662,6 +1662,35 @@ async def chat_send(request: Request):
                     finish_reason = choices[0].get("finish_reason", "stop")
                     pending_tool_calls = assistant_msg.get("tool_calls", [])
 
+                    # Heuristic: If content is JSON and looks like web search arguments, force it as tool call
+                    # (Minimax sometimes outputs raw JSON instead of tool calls)
+                    content_str = assistant_msg.get("content", "")
+                    if (
+                        not pending_tool_calls 
+                        and content_str 
+                        and content_str.strip().startswith("{") 
+                        and "query" in content_str
+                    ):
+                        try:
+                            parsed = json.loads(content_str)
+                            # Check for common search/gateway tool patterns
+                            if isinstance(parsed, dict) and "query" in parsed:
+                                logger.info("Detected implicit web_search JSON: %s", content_str[:100])
+                                pending_tool_calls = [{
+                                    "id": f"call_{uuid.uuid4().hex[:8]}",
+                                    "function": {
+                                        "name": "invoke_gateway",
+                                        "arguments": json.dumps({
+                                            "tool_name": "web_search",
+                                            "arguments": parsed
+                                        })
+                                    }
+                                }]
+                                # Clear content so we don't output the raw JSON to user
+                                assistant_msg["content"] = None
+                        except Exception:
+                            pass
+
                     if finish_reason == "tool_calls" or pending_tool_calls:
                         chat_body["messages"].append(assistant_msg)
 
