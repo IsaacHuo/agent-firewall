@@ -258,8 +258,10 @@ app.add_middleware(
 
 # Register dataset routes
 from src.routes.dataset import router as dataset_router
+from src.routes.trace import router as trace_router
 
 app.include_router(dataset_router)
+app.include_router(trace_router)
 
 
 def _state(request: Request | None = None) -> AppState:

@@ -29,8 +29,10 @@
           :expanded="expandedMessages.has(index)"
           :selected="selectedMessageIndex === index"
           :highlights="getHighlightsForMessage(index)"
+          :annotations="annotations"
           @toggle="toggleMessage(index)"
           @select="selectMessage(index)"
+          @annotate="handleAnnotate"
         />
       </div>
 
@@ -45,6 +47,45 @@
           class="editor-textarea"
           @input="handleTraceEdit"
         />
+      </div>
+    </div>
+
+    <!-- Annotation Modal -->
+    <div v-if="showAnnotationModal" class="modal-overlay" @click="showAnnotationModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Add Annotation</h3>
+          <button @click="showAnnotationModal = false" class="btn-close">×</button>
+        </div>
+        <div class="modal-body">
+          <div v-if="pendingAnnotation" class="selected-text">
+            <strong>Selected text:</strong>
+            <pre>{{ pendingAnnotation.selection }}</pre>
+          </div>
+          <div class="form-group">
+            <label>Severity</label>
+            <select v-model="annotationSeverity" class="form-select">
+              <option value="info">Info</option>
+              <option value="warning">Warning</option>
+              <option value="error">Error</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Comment</label>
+            <textarea
+              v-model="annotationContent"
+              class="form-textarea"
+              placeholder="Add your comment..."
+              rows="4"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="showAnnotationModal = false" class="btn-secondary">Cancel</button>
+          <button @click="submitAnnotation(annotationSeverity, annotationContent)" class="btn-primary">
+            Add Annotation
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -71,6 +112,15 @@ interface Highlight {
   label?: string
 }
 
+interface Annotation {
+  id: string
+  address: string
+  content: string
+  severity: 'info' | 'warning' | 'error'
+  source: string
+  created_at: string
+}
+
 interface Props {
   trace: Message[]
   highlights?: Record<string, string>
@@ -89,6 +139,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'update:trace': [trace: Message[]]
   'select-message': [index: number]
+  'add-annotation': [address: string, content: string, severity: string]
 }>()
 
 // State
@@ -99,6 +150,11 @@ const allExpanded = ref(false)
 const showEditor = ref(props.editor)
 const editableTrace = ref(JSON.stringify(props.trace, null, 2))
 const messagesContainer = ref<HTMLElement | null>(null)
+const annotations = ref<Annotation[]>([])
+const showAnnotationModal = ref(false)
+const pendingAnnotation = ref<{ address: string; selection: string } | null>(null)
+const annotationSeverity = ref<'info' | 'warning' | 'error'>('info')
+const annotationContent = ref('')
 
 // Watch for trace changes
 watch(() => props.trace, (newTrace) => {
@@ -166,7 +222,57 @@ onMounted(() => {
   if (messages.value.length > 0) {
     expandedMessages.value.add(0)
   }
+
+  // Fetch annotations if traceId is provided
+  if (props.traceId) {
+    fetchAnnotations()
+  }
 })
+
+// Fetch annotations
+async function fetchAnnotations() {
+  if (!props.traceId) return
+
+  try {
+    const response = await fetch(`/api/v1/trace/${props.traceId}/annotations`)
+    if (response.ok) {
+      annotations.value = await response.json()
+    }
+  } catch (error) {
+    console.error('Failed to fetch annotations:', error)
+  }
+}
+
+// Handle annotation creation
+function handleAnnotate(address: string, selection: string) {
+  pendingAnnotation.value = { address, selection }
+  showAnnotationModal.value = true
+}
+
+async function submitAnnotation(severity: string, content: string) {
+  if (!props.traceId || !pendingAnnotation.value) return
+
+  try {
+    const response = await fetch(`/api/v1/trace/${props.traceId}/annotate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        address: pendingAnnotation.value.address,
+        content,
+        severity
+      })
+    })
+
+    if (response.ok) {
+      const newAnnotation = await response.json()
+      annotations.value.push(newAnnotation)
+      showAnnotationModal.value = false
+      pendingAnnotation.value = null
+    }
+  } catch (error) {
+    console.error('Failed to create annotation:', error)
+  }
+}
 </script>
 
 <style scoped>
@@ -281,5 +387,143 @@ onMounted(() => {
 
 .editor-textarea:focus {
   outline: none;
+}
+
+/* Annotation Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--bg-primary, #ffffff);
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #333);
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.selected-text {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: var(--bg-code, #f8f8f8);
+  border-radius: 4px;
+  border-left: 3px solid var(--primary-color, #007bff);
+}
+
+.selected-text strong {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text-secondary, #666);
+}
+
+.selected-text pre {
+  margin: 0;
+  font-family: monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text-primary, #333);
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary, #333);
+}
+
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #333);
+}
+
+.form-select:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--primary-color, #007bff);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--primary-color, #007bff);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+.btn-secondary {
+  background: var(--bg-secondary, #f5f5f5);
+  color: var(--text-primary, #333);
+}
+
+.btn-secondary:hover {
+  background: #e8e8e8;
 }
 </style>

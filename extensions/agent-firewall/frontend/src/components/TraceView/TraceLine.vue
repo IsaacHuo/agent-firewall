@@ -34,12 +34,17 @@
       <div v-if="message.tool_call_id" class="tool-call-id-badge">
         ↩ {{ message.tool_call_id }}
       </div>
+
+      <!-- Annotations Badge -->
+      <div v-if="messageAnnotations.length > 0" class="annotations-badge">
+        📝 {{ messageAnnotations.length }} annotation(s)
+      </div>
     </div>
 
     <!-- Line Content (when expanded) -->
     <div v-if="expanded" class="trace-line-content">
       <!-- Text Content -->
-      <div v-if="contentText" class="content-text">
+      <div v-if="contentText" class="content-text" @mouseup="handleTextSelection">
         <CodeHighlighter
           :content="contentText"
           :highlights="highlights"
@@ -73,6 +78,32 @@
               language="json"
               :address="`messages[${index}].tool_calls[${tcIndex}].function.arguments`"
             />
+          </div>
+        </div>
+      </div>
+
+      <!-- Annotations Section -->
+      <div v-if="messageAnnotations.length > 0" class="annotations-section">
+        <div class="annotations-header">
+          <span class="annotations-title">📝 Annotations</span>
+        </div>
+        <div
+          v-for="annotation in messageAnnotations"
+          :key="annotation.id"
+          class="annotation-item"
+          :class="`severity-${annotation.severity}`"
+        >
+          <div class="annotation-header">
+            <span class="annotation-icon">{{ getSeverityIcon(annotation.severity) }}</span>
+            <span class="annotation-severity">{{ annotation.severity }}</span>
+            <span class="annotation-source">{{ annotation.source }}</span>
+            <span class="annotation-time">{{ new Date(annotation.created_at).toLocaleString() }}</span>
+          </div>
+          <div class="annotation-content">
+            {{ annotation.content }}
+          </div>
+          <div class="annotation-address">
+            <code>{{ annotation.address }}</code>
           </div>
         </div>
       </div>
@@ -115,24 +146,43 @@ interface Highlight {
   label?: string
 }
 
+interface Annotation {
+  id: string
+  address: string
+  content: string
+  severity: 'info' | 'warning' | 'error'
+  source: string
+  created_at: string
+}
+
 interface Props {
   message: Message
   index: number
   expanded: boolean
   selected: boolean
   highlights: Highlight[]
+  annotations?: Annotation[]
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  annotations: () => []
+})
 
 const emit = defineEmits<{
   toggle: []
   select: []
+  annotate: [address: string, selection: string]
 }>()
 
 // Computed
 const hasToolCalls = computed(() => {
   return props.message.tool_calls && props.message.tool_calls.length > 0
+})
+
+const messageAnnotations = computed(() => {
+  return props.annotations.filter(ann =>
+    ann.address.startsWith(`messages[${props.index}]`)
+  )
 })
 
 const contentText = computed(() => {
@@ -167,6 +217,33 @@ function getRoleIcon(role: string): string {
 
 function handleClick() {
   emit('select')
+}
+
+function handleTextSelection() {
+  const selection = window.getSelection()
+  if (selection && selection.toString().trim()) {
+    const selectedText = selection.toString()
+    const address = `messages[${props.index}].content`
+    emit('annotate', address, selectedText)
+  }
+}
+
+function getSeverityColor(severity: string): string {
+  const colors: Record<string, string> = {
+    info: '#3b82f6',
+    warning: '#f59e0b',
+    error: '#ef4444'
+  }
+  return colors[severity] || '#6b7280'
+}
+
+function getSeverityIcon(severity: string): string {
+  const icons: Record<string, string> = {
+    info: 'ℹ️',
+    warning: '⚠️',
+    error: '❌'
+  }
+  return icons[severity] || '📝'
 }
 </script>
 
@@ -230,7 +307,8 @@ function handleClick() {
 }
 
 .tool-calls-badge,
-.tool-call-id-badge {
+.tool-call-id-badge,
+.annotations-badge {
   padding: 2px 8px;
   border-radius: 12px;
   font-size: 11px;
@@ -243,6 +321,11 @@ function handleClick() {
   background: var(--badge-bg-alt, #f0f0f0);
   color: var(--text-secondary, #666);
   font-family: monospace;
+}
+
+.annotations-badge {
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .trace-line-content {
@@ -339,5 +422,113 @@ function handleClick() {
 
 .role-tool .trace-line-header {
   background: linear-gradient(to right, rgba(139, 92, 246, 0.05), transparent);
+}
+
+/* Annotations Section */
+.annotations-section {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-secondary, #f5f5f5);
+  border-radius: 4px;
+  border-left: 3px solid #f59e0b;
+}
+
+.annotations-header {
+  margin-bottom: 12px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary, #333);
+}
+
+.annotations-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.annotation-item {
+  margin-bottom: 12px;
+  padding: 10px;
+  background: var(--bg-primary, #ffffff);
+  border-radius: 4px;
+  border-left: 3px solid #6b7280;
+}
+
+.annotation-item:last-child {
+  margin-bottom: 0;
+}
+
+.annotation-item.severity-info {
+  border-left-color: #3b82f6;
+}
+
+.annotation-item.severity-warning {
+  border-left-color: #f59e0b;
+}
+
+.annotation-item.severity-error {
+  border-left-color: #ef4444;
+}
+
+.annotation-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.annotation-icon {
+  font-size: 14px;
+}
+
+.annotation-severity {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg-secondary, #f5f5f5);
+}
+
+.annotation-source {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-secondary, #666);
+  padding: 2px 6px;
+  background: var(--bg-secondary, #f5f5f5);
+  border-radius: 4px;
+}
+
+.annotation-time {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-secondary, #666);
+}
+
+.annotation-content {
+  margin-bottom: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary, #333);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.annotation-address {
+  font-size: 11px;
+  color: var(--text-secondary, #666);
+}
+
+.annotation-address code {
+  font-family: monospace;
+  background: var(--bg-code, #f8f8f8);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.content-text {
+  cursor: text;
+  user-select: text;
 }
 </style>
