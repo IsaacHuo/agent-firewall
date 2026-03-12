@@ -1805,6 +1805,76 @@ async def test_analyze(request: Request) -> dict[str, Any]:
     }
 
 
+# ── Policy Evaluation API ─────────────────────────────────────────
+
+
+@app.post("/api/v1/policy/evaluate")
+async def evaluate_policy(request: Request):
+    """
+    Evaluate a policy against a trace.
+
+    Request body:
+    {
+        "policy": "raise \"High risk\" if: threat_level >= \"HIGH\"",
+        "trace": {
+            "messages": [...],
+            "analysis": {
+                "verdict": "ALLOW",
+                "threat_level": "LOW",
+                "l1_result": {...},
+                "l2_result": {...}
+            }
+        }
+    }
+
+    Returns:
+    {
+        "passed": true/false,
+        "message": "...",
+        "details": {...}
+    }
+    """
+    from src.engine.policy_dsl import PolicyEngine
+
+    try:
+        body = await request.json()
+        policy_code = body.get("policy", "")
+        trace = body.get("trace", {})
+
+        # Build evaluation context from trace
+        analysis = trace.get("analysis", {})
+        context = {
+            "threat_level": analysis.get("threat_level", "LOW"),
+            "verdict": analysis.get("verdict", "ALLOW"),
+            "l1_result": analysis.get("l1_result", {}),
+            "l2_result": analysis.get("l2_result", {}),
+            "messages": trace.get("messages", []),
+            "tool_calls": [],
+        }
+
+        # Extract tool calls from messages
+        for msg in context["messages"]:
+            if msg.get("tool_calls"):
+                context["tool_calls"].extend(msg["tool_calls"])
+
+        # Evaluate policy
+        engine = PolicyEngine()
+        result = await engine.evaluate(policy_code, context)
+
+        return {
+            "passed": result.passed,
+            "message": result.message,
+            "details": result.details,
+            "error": result.error,
+        }
+
+    except Exception as e:
+        logger.error(f"Policy evaluation error: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=500, content={"error": str(e), "passed": True}
+        )
+
+
 # ── Logging config ───────────────────────────────────────────────
 
 logging.basicConfig(
