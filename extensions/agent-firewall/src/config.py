@@ -107,3 +107,14 @@ class FirewallConfig:
     feishu_upstream_url: str = field(
         default_factory=lambda: os.getenv("AF_FEISHU_UPSTREAM_URL", "https://openrouter.ai/api/v1")
     )
+
+    # ── Storage (Phase 1) ────────────────────────────────────────────
+    storage_backend: str = field(
+        default_factory=lambda: os.getenv("AF_STORAGE_BACKEND", "jsonl")  # "jsonl" | "sqlite"
+    )
+    storage_path: str = field(
+        default_factory=lambda: os.getenv("AF_STORAGE_PATH", "./data")
+    )
+    # For SQLite: full path to database file
+    # For JSONL: directory containing *.jsonl files
+

@@ -213,3 +213,104 @@ class DashboardEvent(BaseModel):
 
     def to_bytes(self) -> bytes:
         return orjson.dumps(self.model_dump(exclude_none=True))
+
+
+# ────────────────────────────────────────────────────────────────────
+# Storage Models (Phase 1)
+# ────────────────────────────────────────────────────────────────────
+
+
+class Trace(BaseModel):
+    """
+    Complete trace of a single MCP request-response cycle.
+
+    A trace captures the full lifecycle of a request:
+    - Original JSON-RPC request
+    - Analysis results (L1, L2, Agent-Scan)
+    - Verdict and policy decision
+    - Response (if any)
+    - Metadata (session, timing, etc.)
+    """
+
+    id: str = Field(default_factory=lambda: uuid.uuid4().hex)
+    session_id: str
+    agent_id: str = ""
+    method: str
+    params: Any = None
+    analysis: AnalysisResult
+    verdict: Verdict
+    response: JsonRpcResponse | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: float = Field(default_factory=time.time)
+
+
+class Dataset(BaseModel):
+    """
+    Collection of traces for analysis and policy testing.
+
+    Datasets organize traces into logical groups for:
+    - Policy development and testing
+    - Security analysis
+    - Compliance auditing
+    - Training and documentation
+    """
+
+    id: str = Field(default_factory=lambda: uuid.uuid4().hex)
+    name: str
+    description: str = ""
+    is_public: bool = False
+    traces: list[str] = Field(default_factory=list)  # List of trace IDs
+    policies: list[str] = Field(default_factory=list)  # List of policy IDs
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: float = Field(default_factory=time.time)
+    updated_at: float = Field(default_factory=time.time)
+
+
+class Annotation(BaseModel):
+    """
+    Address-based annotation on a trace.
+
+    Annotations allow users to add notes, highlights, and comments
+    to specific parts of a trace. The address field uses a path-like
+    syntax to reference specific locations:
+
+    Examples:
+        "messages.0.content:10-20"  # Characters 10-20 in first message
+        "analysis.l1_matched_patterns"  # L1 analysis results
+        "request.params.arguments"  # Tool call arguments
+    """
+
+    id: str = Field(default_factory=lambda: uuid.uuid4().hex)
+    trace_id: str
+    address: str  # Path to the annotated element
+    content: str  # Annotation text
+    severity: str = "info"  # "info" | "warning" | "error"
+    source: str = "user"  # "user" | "l1" | "l2" | "policy" | "agent_scan"
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: float = Field(default_factory=time.time)
+
+
+class Policy(BaseModel):
+    """
+    Security policy definition.
+
+    Policies define rules for analyzing and filtering MCP traffic.
+    They can be written in a simple DSL or Python code.
+
+    Example DSL:
+        raise "High risk detected" if:
+            threat_level >= "HIGH"
+
+        raise "Dangerous tool call" if:
+            tool_call.name in ["execute_code", "file_write"]
+    """
+
+    id: str = Field(default_factory=lambda: uuid.uuid4().hex)
+    name: str
+    description: str = ""
+    code: str  # Policy code (DSL or Python)
+    enabled: bool = True
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: float = Field(default_factory=time.time)
+    updated_at: float = Field(default_factory=time.time)
+
