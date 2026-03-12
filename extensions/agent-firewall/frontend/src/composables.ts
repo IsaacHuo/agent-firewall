@@ -934,3 +934,7 @@ export function useCustomConfig() {
     deleteCustomSkill,
   };
 }
+
+// ── Toast Notifications ─────────────────────────────────────────────
+
+export { useToast } from "./composables/useToast";

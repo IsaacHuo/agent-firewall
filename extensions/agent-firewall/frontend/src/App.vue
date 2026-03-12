@@ -131,6 +131,9 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Toast Notifications -->
+    <Toast ref="toastRef" />
   </div>
 </template>
 
@@ -139,7 +142,7 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import type { FirewallConfig, PatternRule, TestPayload, RuleAction, RateLimitConfig, NavSection } from './types'
 import {
   useWebSocket, useStats, useConfig, useRules, useSecurityTest,
-  useAuditLog, useNavigation, useTheme, useGateway,
+  useAuditLog, useNavigation, useTheme, useGateway, useToast,
 } from './composables'
 
 import AuditLog from './components/AuditLog.vue'
@@ -147,6 +150,7 @@ import ChatLab from './components/ChatLab.vue'
 import SkillsManager from './components/SkillsManager.vue'
 import AgentsManager from './components/AgentsManager.vue'
 import GatewayConfig from './components/GatewayConfig.vue'
+import Toast from './components/common/Toast.vue'
 import FeishuConfig from './components/FeishuConfig.vue'
 import TrafficWaterfall from './components/TrafficWaterfall.vue'
 import RulesConfig from './components/RulesConfig.vue'
@@ -181,11 +185,13 @@ const { results: testResults, running: testRunning, runTest, runBatch, clearResu
 const { entries: auditEntries, loading: auditLoading, hasMore: auditHasMore, loadEntries: loadAuditEntries, loadMore: loadMoreAudit } = useAuditLog()
 const { currentSection, navigateTo } = useNavigation()
 const { theme, toggleTheme } = useTheme()
+const { setToastRef } = useToast()
 
 const showTraffic = ref(true)
 const showCommandPalette = ref(false)
 const cmdQuery = ref('')
 const cmdInput = ref<HTMLInputElement | null>(null)
+const toastRef = ref<any>(null)
 
 const navItems = computed(() => [
   { id: 'chat' as const, label: 'Chat Lab', icon: icons.chat, group: 'main', primary: true },
@@ -247,6 +253,11 @@ onMounted(() => {
   loadConfig()
   loadRules()
   loadAuditEntries({ limit: 50 })
+
+  // Initialize toast
+  if (toastRef.value) {
+    setToastRef(toastRef.value)
+  }
 })
 onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
 
