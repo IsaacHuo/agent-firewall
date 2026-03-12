@@ -256,6 +256,11 @@ app.add_middleware(
     expose_headers=["*"],
 )
 
+# Register dataset routes
+from src.routes.dataset import router as dataset_router
+
+app.include_router(dataset_router)
+
 
 def _state(request: Request | None = None) -> AppState:
     """Extract AppState from the ASGI app."""
