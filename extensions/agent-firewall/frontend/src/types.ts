@@ -198,6 +198,7 @@ export type NavSection =
   | "skills"
   | "agents"
   | "feishu"
+  | "integrations"
   | "gateway-config";
 
 // ── Gateway Types (for Skills / Agents / Config) ────────────────────

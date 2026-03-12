@@ -27,12 +27,6 @@ Usage:
 from .base import StorageBackend
 from .jsonl import JsonlStorage
 
-# SQLite is optional (requires aiosqlite)
-try:
-    from .sqlite import SqliteStorage
-except ImportError:
-    SqliteStorage = None  # type: ignore
-
 
 def get_storage_backend(
     backend: str = "jsonl",
@@ -43,8 +37,8 @@ def get_storage_backend(
     Factory function to create storage backend instances.
 
     Args:
-        backend: "jsonl" or "sqlite"
-        path: Path to storage (directory for jsonl, db file for sqlite)
+        backend: "jsonl"
+        path: Path to storage (directory for jsonl)
         **kwargs: Backend-specific configuration
 
     Returns:
@@ -53,32 +47,18 @@ def get_storage_backend(
     Examples:
         # JSONL backend
         storage = get_storage_backend("jsonl", path="./data")
-
-        # SQLite backend
-        storage = get_storage_backend("sqlite", path="./data/firewall.db")
     """
     if backend == "jsonl":
         return JsonlStorage(data_dir=path, **kwargs)
-    elif backend == "sqlite":
-        if SqliteStorage is None:
-            raise ImportError(
-                "SQLite backend requires aiosqlite. "
-                "Install it with: pip install aiosqlite"
-            )
-        
-        # If path is a directory (e.g. default "./data"), append filename
-        import os
-        if os.path.isdir(path):
-            path = os.path.join(path, "firewall.db")
-            
-        return SqliteStorage(db_path=path, **kwargs)
     else:
-        raise ValueError(f"Unknown storage backend: {backend}")
+        # Fallback to jsonl for now if unknown, or raise error?
+        # Given "no more sqlite", treating anything else as error or default to jsonl seems fine.
+        # But let's stick to the current pattern but remove sqlite branch.
+        raise ValueError(f"Unknown storage backend: {backend}. Only 'jsonl' is supported.")
 
 
 __all__ = [
     "StorageBackend",
     "JsonlStorage",
-    "SqliteStorage",
     "get_storage_backend",
 ]

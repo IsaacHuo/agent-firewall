@@ -1,14 +1,32 @@
 <template>
   <div class="playground">
-    <!-- Three-column layout -->
+    <header class="playground-header">
+      <div class="header-main">
+        <h2>Policy Playground</h2>
+        <p class="subtitle">Test and debug your security policies against trace data</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-evaluate" @click="evaluatePolicy" :disabled="evaluating">
+          <span v-if="evaluating" class="spinner-sm"></span>
+          <span v-else>▶ Evaluate Policy</span>
+        </button>
+      </div>
+    </header>
+
     <div class="playground-layout">
-      <!-- Left: Trace View -->
-      <div class="playground-column trace-column">
-        <div class="column-header">
-          <h3>Trace</h3>
-          <button @click="loadSampleTrace" class="btn-secondary">Load Sample</button>
+      <!-- Left: Trace Viewer -->
+      <div class="panel trace-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="icon">📜</span>
+            Trace Data
+          </div>
+          <div class="panel-actions">
+            <button class="btn-sm" @click="loadSampleTrace">Load Sample</button>
+            <button class="btn-sm" @click="clearTrace">Clear</button>
+          </div>
         </div>
-        <div class="column-content">
+        <div class="panel-content">
           <TraceView
             v-if="trace.length > 0"
             :trace="trace"
@@ -17,111 +35,90 @@
             @update:trace="handleTraceUpdate"
           />
           <div v-else class="empty-state">
+            <div class="empty-icon">📜</div>
             <p>No trace loaded</p>
-            <button @click="loadSampleTrace" class="btn-primary">Load Sample Trace</button>
+            <button @click="loadSampleTrace" class="btn-primary-sm">Load Sample Trace</button>
           </div>
         </div>
       </div>
 
       <!-- Middle: Policy Editor -->
-      <div class="playground-column policy-column">
-        <div class="column-header">
-          <h3>Policy</h3>
-          <div class="header-actions">
-            <button @click="loadSamplePolicy" class="btn-secondary">Load Sample</button>
-            <button @click="evaluatePolicy" class="btn-primary" :disabled="evaluating">
-              {{ evaluating ? 'Evaluating...' : 'Evaluate' }}
-            </button>
+      <div class="panel policy-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="icon">🛡️</span>
+            Policy Rules
+          </div>
+          <div class="panel-actions">
+            <button class="btn-sm" @click="loadSamplePolicy">Load Template</button>
           </div>
         </div>
-        <div class="column-content">
-          <textarea
-            v-model="policyCode"
-            class="policy-editor"
-            placeholder='Enter policy code, e.g.:
-
-raise "High risk detected" if:
-    threat_level >= "HIGH"'
-            spellcheck="false"
-          />
-          <div class="policy-help">
+        <div class="panel-content no-padding">
+          <div class="editor-wrapper">
+            <textarea
+              v-model="policyCode"
+              class="policy-editor"
+              placeholder="# Enter your policy rules here...
+raise 'High risk detected' if:
+    threat_level >= 'HIGH'"
+              spellcheck="false"
+            />
+          </div>
+          <div class="policy-help-bar">
             <details>
-              <summary>Policy Syntax Help</summary>
-              <div class="help-content">
-                <h4>Basic Syntax</h4>
-                <pre>raise "message" if:
-    condition</pre>
-
-                <h4>Available Variables</h4>
+              <summary>Syntax Reference</summary>
+              <div class="help-popup">
+                <h4>Variables</h4>
                 <ul>
-                  <li><code>threat_level</code> - LOW, MEDIUM, HIGH, CRITICAL</li>
-                  <li><code>verdict</code> - ALLOW, BLOCK, ESCALATE</li>
-                  <li><code>l1_result.patterns_found</code> - List of matched patterns</li>
-                  <li><code>l2_result.is_injection</code> - Boolean</li>
-                  <li><code>l2_result.confidence</code> - Float 0-1</li>
-                  <li><code>tool_calls[0].function.name</code> - Tool name</li>
+                  <li><code>threat_level</code> (LOW..CRITICAL)</li>
+                  <li><code>verdict</code> (ALLOW..BLOCK)</li>
+                  <li><code>tool_calls[i].function.name</code></li>
+                  <li><code>l2_result.is_injection</code></li>
                 </ul>
-
-                <h4>Operators</h4>
-                <ul>
-                  <li>Comparison: <code>==</code>, <code>!=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code></li>
-                  <li>Logical: <code>and</code>, <code>or</code>, <code>not</code></li>
-                  <li>Membership: <code>in</code>, <code>not in</code></li>
-                </ul>
-
                 <h4>Examples</h4>
-                <pre># Block high-risk requests
-raise "High risk" if:
-    threat_level >= "HIGH"
-
-# Block dangerous tools
-raise "Dangerous tool" if:
-    tool_calls[0].function.name in ["execute_code", "file_write"]
-
-# Block prompt injection
-raise "Injection detected" if:
-    l2_result.is_injection and l2_result.confidence >= 0.8</pre>
+                <pre>raise "No shell" if:
+  tool_calls[0].function.name == "exec"</pre>
               </div>
             </details>
           </div>
         </div>
       </div>
 
-      <!-- Right: Results -->
-      <div class="playground-column results-column">
-        <div class="column-header">
-          <h3>Results</h3>
-          <button v-if="result" @click="clearResult" class="btn-secondary">Clear</button>
+      <!-- Right: Evaluation Results -->
+      <div class="panel results-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="icon">📊</span>
+            Evaluation Result
+          </div>
+          <button v-if="result" @click="clearResult" class="btn-sm">Clear</button>
         </div>
-        <div class="column-content">
-          <div v-if="result" class="result-display">
-            <div class="result-status" :class="result.passed ? 'passed' : 'failed'">
-              <div class="status-icon">
-                {{ result.passed ? '✓' : '✗' }}
-              </div>
-              <div class="status-text">
-                {{ result.passed ? 'Policy Passed' : 'Policy Violated' }}
-              </div>
+        <div class="panel-content">
+          <div v-if="result" class="result-card" :class="result.passed ? 'pass' : 'fail'">
+            <div class="result-header">
+              <span class="result-icon">{{ result.passed ? '✅' : '🚫' }}</span>
+              <span class="result-verdict">{{ result.passed ? 'PASSED' : 'VIOLATION' }}</span>
             </div>
-
+            
             <div v-if="result.message" class="result-message">
-              <h4>Message</h4>
-              <p>{{ result.message }}</p>
+              {{ result.message }}
             </div>
 
             <div v-if="result.error" class="result-error">
-              <h4>Error</h4>
-              <pre>{{ result.error }}</pre>
+              <span class="error-label">Error:</span>
+              <code>{{ result.error }}</code>
             </div>
 
             <div v-if="result.details" class="result-details">
-              <h4>Details</h4>
+              <span class="details-label">Debug Details:</span>
               <pre>{{ JSON.stringify(result.details, null, 2) }}</pre>
             </div>
           </div>
+          
           <div v-else class="empty-state">
-            <p>No results yet</p>
-            <p class="hint">Click "Evaluate" to test your policy</p>
+            <div class="empty-icon">⚡</div>
+            <p>Ready to evaluate</p>
+            <span class="hint">Define trace & policy, then click Evaluate</span>
           </div>
         </div>
       </div>
@@ -131,7 +128,7 @@ raise "Injection detected" if:
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { TraceView } from './TraceView'
+import TraceView from './TraceView/TraceView.vue'
 import type { TraceMessage } from './TraceView/types'
 
 // State
@@ -173,9 +170,19 @@ function loadSampleTrace() {
   ]
 }
 
+function clearTrace() {
+  trace.value = []
+  highlights.value = {}
+}
+
 function loadSamplePolicy() {
-  policyCode.value = `raise "Dangerous tool call detected" if:
-    tool_calls[0].function.name in ["execute_code", "file_write", "shell_exec"]`
+  policyCode.value = `# Block dangerous code execution tools
+raise "Dangerous tool call detected" if:
+    tool_calls[0].function.name in ["execute_code", "file_write", "shell_exec"]
+
+# Prevent high confidence injections
+raise "Injection detected" if:
+    l2_result.is_injection and l2_result.confidence > 0.8`
 }
 
 function handleTraceUpdate(newTrace: TraceMessage[]) {
@@ -197,7 +204,7 @@ async function evaluatePolicy() {
   result.value = null
 
   try {
-    // Build trace with mock analysis
+    // Build trace with mock analysis context for playground
     const traceWithAnalysis = {
       messages: trace.value,
       analysis: {
@@ -235,7 +242,7 @@ async function evaluatePolicy() {
     // Highlight violated messages
     if (!result.value.passed && result.value.details) {
       highlights.value = {
-        'messages[1]': '#ff6b6b',
+        'messages[1]': '#ff6b6b', // Simple heuristic for demo
       }
     } else {
       highlights.value = {}
@@ -260,261 +267,296 @@ function clearResult() {
 
 <style scoped>
 .playground {
+  display: flex;
+  flex-direction: column;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-primary, #ffffff);
+  background: var(--bg-primary);
+  color: var(--text-primary);
 }
 
-.playground-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 1px;
-  flex: 1;
-  background: var(--border-color, #e0e0e0);
-  overflow: hidden;
-}
-
-.playground-column {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg-primary, #ffffff);
-  overflow: hidden;
-}
-
-.column-header {
+.playground-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid var(--border-color, #e0e0e0);
-  background: var(--bg-secondary, #f5f5f5);
 }
 
-.column-header h3 {
+.header-main h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 13px;
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary, #333);
 }
 
-.header-actions {
+.btn-evaluate {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.column-content {
-  flex: 1;
-  overflow: auto;
-  padding: 16px;
+.btn-evaluate:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
-.btn-primary,
-.btn-secondary {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-primary {
-  background: var(--primary-color, #007bff);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--primary-hover, #0056b3);
-}
-
-.btn-primary:disabled {
+.btn-evaluate:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.btn-secondary {
-  background: transparent;
-  color: var(--text-primary, #333);
-  border: 1px solid var(--border-color, #e0e0e0);
+.playground-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  overflow: hidden;
 }
 
-.btn-secondary:hover {
-  background: var(--bg-hover, #e8e8e8);
+.panel {
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
+.panel-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elevated);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  position: relative;
+}
+
+.panel-content.no-padding {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-sm:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-primary-sm {
+  padding: 6px 12px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* Empty State */
 .empty-state {
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  color: var(--text-secondary, #666);
+  color: var(--text-dim);
   text-align: center;
 }
 
-.empty-state p {
-  margin: 8px 0;
+.empty-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  opacity: 0.5;
 }
 
-.empty-state .hint {
-  font-size: 13px;
-  font-style: italic;
+.empty-state p {
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.hint {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* Policy Editor */
+.editor-wrapper {
+  flex: 1;
+  position: relative;
 }
 
 .policy-editor {
   width: 100%;
-  height: calc(100% - 120px);
+  height: 100%;
+  border: none;
+  resize: none;
   padding: 16px;
-  border: 1px solid var(--border-color, #e0e0e0);
-  border-radius: 6px;
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 13px;
   line-height: 1.6;
-  resize: none;
-  background: var(--bg-code, #f8f8f8);
-  color: var(--text-primary, #333);
-}
-
-.policy-editor:focus {
+  background: var(--bg-primary);
+  color: var(--text-primary);
   outline: none;
-  border-color: var(--primary-color, #007bff);
 }
 
-.policy-help {
-  margin-top: 16px;
-}
-
-.policy-help details {
-  border: 1px solid var(--border-color, #e0e0e0);
-  border-radius: 6px;
-  padding: 12px;
-  background: var(--bg-secondary, #f5f5f5);
-}
-
-.policy-help summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--text-primary, #333);
-  user-select: none;
-}
-
-.policy-help summary:hover {
-  color: var(--primary-color, #007bff);
-}
-
-.help-content {
-  margin-top: 12px;
-  font-size: 13px;
-}
-
-.help-content h4 {
-  margin: 16px 0 8px 0;
-  font-size: 14px;
-  color: var(--text-primary, #333);
-}
-
-.help-content ul {
-  margin: 8px 0;
-  padding-left: 24px;
-}
-
-.help-content li {
-  margin: 4px 0;
-}
-
-.help-content code {
-  padding: 2px 6px;
-  background: var(--bg-code, #f8f8f8);
-  border-radius: 3px;
-  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+.policy-help-bar {
+  padding: 8px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elevated);
   font-size: 12px;
 }
 
-.help-content pre {
-  margin: 8px 0;
+.help-popup {
+  margin-top: 8px;
   padding: 12px;
-  background: var(--bg-code, #f8f8f8);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.help-popup h4 {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.help-popup ul {
+  margin: 0 0 12px 0;
+  padding-left: 20px;
+}
+
+.help-popup pre {
+  background: var(--bg-elevated);
+  padding: 8px;
   border-radius: 4px;
-  overflow-x: auto;
-  font-size: 12px;
-  line-height: 1.5;
+  margin: 0;
 }
 
-.result-display {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+/* Results */
+.result-card {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.result-status {
+.result-card.pass {
+  background: rgba(16, 185, 129, 0.05);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.result-card.fail {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.result-header {
+  padding: 16px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
-  border-radius: 8px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.result-icon {
+  font-size: 24px;
+}
+
+.result-verdict {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
-.result-status.passed {
-  background: rgba(16, 185, 129, 0.1);
-  color: #059669;
-  border: 2px solid #10b981;
+.pass .result-verdict { color: #10b981; }
+.fail .result-verdict { color: #ef4444; }
+
+.result-message {
+  padding: 16px;
+  font-weight: 500;
 }
 
-.result-status.failed {
-  background: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
-  border: 2px solid #ef4444;
-}
-
-.status-icon {
-  font-size: 32px;
-  line-height: 1;
-}
-
-.result-message,
 .result-error,
 .result-details {
-  padding: 16px;
-  border-radius: 6px;
-  background: var(--bg-secondary, #f5f5f5);
+  padding: 12px 16px;
+  background: rgba(0,0,0,0.03);
+  border-top: 1px solid rgba(0,0,0,0.05);
+  font-size: 12px;
 }
 
-.result-message h4,
-.result-error h4,
-.result-details h4 {
-  margin: 0 0 8px 0;
-  font-size: 14px;
+.error-label,
+.details-label {
+  display: block;
   font-weight: 600;
-  color: var(--text-primary, #333);
+  margin-bottom: 4px;
+  color: var(--text-secondary);
 }
 
-.result-message p {
-  margin: 0;
-  color: var(--text-primary, #333);
+.result-error code {
+  color: #ef4444;
+  font-family: monospace;
 }
 
-.result-error pre,
 .result-details pre {
   margin: 0;
-  padding: 12px;
-  background: var(--bg-code, #f8f8f8);
-  border-radius: 4px;
-  overflow-x: auto;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--text-primary, #333);
+  white-space: pre-wrap;
+  color: var(--text-dim);
 }
 
-.result-error {
-  background: rgba(239, 68, 68, 0.05);
-  border: 1px solid #ef4444;
+/* Spinner */
+.spinner-sm {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
-.result-error h4 {
-  color: #dc2626;
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>

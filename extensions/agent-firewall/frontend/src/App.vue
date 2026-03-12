@@ -80,14 +80,12 @@
           <SchematicDiagram v-if="currentSection === 'schematic'" />
           <RulesConfig v-if="currentSection === 'rules'" :rules="rulesData" @save="handleSaveRule" @delete="handleDeleteRule" @toggle="handleToggleRule" @updateMethodAction="handleUpdateMethodAction" @updateDefaultAction="(a: string) => handleUpdateDefaultAction(a as RuleAction)" />
           <EngineSettings v-if="currentSection === 'engine'" :config="config" :saving="configSaving" @save="handleSaveConfig" />
-          <RateLimitSettings v-if="currentSection === 'rate-limit'" :config="config?.rate_limit ?? { requests_per_sec: 10, burst: 20 }" @save="handleSaveRateLimit" />
           <SecurityTest v-if="currentSection === 'test'" :results="testResults" :running="testRunning" @run="handleRunTest" @runAll="handleRunAllTests" @clear="clearTestResults" />
           <AuditLog v-if="currentSection === 'audit'" :entries="auditEntries" :loading="auditLoading" :hasMore="auditHasMore" @load="handleLoadAudit" @loadMore="handleLoadMoreAudit" />
           <Playground v-if="currentSection === 'playground'" />
           <DatasetList v-if="currentSection === 'datasets'" />
           <TracesPage v-if="currentSection === 'traces'" />
-          <SkillsManager v-if="currentSection === 'skills'" />
-          <AgentsManager v-if="currentSection === 'agents'" />
+          <IntegrationsPage v-if="currentSection === 'integrations'" />
           <FeishuConfig v-if="currentSection === 'feishu'" />
           <GatewayConfig v-if="currentSection === 'gateway-config'" />
         </div>
@@ -150,8 +148,7 @@ import {
 
 import AuditLog from './components/AuditLog.vue'
 import ChatLab from './components/ChatLab.vue'
-import SkillsManager from './components/SkillsManager.vue'
-import AgentsManager from './components/AgentsManager.vue'
+import IntegrationsPage from './components/IntegrationsPage.vue'
 import GatewayConfig from './components/GatewayConfig.vue'
 import Toast from './components/common/Toast.vue'
 import FeishuConfig from './components/FeishuConfig.vue'
@@ -202,22 +199,28 @@ const cmdQuery = ref('')
 const cmdInput = ref<HTMLInputElement | null>(null)
 const toastRef = ref<any>(null)
 
+interface NavItem {
+  id: NavSection
+  label: string
+  icon: string
+  group: string
+  primary?: boolean
+  separator?: boolean
+  badge?: string
+  badgeType?: string
+}
+
 const navItems = computed(() => [
-  { id: 'chat' as const, label: 'Chat Lab', icon: icons.chat, group: 'main', primary: true },
-  { id: 'schematic' as const, label: '架构示意图', icon: icons.schematic, group: 'main' },
-  { id: 'rules' as const, label: 'Rules', icon: icons.rules, group: 'security', separator: true },
-  { id: 'engine' as const, label: 'Engine', icon: icons.engine, group: 'security' },
-  { id: 'rate-limit' as const, label: 'Rate Limit', icon: icons.rateLimit, group: 'security' },
-  { id: 'test' as const, label: 'Security Test', icon: icons.test, group: 'security' },
-  { id: 'audit' as const, label: 'Audit Log', icon: icons.audit, group: 'security', badge: stats.value?.audit?.blocked ?? 0, badgeType: stats.value?.audit?.blocked ? 'danger' : undefined },
-  { id: 'playground' as const, label: 'Playground', icon: icons.playground, group: 'analysis', separator: true },
-  { id: 'datasets' as const, label: 'Datasets', icon: icons.datasets, group: 'analysis' },
-  { id: 'traces' as const, label: 'Traces', icon: icons.traces, group: 'analysis' },
-  { id: 'agents' as const, label: 'Agents', icon: icons.agents, group: 'agent', separator: true },
-  { id: 'skills' as const, label: 'Skills', icon: icons.skills, group: 'agent' },
-  { id: 'feishu' as const, label: 'Feishu Channel', icon: icons.feishu, group: 'channels', separator: true },
-  { id: 'gateway-config' as const, label: 'Settings', icon: icons.config, group: 'settings', separator: true },
-])
+  { id: 'chat', label: 'Chat Lab', icon: icons.chat, group: 'main', primary: true },
+  { id: 'schematic', label: '架构示意图', icon: icons.schematic, group: 'main' },
+  { id: 'rules', label: 'Rules', icon: icons.rules, group: 'security', separator: true },
+  { id: 'engine', label: 'Engine', icon: icons.engine, group: 'security' },
+  { id: 'integrations', label: 'Integrations', icon: icons.skills, group: 'security' },
+  { id: 'playground', label: 'Playground', icon: icons.playground, group: 'security' },
+  { id: 'feishu', label: 'Feishu', icon: icons.feishu, group: 'security' },
+  { id: 'datasets', label: 'Datasets', icon: icons.datasets, group: 'analysis', separator: true },
+  { id: 'gateway-config', label: 'Settings', icon: icons.config, group: 'settings', separator: true },
+] as NavItem[])
 
 const activePageTitle = computed(() => {
   const item = navItems.value.find(i => i.id === currentSection.value)

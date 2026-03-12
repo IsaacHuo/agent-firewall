@@ -130,12 +130,11 @@ class FirewallConfig:
 
     # ── Storage (Phase 1) ────────────────────────────────────────────
     storage_backend: str = field(
-        default_factory=lambda: os.getenv("AF_STORAGE_BACKEND", "jsonl")  # "jsonl" | "sqlite"
+        default_factory=lambda: os.getenv("AF_STORAGE_BACKEND", "jsonl")
     )
     storage_path: str = field(
         default_factory=lambda: os.getenv("AF_STORAGE_PATH", "./data")
     )
-    # For SQLite: full path to database file
     # For JSONL: directory containing *.jsonl files
 
 

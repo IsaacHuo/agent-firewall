@@ -272,17 +272,22 @@ class FeishuAdapter:
     async def send_message(self, chat_id: str, content: str) -> bool:
         """Send a text message to Feishu chat."""
         try:
+            # Handle special 'me' target
+            if chat_id == "me":
+                logger.warning("Attempted to send message to 'me' - explicit user_id/chat_id required for Feishu")
+                return False
+
             request = CreateMessageRequest.builder().receive_id_type(
                 "chat_id"
             ).request_body(
                 CreateMessageRequestBody.builder()
                 .receive_id(chat_id)
                 .msg_type("text")
-                .content(f'{{"text":"{content}"}}')
+                .content(json.dumps({"text": content}))
                 .build()
             ).build()
 
-            response = self.client.im.v1.message.create(request)
+            response = await self.client.im.v1.message.acreate(request)
 
             if not response.success():
                 logger.error(

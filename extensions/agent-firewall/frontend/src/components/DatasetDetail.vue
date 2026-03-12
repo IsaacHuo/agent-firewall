@@ -187,6 +187,8 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:9090'
+
 interface Dataset {
   id: string
   name: string
@@ -234,7 +236,7 @@ const checkingPolicy = ref(false)
 async function loadDataset() {
   loading.value = true
   try {
-    const response = await fetch(`/api/v1/dataset/${props.datasetId}`)
+    const response = await fetch(`${API_BASE}/api/v1/dataset/${props.datasetId}`)
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
     }
@@ -251,7 +253,7 @@ async function loadTraces() {
   if (!dataset.value) return
 
   try {
-    const response = await fetch(`/api/v1/dataset/${props.datasetId}/traces`)
+    const response = await fetch(`${API_BASE}/api/v1/dataset/${props.datasetId}/traces`)
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`)
     }
@@ -267,7 +269,7 @@ async function addTrace() {
 
   try {
     const response = await fetch(
-      `/api/v1/dataset/${props.datasetId}/traces/${addTraceId.value}`,
+      `${API_BASE}/api/v1/dataset/${props.datasetId}/traces/${addTraceId.value}`,
       {
         method: 'POST',
       }
@@ -293,7 +295,7 @@ async function removeTrace(traceId: string) {
 
   try {
     const response = await fetch(
-      `/api/v1/dataset/${props.datasetId}/traces/${traceId}`,
+      `${API_BASE}/api/v1/dataset/${props.datasetId}/traces/${traceId}`,
       {
         method: 'DELETE',
       }
@@ -317,7 +319,7 @@ async function checkPolicy() {
   policyResults.value = []
 
   try {
-    const response = await fetch(`/api/v1/dataset/${props.datasetId}/policy/check`, {
+    const response = await fetch(`${API_BASE}/api/v1/dataset/${props.datasetId}/policy/check`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
