@@ -1,0 +1,58 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Print hostname
+        run: hostname
+      - uses: actions/setup-python@v3
+      - uses: pre-commit/action@v3.0.1
+  test:
+    runs-on: ${{ matrix.os }}
+    env:
+      AGENT_SCAN_ENVIRONMENT: ci
+      AGENT_SCAN_CI_HOSTNAME: ${{ secrets.AGENT_SCAN_CI_HOSTNAME }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Print scan environment variables
+        run: |
+          echo "AGENT_SCAN_ENVIRONMENT=${{ env.AGENT_SCAN_ENVIRONMENT }}"
+          echo "AGENT_SCAN_CI_HOSTNAME=${{ env.AGENT_SCAN_CI_HOSTNAME }}"
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v6
+      - name: Create venv
+        run: uv venv
+      - name: Run tests
+        run: make ci
+      # build and store whl as artifact
+      - name: Build and store whl
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          make build
+          mkdir -p ${{ github.workspace }}/artifacts
+          cp dist/*.whl ${{ github.workspace }}/artifacts/
+      - name: Build and store binary
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          make binary
+          mkdir -p ${{ github.workspace }}/artifacts
+          cp dist/agent-scan ${{ github.workspace }}/artifacts/
+      - name: Upload whl artifact for this build
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-scan-latest.whl
+          path: ${{ github.workspace }}/artifacts/*.whl
