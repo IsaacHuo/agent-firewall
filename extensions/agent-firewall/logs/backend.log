@@ -1,1334 +1,462 @@
 INFO:     Will watch for changes in these directories: ['/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall']
 INFO:     Uvicorn running on http://127.0.0.1:9090 (Press CTRL+C to quit)
-INFO:     Started reloader process [68478] using WatchFiles
-INFO:     Started server process [68484]
+INFO:     Started reloader process [34208] using WatchFiles
+INFO:     Started server process [34215]
 INFO:     Waiting for application startup.
-2026-03-12T20:50:08 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
-2026-03-12T20:50:08 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
-2026-03-12T20:50:08 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
-2026-03-12T20:50:08 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T20:50:08 [INFO] agent_firewall: JsonlStorage initialized at ./data
-2026-03-12T20:50:09 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
+2026-03-13T21:08:07 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
+2026-03-13T21:08:07 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
+2026-03-13T21:08:07 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
+2026-03-13T21:08:07 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
+2026-03-13T21:08:07 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
+2026-03-13T21:08:07 [INFO] agent_firewall: JsonlStorage initialized at ./data
+2026-03-13T21:08:07 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
   in "<unicode string>", line 2, column 125:
      ... explicit user approval. Triggers: order food, reorder, track ETA.
                                          ^
-2026-03-12T20:50:09 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
-2026-03-12T20:50:09 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
-2026-03-12T20:50:09 [INFO] agent_firewall: 🚀 Starting Feishu channel adapter...
-2026-03-12T20:50:09 [INFO] agent_firewall.channels.feishu: Starting Feishu adapter (App ID: cli_a925cba144f9dbb6)
-2026-03-12T20:50:09 [INFO] agent_firewall.channels.feishu: Feishu WebSocket started in background thread
-2026-03-12T20:50:09 [INFO] agent_firewall: ✅ Feishu channel connected successfully
-2026-03-12T20:50:09 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
-[Lark] [2026-03-12 20:50:09,191] [ERROR] connect failed, err: this event loop is already running.
-2026-03-12T20:50:09 [ERROR] Lark: connect failed, err: this event loop is already running.
-2026-03-12T20:50:09 [ERROR] agent_firewall.channels.feishu: Feishu WebSocket thread error: this event loop is already running.
+2026-03-13T21:08:08 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
+2026-03-13T21:08:08 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
+2026-03-13T21:08:08 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
 INFO:     Application startup complete.
-[Lark] [2026-03-12 20:50:09,621] [INFO] connected to wss://msg-frontier.feishu.cn/ws/v2?fpid=493&aid=552564&device_id=7616350488867785917&access_key=44f38a45c41287468f9f636d194a50b2&service_id=33554678&ticket=e428cb0e-d202-4e5d-aa99-12f5b1b1b07d [conn_id=7616350488867785917]
-2026-03-12T20:50:09 [INFO] Lark: connected to wss://msg-frontier.feishu.cn/ws/v2?fpid=493&aid=552564&device_id=7616350488867785917&access_key=44f38a45c41287468f9f636d194a50b2&service_id=33554678&ticket=e428cb0e-d202-4e5d-aa99-12f5b1b1b07d [conn_id=7616350488867785917]
-[Lark] [2026-03-12 20:50:09,687] [ERROR] receive message loop exit, err: sent 1000 (OK); then received 1000 (OK) bye [conn_id=7616350488867785917]
-2026-03-12T20:50:09 [ERROR] Lark: receive message loop exit, err: sent 1000 (OK); then received 1000 (OK) bye [conn_id=7616350488867785917]
-[Lark] [2026-03-12 20:50:09,701] [INFO] disconnected to wss://msg-frontier.feishu.cn/ws/v2?fpid=493&aid=552564&device_id=7616350488867785917&access_key=44f38a45c41287468f9f636d194a50b2&service_id=33554678&ticket=e428cb0e-d202-4e5d-aa99-12f5b1b1b07d [conn_id=7616350488867785917]
-2026-03-12T20:50:09 [INFO] Lark: disconnected to wss://msg-frontier.feishu.cn/ws/v2?fpid=493&aid=552564&device_id=7616350488867785917&access_key=44f38a45c41287468f9f636d194a50b2&service_id=33554678&ticket=e428cb0e-d202-4e5d-aa99-12f5b1b1b07d [conn_id=7616350488867785917]
-INFO:     127.0.0.1:61586 - "GET /health HTTP/1.1" 200 OK
-[Lark] [2026-03-12 20:50:26,162] [INFO] trying to reconnect for the 1st time
-2026-03-12T20:50:26 [INFO] Lark: trying to reconnect for the 1st time
-[Lark] [2026-03-12 20:50:26,617] [INFO] connected to wss://msg-frontier.feishu.cn/ws/v2?fpid=493&aid=552564&device_id=7616350574318210248&access_key=f85bc100a6f202ca6fa3910bae8771fa&service_id=33554678&ticket=467114f8-33ae-4c0d-9663-16a61422c22e [conn_id=7616350574318210248]
-2026-03-12T20:50:26 [INFO] Lark: connected to wss://msg-frontier.feishu.cn/ws/v2?fpid=493&aid=552564&device_id=7616350574318210248&access_key=f85bc100a6f202ca6fa3910bae8771fa&service_id=33554678&ticket=467114f8-33ae-4c0d-9663-16a61422c22e [conn_id=7616350574318210248]
-INFO:     127.0.0.1:64095 - "OPTIONS /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64096 - "OPTIONS /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64095 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64096 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64105 - "WebSocket /ws/dashboard" [accepted]
-2026-03-12T21:05:57 [INFO] agent_firewall.dashboard: Dashboard client connected: 4589541168 (total: 1)
+INFO:     127.0.0.1:54855 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54913 - "GET /api/gateway-info HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54924 - "GET /api/gateway-info HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60746 - "OPTIONS /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60785 - "WebSocket /ws/dashboard" [accepted]
+2026-03-13T21:41:32 [INFO] agent_firewall.dashboard: Dashboard client connected: 4559639792 (total: 1)
+INFO:     127.0.0.1:60786 - "OPTIONS /api/stats HTTP/1.1" 200 OK
 INFO:     connection open
-INFO:     127.0.0.1:64130 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     connection closed
-2026-03-12T21:06:06 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4589541168 (total: 0)
-INFO:     127.0.0.1:64148 - "WebSocket /ws/dashboard" [accepted]
-2026-03-12T21:06:11 [INFO] agent_firewall.dashboard: Dashboard client connected: 4589545488 (total: 1)
-INFO:     127.0.0.1:64149 - "GET /api/gateway-info HTTP/1.1" 200 OK
-INFO:     connection open
-INFO:     127.0.0.1:64150 - "OPTIONS /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64151 - "OPTIONS /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64149 - "GET /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64152 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64150 - "GET /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64153 - "OPTIONS /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64151 - "GET /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64149 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64149 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64149 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64149 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64149 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64149 - "OPTIONS /api/custom-config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64149 - "GET /api/custom-config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64149 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64149 - "GET /api/logs/stream HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64252 - "GET /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64252 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64252 - "GET /api/custom-config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64252 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64252 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64286 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64286 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64286 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64327 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64327 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64358 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64382 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64401 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64401 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64436 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64453 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64466 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64477 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64495 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64516 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64516 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64516 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64558 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64573 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64573 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64601 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64601 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64601 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:64625 - "WebSocket /ws/dashboard" [accepted]
-2026-03-12T21:08:52 [INFO] agent_firewall.dashboard: Dashboard client connected: 4589947792 (total: 2)
-INFO:     connection open
-INFO:     connection closed
-2026-03-12T21:08:53 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4589947792 (total: 1)
-INFO:     127.0.0.1:64660 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51414 - "OPTIONS /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51414 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51414 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51414 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51414 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51454 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51454 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51454 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51507 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51507 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51507 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51539 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51555 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51555 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60787 - "GET /api/gateway-info HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60786 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60788 - "OPTIONS /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60789 - "OPTIONS /api/rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60787 - "GET /api/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60790 - "OPTIONS /api/audit?limit=50 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60786 - "GET /api/rules HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60791 - "OPTIONS /api/custom-config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60788 - "GET /api/audit?limit=50 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60789 - "GET /api/custom-config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60787 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60787 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60787 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60787 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60787 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60787 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60896 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60896 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60896 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60896 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60896 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60963 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60984 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60984 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60984 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60984 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61048 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61048 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61075 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61098 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61098 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61126 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61126 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61153 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61166 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61179 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61179 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61205 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61205 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61231 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61252 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61263 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61278 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61278 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61314 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61314 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61352 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61352 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61352 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61352 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61403 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61403 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61457 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61457 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61457 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61457 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61509 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61509 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61542 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61555 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61555 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61555 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61555 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61611 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61622 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61622 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61649 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61649 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61673 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61673 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61673 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61710 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61710 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61710 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61750 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61771 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61782 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61792 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61805 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61805 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61831 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61843 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61843 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61867 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61867 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61898 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61912 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61928 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61942 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61942 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61942 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61980 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61992 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62003 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62003 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62003 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62003 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62003 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62073 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62073 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62123 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62133 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62133 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62155 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62155 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62183 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62183 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62183 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62219 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62303 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62303 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62321 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62321 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62344 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62359 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62359 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62387 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62387 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62412 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62423 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62445 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62457 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62473 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62473 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62473 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62504 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62525 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62540 - "OPTIONS /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62540 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62540 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62540 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62540 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62586 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62602 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62612 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62626 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62633 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62633 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62678 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62678 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62715 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62715 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62715 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62715 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62715 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62779 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62808 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62808 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62827 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62827 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62854 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62867 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62881 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62881 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62904 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62904 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62929 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62959 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62973 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62973 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62973 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63001 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63017 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63017 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63055 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63055 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63077 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63077 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63103 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63113 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63134 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63141 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63141 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63163 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63173 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63188 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63198 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63198 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63230 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63230 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63255 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63270 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63284 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63284 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63284 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63284 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63324 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63324 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63324 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63324 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63380 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63380 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63469 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63484 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63498 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63508 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63521 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63521 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63543 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63564 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63564 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63564 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63604 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63604 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63629 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63643 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63643 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63661 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63661 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63683 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63696 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63706 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63706 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63735 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63735 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63764 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63797 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63824 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63834 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63834 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63865 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63865 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63865 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63978 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63978 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63978 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63978 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64027 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64103 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64127 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64127 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64143 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64143 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64168 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64168 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64168 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64168 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64220 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64230 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64230 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64269 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64291 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64304 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64304 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64323 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64339 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64354 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64354 - "OPTIONS /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64354 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64354 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64391 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64391 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64414 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64414 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64454 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64454 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64454 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64454 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64504 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64514 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64514 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64514 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64562 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64562 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64562 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64562 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64623 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64636 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64636 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64636 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64664 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64664 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64690 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64690 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64719 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64719 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64719 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64759 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64759 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64782 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64794 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64794 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64794 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64825 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64825 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64850 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64850 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64881 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64881 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64908 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64908 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64930 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64940 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64940 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64964 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64964 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64964 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64964 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64964 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65029 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65060 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65076 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65086 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65086 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65107 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65107 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65139 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65139 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65139 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65177 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65177 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65203 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65203 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65253 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65253 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65275 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65275 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65298 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65311 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65311 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65336 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65352 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65352 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65352 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65426 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65426 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65426 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65455 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65455 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65455 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65489 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65489 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65489 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49153 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49153 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49179 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49179 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49179 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49242 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49249 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49306 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49306 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49306 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49306 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49306 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49306 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49430 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49444 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49444 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49444 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49444 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49512 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49519 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49519 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49545 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49558 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49558 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49558 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49589 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49589 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49589 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49653 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49653 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49681 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49681 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49681 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49711 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49711 - "OPTIONS /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49711 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49711 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49711 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49753 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49770 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49783 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49794 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49794 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49794 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49834 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49844 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49857 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49867 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49867 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49891 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49907 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49925 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49925 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49952 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49952 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49952 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49986 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49986 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50032 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50042 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50042 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50042 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50077 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50094 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50094 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50117 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50130 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50145 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50165 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50165 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50165 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50210 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50210 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50232 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50268 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50287 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50443 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50668 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50668 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51550 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51550 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51550 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51619 - "GET /api/stats HTTP/1.1" 200 OK
 INFO:     127.0.0.1:51627 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51639 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51639 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51639 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51690 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51690 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51728 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51728 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51754 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51772 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51832 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51848 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51848 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51879 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51892 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51913 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51913 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51954 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51954 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51954 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51994 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52010 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52034 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52050 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52050 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52079 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52079 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52106 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52106 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52106 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52106 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52168 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52184 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52184 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52184 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52236 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52236 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52265 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52265 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52306 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52306 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52306 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52343 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52357 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52371 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52386 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52386 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52417 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52417 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52417 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52470 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52483 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52483 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52483 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52483 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52483 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52483 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52587 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52587 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52587 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52620 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52620 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52663 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52663 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52663 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52663 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52663 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52663 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52663 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52663 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52810 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52810 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52810 - "OPTIONS /api/chat/send HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52810 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T21:31:22 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-2026-03-12T21:31:22 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.10 method=chat/completions
-ERROR:    Exception in ASGI application
-  + Exception Group Traceback (most recent call last):
-  |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 81, in collapse_excgroups
-  |     yield
-  |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 270, in __call__
-  |     async with anyio.create_task_group() as task_group:
-  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
-  |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
-  |     raise BaseExceptionGroup(
-  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
-  +-+---------------- 1 ----------------
-    | Traceback (most recent call last):
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 416, in run_asgi
-    |     result = await app(  # type: ignore[func-returns-value]
-    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
-    |     return await self.app(scope, receive, send)
-    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1134, in __call__
-    |     await super().__call__(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
-    |     await self.middleware_stack(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
-    |     await self.app(scope, receive, _send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 95, in __call__
-    |     await self.simple_response(scope, receive, send, request_headers=headers)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 153, in simple_response
-    |     await self.app(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    |     await app(scope, receive, sender)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    |     await self.app(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
-    |     await self.middleware_stack(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
-    |     await route.handle(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
-    |     await self.app(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 119, in app
-    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    |     await app(scope, receive, sender)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 106, in app
-    |     await response(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 269, in __call__
-    |     with collapse_excgroups():
-    |          ^^^^^^^^^^^^^^^^^^^^
-    |   File "/Users/yingwu/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
-    |     self.gen.throw(value)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 87, in collapse_excgroups
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 273, in wrap
-    |     await func()
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 253, in stream_response
-    |     async for chunk in self.body_iterator:
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/src/main.py", line 1346, in _event_stream
-    |     if s.storage:
-    |        ^^^^^^^^^
-    | AttributeError: 'AppState' object has no attribute 'storage'
-    +------------------------------------
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 416, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1134, in __call__
-    await super().__call__(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
-    await self.app(scope, receive, _send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 95, in __call__
-    await self.simple_response(scope, receive, send, request_headers=headers)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 153, in simple_response
-    await self.app(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    await self.app(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
-    await route.handle(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
-    await self.app(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 119, in app
-    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 106, in app
-    await response(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 269, in __call__
-    with collapse_excgroups():
-         ^^^^^^^^^^^^^^^^^^^^
-  File "/Users/yingwu/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
-    self.gen.throw(value)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 87, in collapse_excgroups
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 273, in wrap
-    await func()
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 253, in stream_response
-    async for chunk in self.body_iterator:
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/src/main.py", line 1346, in _event_stream
-    if s.storage:
-       ^^^^^^^^^
-AttributeError: 'AppState' object has no attribute 'storage'
-INFO:     127.0.0.1:52835 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52835 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52889 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52904 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52998 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52998 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     connection closed
-2026-03-12T21:31:59 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4589545488 (total: 0)
-INFO:     127.0.0.1:53006 - "WebSocket /ws/dashboard" [accepted]
-2026-03-12T21:32:01 [INFO] agent_firewall.dashboard: Dashboard client connected: 4591289072 (total: 1)
-INFO:     127.0.0.1:52998 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     connection open
-INFO:     127.0.0.1:53007 - "GET /api/gateway-info HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53008 - "OPTIONS /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53009 - "OPTIONS /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53010 - "OPTIONS /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:52998 - "GET /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53007 - "GET /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53008 - "GET /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53009 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53109 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53109 - "POST /api/chat/send HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53118 - "GET /api/stats HTTP/1.1" 200 OK
-2026-03-12T21:32:16 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-2026-03-12T21:32:17 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.10 method=chat/completions
-ERROR:    Exception in ASGI application
-  + Exception Group Traceback (most recent call last):
-  |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 81, in collapse_excgroups
-  |     yield
-  |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 270, in __call__
-  |     async with anyio.create_task_group() as task_group:
-  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
-  |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
-  |     raise BaseExceptionGroup(
-  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
-  +-+---------------- 1 ----------------
-    | Traceback (most recent call last):
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 416, in run_asgi
-    |     result = await app(  # type: ignore[func-returns-value]
-    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
-    |     return await self.app(scope, receive, send)
-    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1134, in __call__
-    |     await super().__call__(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
-    |     await self.middleware_stack(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
-    |     await self.app(scope, receive, _send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 95, in __call__
-    |     await self.simple_response(scope, receive, send, request_headers=headers)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 153, in simple_response
-    |     await self.app(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    |     await app(scope, receive, sender)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    |     await self.app(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
-    |     await self.middleware_stack(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
-    |     await route.handle(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
-    |     await self.app(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 119, in app
-    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    |     await app(scope, receive, sender)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 106, in app
-    |     await response(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 269, in __call__
-    |     with collapse_excgroups():
-    |          ^^^^^^^^^^^^^^^^^^^^
-    |   File "/Users/yingwu/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
-    |     self.gen.throw(value)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 87, in collapse_excgroups
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 273, in wrap
-    |     await func()
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 253, in stream_response
-    |     async for chunk in self.body_iterator:
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/src/main.py", line 1346, in _event_stream
-    |     if s.storage:
-    |        ^^^^^^^^^
-    | AttributeError: 'AppState' object has no attribute 'storage'
-    +------------------------------------
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 416, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1134, in __call__
-    await super().__call__(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
-    await self.app(scope, receive, _send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 95, in __call__
-    await self.simple_response(scope, receive, send, request_headers=headers)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 153, in simple_response
-    await self.app(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    await self.app(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
-    await route.handle(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
-    await self.app(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 119, in app
-    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 106, in app
-    await response(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 269, in __call__
-    with collapse_excgroups():
-         ^^^^^^^^^^^^^^^^^^^^
-  File "/Users/yingwu/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
-    self.gen.throw(value)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 87, in collapse_excgroups
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 273, in wrap
-    await func()
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 253, in stream_response
-    async for chunk in self.body_iterator:
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/src/main.py", line 1346, in _event_stream
-    if s.storage:
-       ^^^^^^^^^
-AttributeError: 'AppState' object has no attribute 'storage'
-INFO:     127.0.0.1:53118 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53118 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53118 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53170 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53197 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54329 - "OPTIONS /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54329 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54329 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54380 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54380 - "GET /api/stats HTTP/1.1" 200 OK
-[Lark] [2026-03-12 21:39:57,407] [ERROR] receive message loop exit, err: no close frame received or sent [conn_id=7616350574318210248]
-2026-03-12T21:39:57 [ERROR] Lark: receive message loop exit, err: no close frame received or sent [conn_id=7616350574318210248]
-[Lark] [2026-03-12 21:39:57,434] [INFO] disconnected to wss://msg-frontier.feishu.cn/ws/v2?fpid=493&aid=552564&device_id=7616350574318210248&access_key=f85bc100a6f202ca6fa3910bae8771fa&service_id=33554678&ticket=467114f8-33ae-4c0d-9663-16a61422c22e [conn_id=7616350574318210248]
-2026-03-12T21:39:57 [INFO] Lark: disconnected to wss://msg-frontier.feishu.cn/ws/v2?fpid=493&aid=552564&device_id=7616350574318210248&access_key=f85bc100a6f202ca6fa3910bae8771fa&service_id=33554678&ticket=467114f8-33ae-4c0d-9663-16a61422c22e [conn_id=7616350574318210248]
-INFO:     127.0.0.1:54380 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54567 - "GET /api/stats HTTP/1.1" 200 OK
-[Lark] [2026-03-12 21:40:13,249] [INFO] trying to reconnect for the 1st time
-2026-03-12T21:40:13 [INFO] Lark: trying to reconnect for the 1st time
-[Lark] [2026-03-12 21:40:14,620] [INFO] connected to wss://msg-frontier.feishu.cn/ws/v2?fpid=493&aid=552564&device_id=7616363427552906447&access_key=ad5e5e791e8f9229cb8a74f47821e605&service_id=33554678&ticket=71e1c7a5-ac11-40bf-8c7e-68fa6d8cf8aa [conn_id=7616363427552906447]
-2026-03-12T21:40:14 [INFO] Lark: connected to wss://msg-frontier.feishu.cn/ws/v2?fpid=493&aid=552564&device_id=7616363427552906447&access_key=ad5e5e791e8f9229cb8a74f47821e605&service_id=33554678&ticket=71e1c7a5-ac11-40bf-8c7e-68fa6d8cf8aa [conn_id=7616363427552906447]
-INFO:     127.0.0.1:54628 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54633 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     connection closed
-2026-03-12T21:40:36 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4591289072 (total: 0)
-INFO:     127.0.0.1:54649 - "WebSocket /ws/dashboard" [accepted]
-2026-03-12T21:40:37 [INFO] agent_firewall.dashboard: Dashboard client connected: 4591357680 (total: 1)
-INFO:     127.0.0.1:54650 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     connection open
-INFO:     127.0.0.1:54651 - "GET /api/gateway-info HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54652 - "GET /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54653 - "GET /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54654 - "GET /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54650 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T21:40:41 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 Forbidden"
-2026-03-12T21:40:41 [WARNING] agent_firewall.l2: L2 LLM classifier error: Client error '403 Forbidden' for url 'https://openrouter.ai/api/v1/chat/completions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403 — fail-open
-2026-03-12T21:40:42 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.00 method=chat/completions
-ERROR:    Exception in ASGI application
-  + Exception Group Traceback (most recent call last):
-  |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 81, in collapse_excgroups
-  |     yield
-  |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 270, in __call__
-  |     async with anyio.create_task_group() as task_group:
-  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
-  |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
-  |     raise BaseExceptionGroup(
-  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
-  +-+---------------- 1 ----------------
-    | Traceback (most recent call last):
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 416, in run_asgi
-    |     result = await app(  # type: ignore[func-returns-value]
-    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
-    |     return await self.app(scope, receive, send)
-    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1134, in __call__
-    |     await super().__call__(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
-    |     await self.middleware_stack(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
-    |     await self.app(scope, receive, _send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 95, in __call__
-    |     await self.simple_response(scope, receive, send, request_headers=headers)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 153, in simple_response
-    |     await self.app(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    |     await app(scope, receive, sender)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    |     await self.app(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
-    |     await self.middleware_stack(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
-    |     await route.handle(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
-    |     await self.app(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 119, in app
-    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    |     await app(scope, receive, sender)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 106, in app
-    |     await response(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 269, in __call__
-    |     with collapse_excgroups():
-    |          ^^^^^^^^^^^^^^^^^^^^
-    |   File "/Users/yingwu/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
-    |     self.gen.throw(value)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 87, in collapse_excgroups
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 273, in wrap
-    |     await func()
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 253, in stream_response
-    |     async for chunk in self.body_iterator:
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/src/main.py", line 1346, in _event_stream
-    |     if s.storage:
-    |        ^^^^^^^^^
-    | AttributeError: 'AppState' object has no attribute 'storage'
-    +------------------------------------
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 416, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1134, in __call__
-    await super().__call__(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
-    await self.app(scope, receive, _send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 95, in __call__
-    await self.simple_response(scope, receive, send, request_headers=headers)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 153, in simple_response
-    await self.app(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    await self.app(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
-    await route.handle(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
-    await self.app(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 119, in app
-    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 106, in app
-    await response(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 269, in __call__
-    with collapse_excgroups():
-         ^^^^^^^^^^^^^^^^^^^^
-  File "/Users/yingwu/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
-    self.gen.throw(value)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 87, in collapse_excgroups
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 273, in wrap
-    await func()
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 253, in stream_response
-    async for chunk in self.body_iterator:
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/src/main.py", line 1346, in _event_stream
-    if s.storage:
-       ^^^^^^^^^
-AttributeError: 'AppState' object has no attribute 'storage'
-INFO:     127.0.0.1:54651 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54683 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54696 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54696 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54710 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55162 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55162 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     connection closed
-2026-03-12T21:44:51 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4591357680 (total: 0)
-INFO:     127.0.0.1:55162 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55170 - "WebSocket /ws/dashboard" [accepted]
-2026-03-12T21:44:53 [INFO] agent_firewall.dashboard: Dashboard client connected: 4591359696 (total: 1)
-INFO:     127.0.0.1:55171 - "GET /api/gateway-info HTTP/1.1" 200 OK
-INFO:     connection open
-INFO:     127.0.0.1:55172 - "OPTIONS /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55173 - "OPTIONS /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55174 - "OPTIONS /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55162 - "GET /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55171 - "GET /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55172 - "GET /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55173 - "OPTIONS /api/chat/send HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55174 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T21:44:56 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 Forbidden"
-2026-03-12T21:44:56 [WARNING] agent_firewall.l2: L2 LLM classifier error: Client error '403 Forbidden' for url 'https://openrouter.ai/api/v1/chat/completions'
-For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403 — fail-open
-2026-03-12T21:44:56 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.00 method=chat/completions
-ERROR:    Exception in ASGI application
-  + Exception Group Traceback (most recent call last):
-  |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 81, in collapse_excgroups
-  |     yield
-  |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 270, in __call__
-  |     async with anyio.create_task_group() as task_group:
-  |                ^^^^^^^^^^^^^^^^^^^^^^^^^
-  |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 783, in __aexit__
-  |     raise BaseExceptionGroup(
-  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
-  +-+---------------- 1 ----------------
-    | Traceback (most recent call last):
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 416, in run_asgi
-    |     result = await app(  # type: ignore[func-returns-value]
-    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
-    |     return await self.app(scope, receive, send)
-    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1134, in __call__
-    |     await super().__call__(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
-    |     await self.middleware_stack(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
-    |     await self.app(scope, receive, _send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 95, in __call__
-    |     await self.simple_response(scope, receive, send, request_headers=headers)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 153, in simple_response
-    |     await self.app(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    |     await app(scope, receive, sender)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    |     await self.app(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
-    |     await self.middleware_stack(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
-    |     await route.handle(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
-    |     await self.app(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 119, in app
-    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    |     await app(scope, receive, sender)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 106, in app
-    |     await response(scope, receive, send)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 269, in __call__
-    |     with collapse_excgroups():
-    |          ^^^^^^^^^^^^^^^^^^^^
-    |   File "/Users/yingwu/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
-    |     self.gen.throw(value)
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 87, in collapse_excgroups
-    |     raise exc
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 273, in wrap
-    |     await func()
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 253, in stream_response
-    |     async for chunk in self.body_iterator:
-    |   File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/src/main.py", line 1346, in _event_stream
-    |     if s.storage:
-    |        ^^^^^^^^^
-    | AttributeError: 'AppState' object has no attribute 'storage'
-    +------------------------------------
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 416, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1134, in __call__
-    await super().__call__(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/applications.py", line 107, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
-    await self.app(scope, receive, _send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 95, in __call__
-    await self.simple_response(scope, receive, send, request_headers=headers)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/cors.py", line 153, in simple_response
-    await self.app(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    await self.app(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 716, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 736, in app
-    await route.handle(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/routing.py", line 290, in handle
-    await self.app(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 119, in app
-    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 106, in app
-    await response(scope, receive, send)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 269, in __call__
-    with collapse_excgroups():
-         ^^^^^^^^^^^^^^^^^^^^
-  File "/Users/yingwu/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/contextlib.py", line 158, in __exit__
-    self.gen.throw(value)
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/_utils.py", line 87, in collapse_excgroups
-    raise exc
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 273, in wrap
-    await func()
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/.venv/lib/python3.12/site-packages/starlette/responses.py", line 253, in stream_response
-    async for chunk in self.body_iterator:
-  File "/Users/yingwu/main/projects/agent-firewall/extensions/agent-firewall/src/main.py", line 1346, in _event_stream
-    if s.storage:
-       ^^^^^^^^^
-AttributeError: 'AppState' object has no attribute 'storage'
-INFO:     127.0.0.1:55162 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55162 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55189 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55195 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55195 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:55208 - "GET /api/stats HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'src/main.py'. Reloading...
-INFO:     Shutting down
-INFO:     connection closed
-2026-03-12T21:50:49 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4591359696 (total: 0)
-INFO:     Waiting for application shutdown.
-2026-03-12T21:50:49 [INFO] agent_firewall: Stopping Feishu channel...
-2026-03-12T21:50:49 [ERROR] agent_firewall.channels.feishu: Error closing Feishu WebSocket: 'Client' object has no attribute 'close'
-2026-03-12T21:50:49 [INFO] agent_firewall.channels.feishu: Feishu adapter stopped
-2026-03-12T21:50:49 [INFO] agent_firewall.agent_scan: Agent-Scan cache cleared
-2026-03-12T21:50:49 [INFO] agent_firewall.audit: Audit logger stopped, 4 entries written
-2026-03-12T21:50:49 [INFO] agent_firewall.session: Session manager stopped, 0 sessions cleared
-2026-03-12T21:50:49 [INFO] agent_firewall: Agent Firewall shut down gracefully
-INFO:     Application shutdown complete.
-INFO:     Finished server process [68484]
-INFO:     Started server process [83425]
-INFO:     Waiting for application startup.
-2026-03-12T21:51:14 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
-2026-03-12T21:51:15 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T21:51:15 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
-2026-03-12T21:51:15 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
-2026-03-12T21:51:15 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T21:51:15 [INFO] agent_firewall: JsonlStorage initialized at ./data
-2026-03-12T21:51:15 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
-  in "<unicode string>", line 2, column 125:
-     ... explicit user approval. Triggers: order food, reorder, track ETA.
-                                         ^
-2026-03-12T21:51:15 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
-2026-03-12T21:51:15 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
-2026-03-12T21:51:15 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
-INFO:     Application startup complete.
-INFO:     127.0.0.1:55920 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T21:51:25 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T21:51:25 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 401 Unauthorized"
-INFO:     127.0.0.1:56587 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T21:57:33 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T21:57:34 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 401 Unauthorized"
-WARNING:  WatchFiles detected changes in 'src/main.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-2026-03-12T21:58:21 [INFO] agent_firewall.agent_scan: Agent-Scan cache cleared
-2026-03-12T21:58:21 [INFO] agent_firewall.audit: Audit logger stopped, 2 entries written
-2026-03-12T21:58:21 [INFO] agent_firewall.session: Session manager stopped, 0 sessions cleared
-2026-03-12T21:58:21 [INFO] agent_firewall: Agent Firewall shut down gracefully
-INFO:     Application shutdown complete.
-INFO:     Finished server process [83425]
-INFO:     Started server process [86398]
-INFO:     Waiting for application startup.
-2026-03-12T21:58:36 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
-2026-03-12T21:58:37 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T21:58:37 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
-2026-03-12T21:58:37 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
-2026-03-12T21:58:37 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T21:58:37 [INFO] agent_firewall: JsonlStorage initialized at ./data
-2026-03-12T21:58:37 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
-  in "<unicode string>", line 2, column 125:
-     ... explicit user approval. Triggers: order food, reorder, track ETA.
-                                         ^
-2026-03-12T21:58:37 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
-2026-03-12T21:58:37 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
-2026-03-12T21:58:37 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
-INFO:     Application startup complete.
-INFO:     127.0.0.1:56807 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T21:58:39 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T21:58:40 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 401 Unauthorized"
-2026-03-12T21:58:40 [WARNING] agent_firewall: Upstream auth failed (401), returning mock response.
-INFO:     127.0.0.1:56950 - "OPTIONS /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56950 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56950 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56980 - "WebSocket /ws/dashboard" [accepted]
-2026-03-12T21:59:55 [INFO] agent_firewall.dashboard: Dashboard client connected: 4588601712 (total: 1)
-INFO:     127.0.0.1:56981 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     connection open
-INFO:     127.0.0.1:56982 - "GET /api/gateway-info HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56983 - "OPTIONS /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56984 - "OPTIONS /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56985 - "OPTIONS /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56981 - "GET /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56982 - "GET /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56983 - "GET /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56984 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56994 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56994 - "OPTIONS /api/chat/send HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56994 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T22:00:07 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T22:00:08 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 401 Unauthorized"
-2026-03-12T22:00:08 [WARNING] agent_firewall: Upstream auth failed (401), returning mock response.
-INFO:     127.0.0.1:56994 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57022 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57022 - "GET /api/stats HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'src/main.py'. Reloading...
-INFO:     Shutting down
-INFO:     connection closed
-2026-03-12T22:00:20 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4588601712 (total: 0)
-INFO:     Waiting for application shutdown.
-2026-03-12T22:00:20 [INFO] agent_firewall.agent_scan: Agent-Scan cache cleared
-2026-03-12T22:00:20 [INFO] agent_firewall.audit: Audit logger stopped, 2 entries written
-2026-03-12T22:00:20 [INFO] agent_firewall.session: Session manager stopped, 0 sessions cleared
-2026-03-12T22:00:20 [INFO] agent_firewall: Agent Firewall shut down gracefully
-INFO:     Application shutdown complete.
-INFO:     Finished server process [86398]
-INFO:     Started server process [87102]
-INFO:     Waiting for application startup.
-2026-03-12T22:00:39 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
-2026-03-12T22:00:39 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:00:39 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
-2026-03-12T22:00:39 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
-2026-03-12T22:00:39 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:00:39 [INFO] agent_firewall: JsonlStorage initialized at ./data
-2026-03-12T22:00:39 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
-  in "<unicode string>", line 2, column 125:
-     ... explicit user approval. Triggers: order food, reorder, track ETA.
-                                         ^
-2026-03-12T22:00:40 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
-2026-03-12T22:00:40 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
-2026-03-12T22:00:40 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
-INFO:     Application startup complete.
-INFO:     127.0.0.1:57045 - "WebSocket /ws/dashboard" [accepted]
-2026-03-12T22:00:40 [INFO] agent_firewall.dashboard: Dashboard client connected: 4553204720 (total: 1)
-INFO:     127.0.0.1:57048 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     connection open
-INFO:     127.0.0.1:57048 - "GET /api/stats HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'src/storage/__init__.py'. Reloading...
-INFO:     Shutting down
-INFO:     connection closed
-2026-03-12T22:01:17 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4553204720 (total: 0)
-INFO:     Waiting for application shutdown.
-2026-03-12T22:01:18 [INFO] agent_firewall.agent_scan: Agent-Scan cache cleared
-2026-03-12T22:01:18 [INFO] agent_firewall.audit: Audit logger stopped, 0 entries written
-2026-03-12T22:01:18 [INFO] agent_firewall.session: Session manager stopped, 0 sessions cleared
-2026-03-12T22:01:18 [INFO] agent_firewall: Agent Firewall shut down gracefully
-INFO:     Application shutdown complete.
-INFO:     Finished server process [87102]
-INFO:     Started server process [87417]
-INFO:     Waiting for application startup.
-2026-03-12T22:01:26 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
-2026-03-12T22:01:27 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:01:27 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
-2026-03-12T22:01:27 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
-2026-03-12T22:01:27 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:01:27 [INFO] agent_firewall: JsonlStorage initialized at ./data
-2026-03-12T22:01:27 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
-  in "<unicode string>", line 2, column 125:
-     ... explicit user approval. Triggers: order food, reorder, track ETA.
-                                         ^
-2026-03-12T22:01:27 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
-2026-03-12T22:01:27 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
-2026-03-12T22:01:27 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'src/config.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-2026-03-12T22:01:31 [INFO] agent_firewall.agent_scan: Agent-Scan cache cleared
-2026-03-12T22:01:31 [INFO] agent_firewall.audit: Audit logger stopped, 0 entries written
-2026-03-12T22:01:31 [INFO] agent_firewall.session: Session manager stopped, 0 sessions cleared
-2026-03-12T22:01:31 [INFO] agent_firewall: Agent Firewall shut down gracefully
-INFO:     Application shutdown complete.
-INFO:     Finished server process [87417]
-INFO:     Started server process [87467]
-INFO:     Waiting for application startup.
-2026-03-12T22:01:36 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
-2026-03-12T22:01:36 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:01:36 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
-2026-03-12T22:01:36 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
-2026-03-12T22:01:36 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:01:36 [INFO] agent_firewall: JsonlStorage initialized at ./data
-2026-03-12T22:01:36 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
-  in "<unicode string>", line 2, column 125:
-     ... explicit user approval. Triggers: order food, reorder, track ETA.
-                                         ^
-2026-03-12T22:01:37 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
-2026-03-12T22:01:37 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
-2026-03-12T22:01:37 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'src/storage/sqlite.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-2026-03-12T22:05:11 [INFO] agent_firewall.agent_scan: Agent-Scan cache cleared
-2026-03-12T22:05:11 [INFO] agent_firewall.audit: Audit logger stopped, 0 entries written
-2026-03-12T22:05:11 [INFO] agent_firewall.session: Session manager stopped, 0 sessions cleared
-2026-03-12T22:05:11 [INFO] agent_firewall: Agent Firewall shut down gracefully
-INFO:     Application shutdown complete.
-INFO:     Finished server process [87467]
-INFO:     Started server process [88142]
-INFO:     Waiting for application startup.
-2026-03-12T22:05:32 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
-2026-03-12T22:05:32 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:05:32 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
-2026-03-12T22:05:32 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
-2026-03-12T22:05:32 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:05:32 [INFO] agent_firewall: JsonlStorage initialized at ./data
-2026-03-12T22:05:32 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
-  in "<unicode string>", line 2, column 125:
-     ... explicit user approval. Triggers: order food, reorder, track ETA.
-                                         ^
-2026-03-12T22:05:32 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
-2026-03-12T22:05:32 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
-2026-03-12T22:05:32 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
-INFO:     Application startup complete.
-INFO:     127.0.0.1:57937 - "GET /health HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'src/main.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-2026-03-12T22:06:26 [INFO] agent_firewall.agent_scan: Agent-Scan cache cleared
-2026-03-12T22:06:26 [INFO] agent_firewall.audit: Audit logger stopped, 0 entries written
-2026-03-12T22:06:26 [INFO] agent_firewall.session: Session manager stopped, 0 sessions cleared
-2026-03-12T22:06:26 [INFO] agent_firewall: Agent Firewall shut down gracefully
-INFO:     Application shutdown complete.
-INFO:     Finished server process [88142]
-INFO:     Started server process [88427]
-INFO:     Waiting for application startup.
-2026-03-12T22:06:35 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
-2026-03-12T22:06:35 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:06:35 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
-2026-03-12T22:06:35 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
-2026-03-12T22:06:35 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:06:35 [INFO] agent_firewall: JsonlStorage initialized at ./data
-2026-03-12T22:06:35 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
-  in "<unicode string>", line 2, column 125:
-     ... explicit user approval. Triggers: order food, reorder, track ETA.
-                                         ^
-2026-03-12T22:06:35 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
-2026-03-12T22:06:36 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
-2026-03-12T22:06:36 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
-INFO:     Application startup complete.
-WARNING:  WatchFiles detected changes in 'src/main.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-2026-03-12T22:06:49 [INFO] agent_firewall.agent_scan: Agent-Scan cache cleared
-2026-03-12T22:06:49 [INFO] agent_firewall.audit: Audit logger stopped, 0 entries written
-2026-03-12T22:06:49 [INFO] agent_firewall.session: Session manager stopped, 0 sessions cleared
-2026-03-12T22:06:49 [INFO] agent_firewall: Agent Firewall shut down gracefully
-INFO:     Application shutdown complete.
-INFO:     Finished server process [88427]
-WARNING:  WatchFiles detected changes in 'src/main.py'. Reloading...
-INFO:     Started server process [88510]
-INFO:     Waiting for application startup.
-2026-03-12T22:07:05 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
-2026-03-12T22:07:05 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:07:05 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
-2026-03-12T22:07:05 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
-2026-03-12T22:07:05 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:07:05 [INFO] agent_firewall: JsonlStorage initialized at ./data
-2026-03-12T22:07:05 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
-  in "<unicode string>", line 2, column 125:
-     ... explicit user approval. Triggers: order food, reorder, track ETA.
-                                         ^
-2026-03-12T22:07:05 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
-2026-03-12T22:07:05 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
-2026-03-12T22:07:05 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
-INFO:     Application startup complete.
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-2026-03-12T22:07:05 [INFO] agent_firewall.agent_scan: Agent-Scan cache cleared
-2026-03-12T22:07:05 [INFO] agent_firewall.audit: Audit logger stopped, 0 entries written
-2026-03-12T22:07:05 [INFO] agent_firewall.session: Session manager stopped, 0 sessions cleared
-2026-03-12T22:07:05 [INFO] agent_firewall: Agent Firewall shut down gracefully
-INFO:     Application shutdown complete.
-INFO:     Finished server process [88510]
-INFO:     Started server process [88562]
-INFO:     Waiting for application startup.
-2026-03-12T22:07:13 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
-2026-03-12T22:07:14 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:07:14 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
-2026-03-12T22:07:14 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
-2026-03-12T22:07:14 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:07:14 [INFO] agent_firewall: JsonlStorage initialized at ./data
-2026-03-12T22:07:14 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
-  in "<unicode string>", line 2, column 125:
-     ... explicit user approval. Triggers: order food, reorder, track ETA.
-                                         ^
-2026-03-12T22:07:14 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
-2026-03-12T22:07:14 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
-2026-03-12T22:07:14 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
-INFO:     Application startup complete.
-INFO:     127.0.0.1:58095 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T22:07:15 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T22:07:15 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 401 Unauthorized"
-2026-03-12T22:07:15 [WARNING] agent_firewall: Upstream auth failed (401), returning mock response.
-INFO:     127.0.0.1:58181 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58194 - "WebSocket /ws/dashboard" [accepted]
-2026-03-12T22:07:50 [INFO] agent_firewall.dashboard: Dashboard client connected: 4520806352 (total: 1)
-INFO:     127.0.0.1:58195 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     connection open
-INFO:     127.0.0.1:58196 - "GET /api/gateway-info HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58197 - "GET /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58198 - "GET /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58199 - "GET /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58195 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58195 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T22:07:57 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T22:07:58 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 401 Unauthorized"
-2026-03-12T22:07:58 [WARNING] agent_firewall: Upstream auth failed (401), returning mock response.
-INFO:     127.0.0.1:58195 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58195 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T22:08:00 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T22:08:01 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 401 Unauthorized"
-2026-03-12T22:08:01 [WARNING] agent_firewall: Upstream auth failed (401), returning mock response.
-INFO:     127.0.0.1:58195 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     connection closed
-2026-03-12T22:08:08 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4520806352 (total: 0)
-INFO:     127.0.0.1:58195 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58282 - "WebSocket /ws/dashboard" [accepted]
-2026-03-12T22:08:09 [INFO] agent_firewall.dashboard: Dashboard client connected: 4520816192 (total: 1)
-INFO:     127.0.0.1:58283 - "GET /api/gateway-info HTTP/1.1" 200 OK
-INFO:     connection open
-INFO:     127.0.0.1:58284 - "GET /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58285 - "GET /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58286 - "GET /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58283 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58283 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58283 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T22:08:20 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T22:08:21 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 401 Unauthorized"
-2026-03-12T22:08:21 [WARNING] agent_firewall: Upstream auth failed (401), returning mock response.
-INFO:     127.0.0.1:58283 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58331 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58331 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58331 - "GET /api/logs/stream HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58357 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58357 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58404 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58420 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58649 - "OPTIONS /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58649 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58649 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58649 - "OPTIONS /api/chat/send HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58649 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T22:10:46 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T22:10:47 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 401 Unauthorized"
-2026-03-12T22:10:47 [WARNING] agent_firewall: Upstream auth failed (401), returning mock response.
-INFO:     127.0.0.1:58649 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58712 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58712 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58735 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:58757 - "GET /api/stats HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'src/main.py'. Reloading...
-INFO:     Shutting down
-INFO:     connection closed
-2026-03-12T22:12:57 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4520816192 (total: 0)
-INFO:     Waiting for application shutdown.
-2026-03-12T22:12:57 [INFO] agent_firewall.agent_scan: Agent-Scan cache cleared
-2026-03-12T22:12:57 [INFO] agent_firewall.audit: Audit logger stopped, 5 entries written
-2026-03-12T22:12:57 [INFO] agent_firewall.session: Session manager stopped, 0 sessions cleared
-2026-03-12T22:12:57 [INFO] agent_firewall: Agent Firewall shut down gracefully
-INFO:     Application shutdown complete.
-INFO:     Finished server process [88562]
-INFO:     Started server process [89888]
-INFO:     Waiting for application startup.
-2026-03-12T22:13:10 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
-2026-03-12T22:13:10 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:13:10 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
-2026-03-12T22:13:10 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
-2026-03-12T22:13:10 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:13:10 [INFO] agent_firewall: JsonlStorage initialized at ./data
-2026-03-12T22:13:10 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
-  in "<unicode string>", line 2, column 125:
-     ... explicit user approval. Triggers: order food, reorder, track ETA.
-                                         ^
-2026-03-12T22:13:10 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
-2026-03-12T22:13:10 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
-2026-03-12T22:13:10 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
-INFO:     Application startup complete.
-INFO:     127.0.0.1:59045 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T22:13:29 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T22:13:29 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 401 Unauthorized"
-2026-03-12T22:13:29 [WARNING] agent_firewall: Upstream auth failed (401).
-WARNING:  WatchFiles detected changes in 'src/main.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-2026-03-12T22:14:07 [INFO] agent_firewall.agent_scan: Agent-Scan cache cleared
-2026-03-12T22:14:07 [INFO] agent_firewall.audit: Audit logger stopped, 1 entries written
-2026-03-12T22:14:07 [INFO] agent_firewall.session: Session manager stopped, 0 sessions cleared
-2026-03-12T22:14:07 [INFO] agent_firewall: Agent Firewall shut down gracefully
-INFO:     Application shutdown complete.
-INFO:     Finished server process [89888]
-INFO:     Started server process [90490]
-INFO:     Waiting for application startup.
-2026-03-12T22:14:17 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
-2026-03-12T22:14:17 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:14:17 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
-2026-03-12T22:14:17 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
-2026-03-12T22:14:17 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:14:17 [INFO] agent_firewall: JsonlStorage initialized at ./data
-2026-03-12T22:14:17 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
-  in "<unicode string>", line 2, column 125:
-     ... explicit user approval. Triggers: order food, reorder, track ETA.
-                                         ^
-2026-03-12T22:14:17 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
-2026-03-12T22:14:17 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
-2026-03-12T22:14:17 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
-INFO:     Application startup complete.
-INFO:     127.0.0.1:59184 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T22:14:21 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T22:14:21 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 401 Unauthorized"
-2026-03-12T22:14:21 [WARNING] agent_firewall: Upstream auth failed (401).
-INFO:     127.0.0.1:59655 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59655 - "OPTIONS /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59676 - "WebSocket /ws/dashboard" [accepted]
-2026-03-12T22:17:24 [INFO] agent_firewall.dashboard: Dashboard client connected: 4580281904 (total: 1)
-INFO:     127.0.0.1:59655 - "GET /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59677 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     connection open
-INFO:     127.0.0.1:59678 - "GET /api/gateway-info HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59679 - "OPTIONS /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59680 - "OPTIONS /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59655 - "GET /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59677 - "GET /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59678 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T22:17:26 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T22:17:27 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 401 Unauthorized"
-2026-03-12T22:17:27 [WARNING] agent_firewall: Upstream auth failed (401).
-INFO:     127.0.0.1:59679 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59679 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59679 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59741 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59741 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59772 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59954 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59960 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59960 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59968 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:59975 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60090 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60090 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T22:20:40 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T22:20:41 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 401 Unauthorized"
-2026-03-12T22:20:41 [WARNING] agent_firewall: Upstream auth failed (401).
-INFO:     127.0.0.1:60090 - "OPTIONS /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60090 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60114 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60120 - "GET /api/stats HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'src/main.py'. Reloading...
-INFO:     Shutting down
-INFO:     connection closed
-INFO:     Waiting for background tasks to complete. (CTRL+C to force quit)
-2026-03-12T22:22:03 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4580281904 (total: 0)
-INFO:     Waiting for application shutdown.
-2026-03-12T22:22:03 [INFO] agent_firewall.agent_scan: Agent-Scan cache cleared
-2026-03-12T22:22:03 [INFO] agent_firewall.audit: Audit logger stopped, 3 entries written
-2026-03-12T22:22:03 [INFO] agent_firewall.session: Session manager stopped, 0 sessions cleared
-2026-03-12T22:22:03 [INFO] agent_firewall: Agent Firewall shut down gracefully
-INFO:     Application shutdown complete.
-INFO:     Finished server process [90490]
-INFO:     Started server process [92255]
-INFO:     Waiting for application startup.
-2026-03-12T22:22:28 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
-2026-03-12T22:22:28 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:22:28 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
-2026-03-12T22:22:28 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
-2026-03-12T22:22:28 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:22:28 [INFO] agent_firewall: JsonlStorage initialized at ./data
-2026-03-12T22:22:28 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
-  in "<unicode string>", line 2, column 125:
-     ... explicit user approval. Triggers: order food, reorder, track ETA.
-                                         ^
-2026-03-12T22:22:28 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
-2026-03-12T22:22:28 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
-2026-03-12T22:22:28 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
-INFO:     Application startup complete.
-INFO:     127.0.0.1:60251 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T22:22:28 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T22:22:31 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:     127.0.0.1:60434 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60453 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60464 - "WebSocket /ws/dashboard" [accepted]
-2026-03-12T22:24:05 [INFO] agent_firewall.dashboard: Dashboard client connected: 4527097856 (total: 1)
-INFO:     connection open
-INFO:     127.0.0.1:60908 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     connection closed
-2026-03-12T22:27:37 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4527097856 (total: 0)
-INFO:     127.0.0.1:60932 - "WebSocket /ws/dashboard" [accepted]
-2026-03-12T22:27:40 [INFO] agent_firewall.dashboard: Dashboard client connected: 4527105536 (total: 1)
-INFO:     127.0.0.1:60933 - "OPTIONS /api/config HTTP/1.1" 200 OK
-INFO:     connection open
-INFO:     127.0.0.1:60934 - "OPTIONS /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60933 - "GET /api/config HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60935 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60934 - "GET /api/rules HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60936 - "GET /api/gateway-info HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60937 - "OPTIONS /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60933 - "GET /api/audit?limit=50 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60935 - "OPTIONS /api/chat/send HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60934 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T22:27:42 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T22:27:43 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:     127.0.0.1:60936 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60964 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60964 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60975 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60975 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T22:28:01 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-2026-03-12T22:28:02 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:     127.0.0.1:60995 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60995 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61001 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61001 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61001 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61001 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61001 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61001 - "POST /api/chat/send HTTP/1.1" 200 OK
-2026-03-12T22:28:39 [INFO] agent_firewall.l2: L2 result: injection=False confidence=0.05 method=chat/completions
-INFO:     127.0.0.1:61068 - "GET /api/stats HTTP/1.1" 200 OK
-2026-03-12T22:28:40 [INFO] httpx: HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-INFO:     127.0.0.1:61068 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61068 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61101 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61143 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61162 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61186 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61186 - "GET /api/logs/stream HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61201 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61201 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61237 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61272 - "GET /api/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:61288 - "GET /api/stats HTTP/1.1" 200 OK
-WARNING:  WatchFiles detected changes in 'src/main.py'. Reloading...
-INFO:     Shutting down
-INFO:     connection closed
-2026-03-12T22:32:35 [INFO] agent_firewall.dashboard: Dashboard client disconnected: 4527105536 (total: 0)
-INFO:     Waiting for application shutdown.
-2026-03-12T22:32:35 [INFO] agent_firewall.agent_scan: Agent-Scan cache cleared
-2026-03-12T22:32:35 [INFO] agent_firewall.audit: Audit logger stopped, 4 entries written
-2026-03-12T22:32:35 [INFO] agent_firewall.session: Session manager stopped, 0 sessions cleared
-2026-03-12T22:32:35 [INFO] agent_firewall: Agent Firewall shut down gracefully
-INFO:     Application shutdown complete.
-INFO:     Finished server process [92255]
-INFO:     Started server process [94916]
-INFO:     Waiting for application startup.
-2026-03-12T22:32:44 [INFO] agent_firewall.agent_scan: Agent-Scan integration disabled
-2026-03-12T22:32:44 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:32:44 [INFO] agent_firewall.session: Session manager started (buffer=64, ttl=3600s)
-2026-03-12T22:32:44 [INFO] agent_firewall.audit: Audit logger started → audit/firewall.jsonl
-2026-03-12T22:32:44 [INFO] agent_firewall.storage.jsonl: JsonlStorage initialized at data
-2026-03-12T22:32:44 [INFO] agent_firewall: JsonlStorage initialized at ./data
-2026-03-12T22:32:45 [WARNING] agent-firewall.skills: Bad YAML in /Users/yingwu/main/projects/agent-firewall/skills/food-order/SKILL.md: mapping values are not allowed here
-  in "<unicode string>", line 2, column 125:
-     ... explicit user approval. Triggers: order food, reorder, track ETA.
-                                         ^
-2026-03-12T22:32:45 [INFO] agent-firewall.skills: Skills discovered: 49 total, 21 ready (apple-notes, apple-reminders, bluebubbles, coding-agent, discord, gog, healthcheck, notion, openai-image-gen, openai-whisper-api, session-logs, sherpa-onnx-tts, skill-creator, slack, spotify-player, summarize, things-mac, trello, video-frames, voice-call, weather)
-2026-03-12T22:32:45 [INFO] agent-firewall.gateway-tools: Gateway tools discovered: 19 (agents_list, browser, canvas, cron, gateway, image, memory_get, memory_search, message, nodes, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, subagents, tts, web_fetch, web_search)
-2026-03-12T22:32:45 [INFO] agent_firewall: 🛡️  Agent Firewall started on 127.0.0.1:9090 → upstream 127.0.0.1:18789
-INFO:     Application startup complete.
+INFO:     127.0.0.1:51646 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51987 - "OPTIONS /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51987 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51987 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51987 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52022 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52022 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52054 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52054 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52054 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52054 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52185 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52187 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53029 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53029 - "GET /api/stats HTTP/1.1" 200 OK
