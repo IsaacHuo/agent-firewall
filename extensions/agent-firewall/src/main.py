@@ -220,12 +220,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     try:
         # Assuming storage_backend is a string like "jsonl"
-        backend_name = config.storage_backend if hasattr(config, 'storage_backend') else "jsonl"
+        backend_name = config.storage_backend if hasattr(config, "storage_backend") else "jsonl"
         storage_path = config.storage_path
         storage = get_storage_backend(backend_name, storage_path)
-        logger.info(
-            f"{backend_name.capitalize()}Storage initialized at {storage_path}"
-        )
+        logger.info(f"{backend_name.capitalize()}Storage initialized at {storage_path}")
     except Exception as e:
         logger.error(f"Failed to initialize storage: {e}")
         # Fallback to in-memory/stub or fail hard depending on policy
@@ -249,7 +247,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         except Exception as e:
             logger.error(f"❌ Failed to start Feishu channel: {e}")
             logger.warning("⚠️  Please check your Feishu App ID and Secret in .env file")
-            logger.warning("⚠️  Also ensure you've enabled event subscriptions in Feishu Admin Console")
+            logger.warning(
+                "⚠️  Also ensure you've enabled event subscriptions in Feishu Admin Console"
+            )
 
     logger.info(
         "🛡️  Agent Firewall started on %s:%d → upstream %s:%d",
@@ -317,7 +317,7 @@ def _state(request: Request | None = None) -> AppState:
 @app.get("/api/logs/stream")
 async def stream_logs(request: Request) -> StreamingResponse:
     """Stream backend logs via Server-Sent Events (SSE)."""
-    
+
     async def event_generator() -> AsyncIterator[str]:
         log_file = Path("logs/backend.log")
         if not log_file.exists():
@@ -330,13 +330,13 @@ async def stream_logs(request: Request) -> StreamingResponse:
                 lines = f.readlines()
                 for line in lines[-20:]:
                     yield f"data: {line.strip()}\n\n"
-                
+
                 # Follow tail
                 f.seek(0, 2)  # Go to end
                 while True:
                     if await request.is_disconnected():
                         break
-                        
+
                     line = f.readline()
                     if line:
                         yield f"data: {line.strip()}\n\n"
@@ -431,18 +431,56 @@ async def serve_local_file(path: str) -> FileResponse:
 async def gateway_info() -> dict[str, Any]:
     """Read the local gateway config to auto-provide connection details.
 
-    This endpoint reads ~/.agent-shield-dev/agent-shield.json or ~/.openclaw/openclaw.json
-    to extract the gateway port and auth token, so the browser frontend can connect
-    without manual configuration. Only works when the firewall backend runs on the
-    same machine as the gateway.
+    This endpoint discovers likely local gateway config paths (env overrides,
+    profile-based defaults, and legacy locations) and extracts port/auth data,
+    so the browser frontend can connect without manual token entry.
+    It only works when the firewall backend runs on the same machine as the gateway.
     """
     import json as _json
 
-    # Try agent-shield-dev config first, then openclaw config
-    config_paths = [
-        Path.home() / ".agent-shield-dev" / "agent-shield.json",
-        Path.home() / ".openclaw" / "openclaw.json",
-    ]
+    def build_config_candidates() -> list[Path]:
+        candidates: list[Path] = []
+        seen: set[str] = set()
+
+        def add_candidate(raw: str | Path | None) -> None:
+            if raw is None:
+                return
+            value = str(raw).strip()
+            if not value:
+                return
+            candidate = Path(value).expanduser()
+            key = str(candidate)
+            if key in seen:
+                return
+            seen.add(key)
+            candidates.append(candidate)
+
+        # Highest priority: explicit config path overrides.
+        for env_var in ("AGENT_SHIELD_CONFIG_PATH", "CLAWDBOT_CONFIG_PATH", "OPENCLAW_CONFIG_PATH"):
+            add_candidate(os.getenv(env_var))
+
+        # Next: state-dir overrides mapped to known config filenames.
+        for env_var in ("AGENT_SHIELD_STATE_DIR", "CLAWDBOT_STATE_DIR", "OPENCLAW_STATE_DIR"):
+            state_dir = os.getenv(env_var)
+            if not state_dir:
+                continue
+            state_path = Path(state_dir).expanduser()
+            add_candidate(state_path / "agent-shield.json")
+            add_candidate(state_path / "openclaw.json")
+
+        # Profile default (e.g. dev => ~/.agent-shield-dev/agent-shield.json).
+        profile = (os.getenv("AGENT_SHIELD_PROFILE") or "").strip()
+        if profile:
+            suffix = "" if profile.lower() == "default" else f"-{profile}"
+            add_candidate(Path.home() / f".agent-shield{suffix}" / "agent-shield.json")
+
+        # Common defaults and legacy locations.
+        add_candidate(Path.home() / ".agent-shield" / "agent-shield.json")
+        add_candidate(Path.home() / ".agent-shield-dev" / "agent-shield.json")
+        add_candidate(Path.home() / ".openclaw" / "openclaw.json")
+        return candidates
+
+    config_paths = build_config_candidates()
 
     result: dict[str, Any] = {"configured": False}
 
@@ -465,6 +503,7 @@ async def gateway_info() -> dict[str, Any]:
                 result["token"] = auth["token"]
             if auth.get("password"):
                 result["hasPassword"] = True
+            result["configPath"] = str(config_path)
             # Pass allowed origins so frontend can self-register
             control_ui = gw.get("controlUi", {})
             result["allowedOrigins"] = control_ui.get("allowedOrigins", [])
@@ -865,9 +904,7 @@ async def get_feishu_stats(request: Request) -> JSONResponse:
     s = _state(request)
 
     # Count Feishu-related audit entries
-    feishu_entries = [
-        e for e in s.audit_logger._buffer if "feishu" in e.get("method", "").lower()
-    ]
+    feishu_entries = [e for e in s.audit_logger._buffer if "feishu" in e.get("method", "").lower()]
 
     total_messages = len(feishu_entries)
     blocked_messages = sum(1 for e in feishu_entries if e.get("verdict") == "BLOCK")
@@ -1244,7 +1281,9 @@ async def chat_send(request: Request):
     max_tokens = data.get("max_tokens", None)
     top_p = data.get("top_p", None)
     enable_tools = data.get("enable_tools", True)
-    external_tools = data.get("external_tools", [])  # tools provided by frontend (e.g. gateway skills)
+    external_tools = data.get(
+        "external_tools", []
+    )  # tools provided by frontend (e.g. gateway skills)
 
     if not messages:
         return JSONResponse({"error": "No messages provided"}, status_code=400)
@@ -1357,15 +1396,19 @@ async def chat_send(request: Request):
                 "session_id": "chat-lab",
                 "timestamp": time.time(),
                 "verdict": verdict,
-                "threat_level": threat_level.value if hasattr(threat_level, "value") else str(threat_level),
+                "threat_level": threat_level.value
+                if hasattr(threat_level, "value")
+                else str(threat_level),
                 "messages": messages,
                 "analysis": {
                     "verdict": verdict,
-                    "threat_level": threat_level.value if hasattr(threat_level, "value") else str(threat_level),
+                    "threat_level": threat_level.value
+                    if hasattr(threat_level, "value")
+                    else str(threat_level),
                     "l1_patterns": l1_result.matched_patterns,
                     "l2_confidence": l2_confidence,
                     "l2_reasoning": l2_reasoning,
-                }
+                },
             }
             try:
                 await s.storage.save_trace(trace_entry)
@@ -1492,7 +1535,9 @@ async def chat_send(request: Request):
             )
 
             skills_prompt = registry.get_skills_system_prompt()
-            combined_prompt = "\n\n".join(p for p in [gateway_prompt, skills_prompt, policy_prompt] if p)
+            combined_prompt = "\n\n".join(
+                p for p in [gateway_prompt, skills_prompt, policy_prompt] if p
+            )
 
             if combined_prompt and enable_tools:
                 chat_body_messages = list(forwarded_messages)
@@ -1577,9 +1622,7 @@ async def chat_send(request: Request):
                     if resp is None or resp.status_code != 200:
                         # Fallback for 401/403 in test environment
                         if resp and resp.status_code in (401, 403):
-                            logger.warning(
-                                f"Upstream auth failed ({resp.status_code})."
-                            )
+                            logger.warning(f"Upstream auth failed ({resp.status_code}).")
                             # Try to parse error details
                             try:
                                 error_json = resp.json()
@@ -1591,21 +1634,26 @@ async def chat_send(request: Request):
                             # but didn't provide credentials. In this dev environment, we can try to fallback to a direct
                             # OpenRouter call if the user INTENDED to just use LLM directly, OR we can mock the response
                             # to show the user the firewall flow is working (which is what we did before).
-                            
+
                             # But wait, if the user provided AF_L2_API_KEY, maybe they wanted to use THAT as the auth?
                             # The issue is that OpenAIAdapter uses `api_key` for `Authorization: Bearer <key>`.
                             # If upstream is Agent Shield Gateway, it expects a cookie or token.
                             # If upstream is OpenRouter, it expects Bearer token.
-                            
+
                             # If the user configured AF_L2_MODEL_ENDPOINT=https://openrouter.ai/..., then upstream_url
                             # should be pointing to OpenRouter, not 127.0.0.1:18789.
                             # However, `s.openai_adapter` is initialized with `config.l2_model_endpoint` derived URL.
-                            
+
                             # Let's check if we can recover by forcing a direct OpenRouter call if we have a key.
                             # (This is a "smart" fix for the user's likely intent).
-                            
-                            if s.openai_adapter.api_key and "openrouter" in s.config.l2_model_endpoint:
-                                logger.info("Attempting fallback to direct OpenRouter call since gateway failed.")
+
+                            if (
+                                s.openai_adapter.api_key
+                                and "openrouter" in s.config.l2_model_endpoint
+                            ):
+                                logger.info(
+                                    "Attempting fallback to direct OpenRouter call since gateway failed."
+                                )
                                 # We need to create a new client or request to OpenRouter directly
                                 try:
                                     direct_url = "https://openrouter.ai/api/v1/chat/completions"
@@ -1614,14 +1662,18 @@ async def chat_send(request: Request):
                                         "Content-Type": "application/json",
                                     }
                                     # Use the same chat_body
-                                    direct_resp = await client.post(direct_url, headers=direct_headers, json=chat_body)
+                                    direct_resp = await client.post(
+                                        direct_url, headers=direct_headers, json=chat_body
+                                    )
                                     if direct_resp.status_code == 200:
                                         resp = direct_resp
                                         resp_json = direct_resp.json()
                                         # Proceed as if original request succeeded
                                     else:
                                         # Fallback failed too
-                                        logger.warning(f"Direct fallback failed: {direct_resp.status_code}")
+                                        logger.warning(
+                                            f"Direct fallback failed: {direct_resp.status_code}"
+                                        )
                                 except Exception as e:
                                     logger.warning(f"Direct fallback exception: {e}")
 
@@ -1666,26 +1718,29 @@ async def chat_send(request: Request):
                     # (Minimax sometimes outputs raw JSON instead of tool calls)
                     content_str = assistant_msg.get("content", "")
                     if (
-                        not pending_tool_calls 
-                        and content_str 
-                        and content_str.strip().startswith("{") 
+                        not pending_tool_calls
+                        and content_str
+                        and content_str.strip().startswith("{")
                         and "query" in content_str
                     ):
                         try:
                             parsed = json.loads(content_str)
                             # Check for common search/gateway tool patterns
                             if isinstance(parsed, dict) and "query" in parsed:
-                                logger.info("Detected implicit web_search JSON: %s", content_str[:100])
-                                pending_tool_calls = [{
-                                    "id": f"call_{uuid.uuid4().hex[:8]}",
-                                    "function": {
-                                        "name": "invoke_gateway",
-                                        "arguments": json.dumps({
-                                            "tool_name": "web_search",
-                                            "arguments": parsed
-                                        })
+                                logger.info(
+                                    "Detected implicit web_search JSON: %s", content_str[:100]
+                                )
+                                pending_tool_calls = [
+                                    {
+                                        "id": f"call_{uuid.uuid4().hex[:8]}",
+                                        "function": {
+                                            "name": "invoke_gateway",
+                                            "arguments": json.dumps(
+                                                {"tool_name": "web_search", "arguments": parsed}
+                                            ),
+                                        },
                                     }
-                                }]
+                                ]
                                 # Clear content so we don't output the raw JSON to user
                                 assistant_msg["content"] = None
                         except Exception:
@@ -1816,7 +1871,11 @@ async def chat_send(request: Request):
                                 else:
                                     # Fix: Handle wrapped arguments (LLM confusion when calling tools directly)
                                     real_args = tool_args
-                                    if isinstance(tool_args, dict) and "arguments" in tool_args and len(tool_args) == 1:
+                                    if (
+                                        isinstance(tool_args, dict)
+                                        and "arguments" in tool_args
+                                        and len(tool_args) == 1
+                                    ):
                                         val = tool_args["arguments"]
                                         if isinstance(val, dict):
                                             real_args = val
@@ -2076,9 +2135,7 @@ async def evaluate_policy(request: Request):
 
     except Exception as e:
         logger.error(f"Policy evaluation error: {e}", exc_info=True)
-        return JSONResponse(
-            status_code=500, content={"error": str(e), "passed": True}
-        )
+        return JSONResponse(status_code=500, content={"error": str(e), "passed": True})
 
 
 # ── Logging config ───────────────────────────────────────────────

@@ -457,10 +457,15 @@ async function gwAutoConnect() {
       if (resp.ok) {
         const info = await resp.json();
         if (info.configured) {
-          // Auto-store token for connect handshake
-          if (info.token && !localStorage.getItem("af-gateway-token")) {
-            localStorage.setItem("af-gateway-token", info.token);
-            console.log("[Gateway] Auto-configured token from backend");
+          // Keep token in sync for default local gateway connections.
+          // This recovers from stale cached tokens after profile/config changes.
+          const hasCustomGatewayUrl = Boolean(localStorage.getItem("af-gateway-url"));
+          if (info.token && !hasCustomGatewayUrl) {
+            const existingToken = localStorage.getItem("af-gateway-token");
+            if (existingToken !== info.token) {
+              localStorage.setItem("af-gateway-token", info.token);
+              console.log("[Gateway] Synced token from backend config");
+            }
           }
           // Update WS URL if port differs
           if (info.port && !localStorage.getItem("af-gateway-url")) {
